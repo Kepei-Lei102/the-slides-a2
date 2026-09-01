@@ -1,5 +1,32 @@
 # CS Slides — A2 2026-2027
 
+## Start here
+
+**Copy this line and give it to your AI assistant:**
+
+> Read https://raw.githubusercontent.com/Kepei-Lei102/the-slides-a2/main/SETUP.md and follow it to set up both repos on my computer.
+
+That's it. It will do the rest — this repo and the cards that go with it.
+
+**No AI assistant? Two commands:**
+
+```bash
+git clone --depth 1 https://github.com/Kepei-Lei102/the-slides-a2.git
+```
+
+Then open any `slides_*.html` by double-clicking it. That is the whole of what
+you need today. The other half — a few hundred Maths, Physics and CS cards — is
+about 600 MB, so do it at home rather than on school wifi:
+
+```bash
+git clone --depth 1 https://github.com/Kepei-Lei102/the-vault-a2.git
+```
+
+Stuck on any of it? [`SETUP.md`](SETUP.md) is the long version, and it is written
+so you can hand the whole file to an AI and let it work.
+
+---
+
 The interactive decks, practice sheets and 🍦 challenges for **Cambridge 9618 A2
 Computer Science**, as they are taught. This repo grows through the year: a
 lesson's material appears here after that lesson has run.
