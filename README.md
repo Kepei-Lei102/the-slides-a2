@@ -2,28 +2,34 @@
 
 ## Start here
 
-**Copy this line and give it to your AI assistant:**
-
-> Read https://raw.githubusercontent.com/Kepei-Lei102/the-slides-a2/main/SETUP.md and follow it to set up both repos on my computer.
-
-That's it. It will do the rest — this repo and the cards that go with it.
-
-**No AI assistant? Two commands:**
+Two repos: this one (the lessons) and the vault (the cards behind them).
 
 ```bash
+mkdir -p ~/A2-CS && cd ~/A2-CS
 git clone --depth 1 https://github.com/Kepei-Lei102/the-slides-a2.git
-```
-
-Then open any `slides_*.html` by double-clicking it. That is the whole of what
-you need today. The other half — a few hundred Maths, Physics and CS cards — is
-about 600 MB, so do it at home rather than on school wifi:
-
-```bash
 git clone --depth 1 https://github.com/Kepei-Lei102/the-vault-a2.git
 ```
 
-Stuck on any of it? [`SETUP.md`](SETUP.md) is the long version, and it is written
-so you can hand the whole file to an AI and let it work.
+The first is instant. The second is about 600 MB — a few minutes. If it stops
+partway, **don't start over**: `cd` in and run `git pull`, which picks up where
+it left off. That is one of the better reasons to be using git at all.
+
+Then double-click any `slides_*.html` to run a deck.
+
+**Every week after a lesson**, new material appears here:
+
+```bash
+cd ~/A2-CS/the-slides-a2 && git pull
+```
+
+You'll run that one about thirty times this year.
+
+**Using an AI to drive it?** Good — but ask it to explain as it goes:
+
+> Read https://raw.githubusercontent.com/Kepei-Lei102/the-slides-a2/main/SETUP.md and follow it. Explain each git command before you run it.
+
+[`SETUP.md`](SETUP.md) is the long version: what each command does, what to do
+when one of them complains, and how to point an AI tutor at the cards.
 
 ---
 

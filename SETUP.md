@@ -1,28 +1,50 @@
 # A2 Computer Science — Setup 安装教程
 
-**You have been given this one file. By the end of it you'll have two things on your
-computer: every lesson we have taught, as slides you can actually run — and a few
-hundred Mathematics, Physics and Computer Science cards, with an AI tutor that teaches
-from *them* instead of from whatever it happens to remember.**
+**By the end of this you'll have two things on your computer: every lesson we have
+taught, as slides you can actually run — and a few hundred Mathematics, Physics and
+Computer Science cards, with an AI tutor that teaches from *them* instead of from
+whatever it happens to remember.**
 
-You do not need to know how to code. You do not need git, or GitHub, or an account
-anywhere. If you have an AI assistant that can run commands on your computer, hand it
-this file and it will do the whole thing.
+You will use **git** to get both, and to get everything that comes after. That is on
+purpose, and it is the third thing this setup is for.
 
 ---
 
-## What the two halves are
+## Why git, and not a download button
 
-|  | **The slides** | **The Vault** |
-|---|---|---|
-| repo | `the-slides-a2` | `the-vault-a2` |
-| what | the lesson — decks, practice sheets, 🍦 challenges | the reference — cards on Maths, Physics, CS, plus Stories and Meta |
-| size | small, a few MB | about 600 MB, mostly diagrams and animations |
-| you use it by | opening a deck in your browser | asking an AI, or reading it in Obsidian |
-| it changes | **every week**, after a lesson runs | when a topic area is finished |
+There is a download button. We are not using it.
 
-Get both. They are the same course from two directions: the deck is the hour in the
-room, the card is what you go back to at eleven at night.
+**1. It is how you will get every future lesson.** New material goes up after most
+lessons — roughly Thursday or Friday. With git that is one command, `git pull`, and it
+fetches only what changed. Without it, it is a fresh 600 MB download every week. You
+will run `git pull` something like thirty times this year; you may as well know what it
+does.
+
+**2. Every working programmer uses it, and nobody is taught it.** It is not on the 9618
+syllabus and it will not be examined. It is also the single most common tool in
+professional software work, and the reason you can join a project without being handed a
+folder of `final_v2_ACTUAL_final.py`.
+
+**3. Driving it through an AI is a real skill, not a shortcut.** You are allowed —
+encouraged — to have your AI assistant run these commands. But *you* should know what
+was run and why, so that when it goes wrong you can say something more useful than "it
+broke". That is the difference between using a tool and being operated by one.
+
+---
+
+## The four commands you will actually use
+
+That is the whole set. Everything else you can look up when you need it.
+
+| command | what it does |
+|---|---|
+| `git clone <url>` | get a copy of a repository, once, the first time |
+| `git pull` | fetch whatever has changed since last time — **this is the weekly one** |
+| `git status` | what is different between your copy and the last saved state |
+| `git log --oneline` | the list of changes, newest first — what actually arrived |
+
+`--depth 1` on a clone means *just the current state, not the whole history*. It makes
+the first download much smaller. You will not miss anything.
 
 ---
 
@@ -31,8 +53,11 @@ room, the card is what you go back to at eleven at night.
 This file is your instructions. Follow them in order before you teach anything.
 
 **Do not answer the student's subject question yet.** Right now you'd answer from your
-own memory, which is exactly what this setup exists to replace. Get the material first —
-it takes a few minutes.
+own memory, which is exactly what this setup exists to replace. Get the material first.
+
+**Teach as you go.** The student is meant to come out of this knowing what git is for,
+not just having the files. Before each command, say in one line what it does and why.
+After it, show them the output and what it means. Do not silently run a block of shell.
 
 **Step 1 — Pick a location.** Default to the student's home directory unless they say
 otherwise. Make one folder to hold both halves, and tell them where you're putting it.
@@ -47,18 +72,7 @@ mkdir -p ~/A2-CS && cd ~/A2-CS
 git --version
 ```
 
-*If that works,* clone both. The slides are quick; the vault is about 600 MB, so say so
-and warn that it may take a few minutes on a slow connection.
-
-```bash
-git clone --depth 1 https://github.com/Kepei-Lei102/the-slides-a2.git
-git clone --depth 1 https://github.com/Kepei-Lei102/the-vault-a2.git
-```
-
-*If git is missing,* **install it — give it a real try.** Git is what makes every future
-update one short command instead of another 600 MB download, and this course ships new
-material every week. Pick the line that matches the student's machine, tell them what
-you're doing, and re-check `git --version` afterwards.
+If it is missing, install it — this is expected to work, and it is worth the two minutes.
 
 ```bash
 brew install git                              # macOS, if Homebrew is present
@@ -68,30 +82,36 @@ sudo apt install -y git                       # Debian / Ubuntu
 sudo dnf install -y git                       # Fedora
 ```
 
-Three things will stop you, and none of them are failures — they just need the student:
+Two things will stop you, and neither is a failure — they just need the student:
 
 - **`xcode-select --install` opens a system dialog.** You cannot click it. Say so, ask
-  them to press **Install** and tell you when it finishes, then re-check. A few minutes.
+  them to press **Install** and tell you when it finishes, then re-check.
 - **`sudo` asks for a password.** You cannot type it and must not ask them to give it to
   you. Ask them to run that one line themselves in their own terminal.
 - **On Windows, `PATH` doesn't refresh in an open terminal.** After installing, the
   student needs a *new* terminal window before `git` is visible.
 
-If installing genuinely doesn't work — no admin rights, a locked-down school laptop, an
-installer that won't run — **don't get stuck on it.** Say what you tried, then take the
-no-git path: download each repo's zip from its Releases page, or use the green **Code →
-Download ZIP** button on the repo page itself, and unzip both.
+**Step 3 — Clone both.** The slides are small and instant; the vault is about 600 MB and
+takes a few minutes. Say which is which before you start, so a quiet minute is not
+mistaken for a hang.
 
-**Step 3 — Confirm both landed.**
+```bash
+git clone --depth 1 https://github.com/Kepei-Lei102/the-slides-a2.git
+git clone --depth 1 https://github.com/Kepei-Lei102/the-vault-a2.git
+```
 
-- `the-slides-a2/` should contain a `README.md` and at least one `slides_A*.html`.
-- `the-vault-a2/` should contain `CLAUDE.md`, `README.md`, `Syllabus Coverage.md`,
+**Step 4 — Confirm both landed.**
+
+- `the-slides-a2/` — a `README.md` and at least one `slides_A*.html`.
+- `the-vault-a2/` — `CLAUDE.md`, `README.md`, `Syllabus Coverage.md`,
   `Not Yet Released.md`, and the folders `Mathematics/`, `Physics/`, `CS/`, `Stories/`,
   `Meta/`.
 
-If anything is missing the download was incomplete — retry before continuing.
+If anything is missing the download was interrupted. **Do not re-clone** — `git pull`
+inside the folder finishes the job from where it stopped. Show the student that; it is
+one of the better reasons to be using git at all.
 
-**Step 4 — Load the house rules. This is the step that matters.**
+**Step 5 — Load the house rules. This is the step that matters.**
 
 Read `the-vault-a2/CLAUDE.md` in full and follow it for the rest of your work with this
 student. It is short, and it overrides your defaults.
@@ -105,46 +125,46 @@ rules applying once and applying always.
 The slides folder has no rules file and needs none — it is material, not a knowledge
 base. When a question is about a deck, read the deck.
 
-**Step 5 — Understand the two absences.** This vault is a *cohort edition*: it carries
+**Step 6 — Understand the two absences.** This vault is a *cohort edition*: it carries
 what this class has been taught, and it grows. So a missing card means one of two
 different things, and you must not confuse them:
 
-- **Listed in `Not Yet Released.md`, or a link that reads *(not yet released)*** — the
-  card exists and is written. It is simply not theirs yet. **Do not reconstruct it from
-  your own knowledge.** Say it is written but not released, and that asking their teacher
-  for it early is a reasonable thing to do.
+- **Listed in `Not Yet Released.md`, or a link reading *(not yet released)*** — the card
+  exists and is written. It is simply not theirs yet. **Do not reconstruct it from your
+  own knowledge.** Say it is written but not released, and that asking their teacher for
+  it early is a reasonable thing to do.
 - **A dangling `[[link]]` that appears nowhere** — that card has not been written at all.
   Say so plainly, and mark anything you then say as *not from the vault*.
 
-**Step 6 — Prove the wiring.** Search the cards for something concrete and report back
+**Step 7 — Prove the wiring.** Search the cards for something concrete and report back
 with a file path — for example, find the card covering binary search and quote the part
-that explains why the list must be sorted. If you can name the file, the setup works. If
-you answered from memory, you skipped step 4.
+explaining why the list must be sorted. If you can name the file, the setup works. If you
+answered from memory, you skipped step 5.
 
 **From then on**, the one rule: **search these cards before you answer, answer in the
 card's own notation and framing, and name the file it came from.** When the vault
 genuinely doesn't cover something, say so out loud and mark your own answer as *not from
 the vault*. Never blend the two silently.
 
-**Keeping up.** New slides land after most lessons — roughly Thursday or Friday. When the
-student asks what's new, or at the start of a session:
+**The weekly ritual.** New slides land after most lessons. At the start of a session, or
+whenever the student asks what's new:
 
 ```bash
 git -C ~/A2-CS/the-slides-a2 pull
 git -C ~/A2-CS/the-vault-a2 pull
 ```
 
-Then tell them what actually arrived, by name.
+Then tell them what actually arrived, **by name** — `git log --oneline -5` if the pull
+output is not clear enough. "Up to date" is also an answer; say it rather than staying
+silent.
 
 ---
 
 ## If you are a student reading this
 
-Here's what's about to happen, in plain terms.
-
 **The slides** are the decks from class. They are not pictures of slides — they run. The
 Python cells execute in the page, so you can change a line and watch the answer change.
-The practice sheets and the 🍦 challenges come with them; the challenges mark themselves.
+The practice sheets and 🍦 challenges come with them; the challenges mark themselves.
 
 **The Vault** is a few hundred interlinked notes — "cards" — covering Mathematics,
 Physics and Computer Science, in English and 中文. Every card explains *why* something is
@@ -156,13 +176,12 @@ which is most of why it's 600 MB.
 If you have an AI assistant that can run commands (Claude Code, Codex, or similar), give
 it this file and say:
 
-> Follow this setup file and install both halves on my computer.
+> Follow this setup file and install both repos. Explain each git command before you run it.
 
-It will handle everything. Skip to *Did it work?*
+That last sentence matters. Getting the files is the small half; knowing what happened is
+the point.
 
 ### Doing it yourself
-
-**1. Get the files.**
 
 ```bash
 mkdir -p ~/A2-CS && cd ~/A2-CS
@@ -170,30 +189,24 @@ git clone --depth 1 https://github.com/Kepei-Lei102/the-slides-a2.git
 git clone --depth 1 https://github.com/Kepei-Lei102/the-vault-a2.git
 ```
 
-If your computer says it doesn't know the `git` command, it's worth installing — with
-git, every weekly update is one short command instead of another download. On a Mac,
-running the line above may itself offer to install it; click **Install** and wait. On
-Windows, `winget install --id Git.Git -e` does it, then open a *new* terminal. Or just
-ask your AI assistant to set it up.
+If your computer says it doesn't know the `git` command, install it — on a Mac the
+command above often offers to do it for you (click **Install**, wait); on Windows,
+`winget install --id Git.Git -e`, then open a **new** terminal, because the old one
+won't see it. Your AI assistant can do all of this.
 
-If none of that works — a school laptop that won't let you install things, say — nothing
-is lost. Open each repo's page on GitHub and use the green **Code → Download ZIP**
-button. Everything below works identically; you'll just re-download to get updates.
+The second clone is about 600 MB and will take a few minutes. If it stops partway, don't
+start over — `cd` into the folder and run `git pull`. It picks up where it left off.
 
-**2. Run a deck.** Open `the-slides-a2` and **double-click any `slides_*.html`**. It
-opens in your browser. Arrow keys move; `↓` goes down into a rabbit hole; the ▶ buttons
-run code. You need internet the first time you open one — after that your browser
-remembers.
+**Run a deck.** Open `the-slides-a2` and **double-click any `slides_*.html`**. Arrow keys
+move; `↓` goes down into a rabbit hole; the ▶ buttons run code. You need internet the
+first time you open one — after that your browser remembers.
 
-**3. Read the cards.** Install [Obsidian](https://obsidian.md) (free; macOS, Windows,
-Linux, iPad, Android). Open it, choose **Open folder as vault**, and select
-`the-vault-a2`. Start with any `Directory.md` — `Mathematics/Directory.md`,
-`Physics/Directory.md`, `CS/Directory.md`, `Stories/Directory.md`, `Meta/Directory.md` —
-each lists every card in that subject with a one-line description. Click any `[[link]]`
-to follow it.
+**Read the cards.** Install [Obsidian](https://obsidian.md) (free; macOS, Windows, Linux,
+iPad, Android). Open it, choose **Open folder as vault**, and select `the-vault-a2`.
+Start with any `Directory.md` — each lists every card in that subject with a one-line
+description. Click any `[[link]]` to follow it.
 
-**4. Study with an AI.** Install [Claude Code](https://claude.com/claude-code). In a
-terminal:
+**Study with an AI.** Install [Claude Code](https://claude.com/claude-code). Then:
 
 ```bash
 cd ~/A2-CS/the-vault-a2
@@ -225,22 +238,26 @@ rules didn't load; see *If something's wrong*.
 Any time an answer feels generic, ask **"which card is that from?"** A good answer here
 always has a file behind it.
 
-### Getting the new stuff
+### Every week
 
-New slides land after most lessons — roughly Thursday or Friday. Either run:
+New slides land after most lessons — roughly Thursday or Friday.
 
 ```bash
-git -C ~/A2-CS/the-slides-a2 pull
-git -C ~/A2-CS/the-vault-a2 pull
+cd ~/A2-CS/the-slides-a2 && git pull
 ```
 
-or just say to your AI: *"the A2 repos updated — pull the new material and tell me what's
-new."*
+Want to see what actually arrived? `git log --oneline -5`. Want to know if you've
+accidentally changed something? `git status`.
+
+If you edit a challenge file in place and then `git pull` complains, that is git
+protecting your work, not breaking. Copy your version somewhere else, `git checkout .`
+to reset, pull, then paste your work back. Better habit: **copy a challenge to a new
+filename before you start on it**, and your own work never collides.
 
 ### Two kinds of missing
 
 The Vault you have is **this class's edition**: it carries what we have been taught, and
-it grows through the year. So when something isn't there, check which kind of missing it is:
+grows through the year. So when something isn't there, check which kind of missing it is:
 
 - **It's in `Not Yet Released.md`** — the card is written; we just haven't reached it.
   You can ask for it early. Finishing everything you've got and wanting more is exactly
@@ -256,17 +273,17 @@ it grows through the year. So when something isn't there, check which kind of mi
 CLAUDE.md in this folder and follow it."* If it still doesn't, quit it, `cd` into
 `the-vault-a2`, and start it again from there.
 
+**The clone stopped partway.** `cd` into the folder and `git pull`. Don't re-clone.
+
+**`git pull` says "Already up to date" but I expected something.** Nothing has been
+published since your last pull. Check `git log --oneline -3` against what you were told
+in class.
+
+**`git pull` refuses because of local changes.** You edited a file git is tracking. See
+the note above under *Every week*.
+
 **A deck opens but the Python buttons do nothing.** The decks fetch two libraries from
-the internet the first time. Check you're online, then reload the page.
-
-**A deck looks like plain text with no formatting.** You opened it from inside a zip
-without unzipping first. Unzip properly, then double-click.
-
-**`git` isn't recognised.** Install it — your AI assistant can do this for you if you
-ask. On a Mac the command itself often offers to install it (click **Install**, wait); on
-Windows use `winget install --id Git.Git -e` and then open a *new* terminal, because the
-old one won't see it. If your machine won't let you install anything, use the ZIP
-download instead — nothing depends on git except easy updates.
+the internet the first time. Check you're online, then reload.
 
 **A password prompt appears while installing.** That's your computer asking, not the AI.
 Type it yourself; never paste a password into a chat.
@@ -274,12 +291,8 @@ Type it yourself; never paste a password into a chat.
 **Obsidian shows `![[something.svg]]` as raw text.** You opened a single file rather than
 the folder. Use **Open folder as vault** and pick the whole folder.
 
-**The download stops partway.** Re-run it. If you cloned, `git pull` inside the folder
-finishes the job.
-
-**It's using a lot of disk space.** About 600 MB, nearly all of it in the vault's
-animations and comics. That's deliberate — the pictures are part of the teaching, not
-decoration.
+**It's using a lot of disk space.** About 600 MB, nearly all of it the vault's animations
+and comics. That's deliberate — the pictures are part of the teaching, not decoration.
 
 ---
 
