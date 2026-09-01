@@ -33,9 +33,9 @@ when one of them complains, and how to point an AI tutor at the cards.
 
 ---
 
-The interactive decks, practice sheets and 🍦 challenges for **Cambridge 9618 A2
-Computer Science**, as they are taught. This repo grows through the year: a
-lesson's material appears here after that lesson has run.
+The interactive decks, practice sheets and 🍦 challenges for
+**Cambridge 9618 A2 Computer Science**, as they are taught. This repo grows through the year: a lesson's
+material appears here after that lesson has run.
 
 **This is not everything that exists.** It is everything you have been taught.
 If a unit you want is missing, it is because we have not reached it — ask.

@@ -1,4 +1,4 @@
-# A2 Computer Science — Setup 安装教程
+# Cambridge 9618 A2 Computer Science — Setup 安装教程
 
 **By the end of this you'll have two things on your computer: every lesson we have
 taught, as slides you can actually run — and a few hundred Mathematics, Physics and
