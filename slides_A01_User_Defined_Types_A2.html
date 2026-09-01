@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Sort That Stole Everyone's Grade — User-Defined Data Types</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<style>
+:root{
+  --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
+  --accent3:#F2B53C; --navy:#222B5A; --ice:#E8EEF9; --white:#fff;
+}
+.reveal{font-family:'Calibri','Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif; font-size:26px;}
+.reveal h1,.reveal h2,.reveal h3{font-family:'Georgia','Times New Roman','PingFang SC','Microsoft YaHei',serif; text-transform:none; letter-spacing:-.02em;}
+.reveal section{text-align:left;}
+.dk{color:var(--ice);} .dk h1,.dk h2,.dk h3{color:var(--white);}
+.lt{color:var(--navy);} .lt h2,.lt h3{color:var(--navy);}
+.bar{position:absolute; top:0; left:0; right:0; height:5px;}
+.card{background:var(--white); border-radius:10px; padding:16px 20px; box-shadow:0 4px 12px rgba(0,0,0,.07); text-align:left;}
+.rule{background:var(--white); border-radius:8px; padding:11px 16px; box-shadow:0 3px 10px rgba(0,0,0,.05); border-left:5px solid var(--accent1); margin:10px 0; text-align:left; font-size:.74em;}
+.rule.accent2{border-left-color:var(--accent2);} .rule.accent3{border-left-color:var(--accent3);} .rule.navy{border-left-color:var(--navy);}
+.dk .rule{background:rgba(255,255,255,.06); color:var(--ice);}
+.two-col{display:flex; gap:26px; align-items:flex-start;} .two-col>*{flex:1; min-width:0;}
+.three-col{display:flex; gap:16px;} .three-col>*{flex:1; min-width:0;}
+.smaller{font-size:.7em;} .center{text-align:center;}
+.accent1{color:var(--accent1);} .accent2{color:var(--accent2);} .accent3{color:var(--accent3);}
+.mono{font-family:'Courier New',monospace; font-weight:bold;}
+
+.badges{position:absolute; top:-14px; right:0; display:flex; gap:6px; z-index:5;}
+.bg{font-size:.44em; font-weight:bold; letter-spacing:.03em; padding:3px 12px; border-radius:20px; font-family:'Calibri','Segoe UI',sans-serif;}
+.bg-p3{background:rgba(240,101,91,.14); color:#c0392b; border:1.5px solid var(--accent2);}
+.bg-p34{background:rgba(23,179,163,.15); color:#0d7a6e; border:1.5px solid var(--accent1);}
+.dk .bg-p3{color:#ff9d95;} .dk .bg-p34{color:#5FD6C9;}
+
+.dig{position:absolute; bottom:-34px; left:50%; transform:translateX(-50%); font-size:.5em; color:#98a0c0; animation:bob 2s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(5px);}}
+#obj-btn{background:rgba(255,255,255,.08); color:var(--ice); border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:5px 14px; cursor:pointer; font-size:.42em; opacity:.55;}
+#obj-btn:hover{opacity:1;}
+
+/* ===== py-cell: live Python ===== */
+.pycell{background:var(--navy); border-radius:12px; padding:10px 12px 12px; box-shadow:0 4px 14px rgba(0,0,0,.14); text-align:left;}
+.pycell .pybar{display:flex; gap:8px; align-items:center; margin-bottom:6px;}
+.pycell .pydots{display:flex; gap:5px;}
+.pycell .pydots i{width:9px; height:9px; border-radius:50%; display:block;}
+.pyta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.45; padding:10px 12px; resize:none; outline:none; display:block;}
+.pyta[readonly]{color:#aeb8dd;}
+.pyta:focus{box-shadow:0 0 0 2px var(--accent1);}
+.pyrun{background:var(--accent1); color:#fff; border:none; border-radius:7px; padding:4px 16px; font-size:.5em; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.pyrun:hover{background:#12907f;} .pyrun:disabled{background:#5a6394; cursor:wait;}
+.pylock{background:transparent; color:#98a0c0; border:1.5px solid #454e82; border-radius:7px; padding:3px 9px; font-size:.5em; font-weight:bold; cursor:pointer;}
+.pylock:hover{color:var(--accent3); border-color:var(--accent3);}
+.pyout{background:#0d1230; color:#5FD6C9; border-radius:8px; font-family:'Courier New',monospace; font-weight:bold;
+  font-size:.54em; line-height:1.45; padding:9px 12px; margin:8px 0 0; min-height:1.4em; white-space:pre-wrap; text-align:left;}
+.pyout .crash{color:var(--accent2);}
+.pyin-lbl{color:#5FD6C9;}
+.pyin{background:#1b234d; border:2px solid var(--accent1); border-radius:6px; color:var(--ice);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:1em; padding:1px 8px; width:130px; outline:none;}
+.pystate{font-size:.44em; color:#98a0c0; margin-left:auto;}
+.pycell.side .pyrow{display:flex; gap:10px; align-items:stretch;}
+.pycell.side .pyrow .pyta{flex:1; min-width:0;}
+.pycell.side .pyrow .pyout{margin:0; flex:0 0 auto; min-width:190px;}
+#py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
+#py-chip.ready{color:#5FD6C9;}
+
+/* ===== the Java lane: captured, not live ===== */
+.pycell.java .pyrun{background:#8a6100;} .pycell.java .pyrun:hover{background:#a87700;}
+.pystate.cap{color:#e0b050;}
+.pyout.cap{color:#e8c98a;}
+.pyout.err{color:#ff9d95;}
+
+/* ===== the language switch ===== */
+#langsel{position:fixed; top:14px; right:16px; z-index:99; display:flex; border:2px solid #6b74a8;
+  border-radius:9px; overflow:hidden; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+#langsel div{padding:5px 15px; background:rgba(20,26,60,.72); color:#98a0c0; transition:.12s;}
+#langsel div.on{background:var(--accent1); color:#fff;}
+body[data-lang="java"] .lane[data-lang="py"]{display:none;}
+body[data-lang="py"] .lane[data-lang="java"]{display:none;}
+
+/* ===== 🧾 outside the exam hall ===== */
+.toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
+.toll .th{display:inline-block; font-weight:bold; font-size:.86em; letter-spacing:.05em; color:#8a6100; margin-bottom:3px;}
+.toll .yes{color:#0d7a6e; font-weight:bold;} .toll .no{color:#c0392b; font-weight:bold;}
+
+/* ===== 📐 the divergence box ===== */
+.diverge{background:#f7f5ff; border:2px dashed #b3a6e8; border-radius:10px; padding:10px 15px; text-align:left; font-size:.55em; line-height:1.5; color:var(--navy); margin:9px 0;}
+.diverge .dh{display:inline-block; font-weight:bold; font-size:.85em; letter-spacing:.04em; color:#6d4fd0; margin-bottom:3px;}
+
+/* ===== pseudocode block ===== */
+.ps{background:#f4f6fb; border:1px solid #d9deed; border-left:4px solid var(--accent3); border-radius:8px;
+  padding:10px 14px; font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.5;
+  color:var(--navy); white-space:pre; margin:8px 0; overflow-x:auto;}
+.dk .ps{background:rgba(255,255,255,.07); color:var(--ice); border-color:rgba(255,255,255,.16); border-left-color:var(--accent3);}
+.ps .k{color:#6d4fd0;} .dk .ps .k{color:#c0aef5;}
+.ps .v{color:#c0392b;} .dk .ps .v{color:#ff9d95;}
+.ps .c{color:#8890b5; font-weight:normal;}
+
+/* ===== the class table (hook) ===== */
+.ct{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.58em; margin:0;}
+.ct td,.ct th{border:1px solid rgba(255,255,255,.18); padding:3px 14px; text-align:left;}
+.lt .ct td,.lt .ct th{border-color:#ccd3e8;}
+.ct th{font-size:.85em; letter-spacing:.05em; color:#98a0c0; border:none;}
+.ct td.bad{color:var(--accent2);} .ct td.ok{color:#5FD6C9;}
+.lt .ct td.ok{color:#0d7a6e;}
+
+/* ===== marks table ===== */
+.mk{border-collapse:collapse; font-size:.5em; width:100%;}
+.mk td,.mk th{border:1px solid #ccd3e8; padding:4px 9px; text-align:left; vertical-align:top;}
+.mk th{background:#eef2fb; font-weight:bold; color:var(--navy);}
+.mk td.m{text-align:center; font-weight:bold; color:var(--accent2); white-space:nowrap;}
+.mk code{font-family:'Courier New',monospace; font-weight:bold; color:#6d4fd0;}
+
+/* ===== 🎮 The Type Designer ===== */
+.g-wrap{background:var(--white); border-radius:12px; padding:14px 18px; box-shadow:0 5px 18px rgba(0,0,0,.09); color:var(--navy);}
+/* a teacher must be able to move on without answering */
+.g-skip{margin-left:8px; background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;
+  border-radius:7px; padding:2px 11px; font-size:.44em; font-weight:bold; cursor:pointer;
+  font-family:'Calibri','Segoe UI',sans-serif;}
+.g-skip:hover{color:var(--accent1); border-color:var(--accent1);}
+.g-top{display:flex; align-items:center; gap:14px; margin-bottom:9px;}
+.g-stage{font-size:.56em; font-weight:bold; color:var(--navy); background:rgba(242,181,60,.18); border:2px solid var(--accent3); border-radius:22px; padding:3px 20px;}
+.g-prog{display:flex; gap:6px; margin-left:auto;}
+.g-prog i{width:9px; height:9px; border-radius:50%; background:#d3d9ec; display:block; transition:.2s;}
+.g-prog i.done{background:var(--accent1);} .g-prog i.cur{background:var(--accent3); transform:scale(1.35);}
+.g-score{font-size:.52em; font-weight:bold; color:var(--accent2); font-family:'Courier New',monospace;}
+.g-q{font-size:.6em; line-height:1.5; margin-bottom:8px;}
+.g-q b{color:var(--accent2);}
+.g-opts{display:flex; flex-wrap:wrap; gap:8px;}
+.g-b{background:#f4f6fb; border:2px solid #ccd3e8; border-radius:9px; padding:7px 14px; font-size:.54em;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; color:var(--navy); text-align:left; line-height:1.4;}
+.g-b:hover{border-color:var(--accent1);}
+.g-b.no{border-color:var(--accent2); background:#fdeeec; animation:shake .35s;}
+.g-b.yes{border-color:var(--accent1); background:#e6f7f4;}
+.g-b .mono{display:block; font-size:.92em;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.g-ta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.54em; line-height:1.5; padding:9px 12px; resize:none; outline:none;}
+.g-ta:focus{box-shadow:0 0 0 2px var(--accent3);}
+.g-sub{background:var(--accent3); color:#4a3500; border:none; border-radius:8px; padding:5px 20px; font-size:.52em;
+  font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; margin-top:7px;}
+.g-sub:hover{background:#e0a52c;}
+.g-say{font-size:.54em; min-height:1.5em; margin-top:7px; line-height:1.5;}
+.g-say.ok{color:#0d7a6e; font-weight:bold;} .g-say.bad{color:var(--accent2); font-weight:bold;}
+.g-mp{list-style:none; padding:0; margin:6px 0 0; font-size:.5em; line-height:1.6;}
+.g-mp li{padding-left:2px;} .g-mp .y{color:#0d7a6e; font-weight:bold;} .g-mp .n{color:var(--accent2); font-weight:bold;}
+.g-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 20px;}
+/* a panel that grows AFTER the slide was centred grows downward off the stage;
+   top-anchoring is the only fix that works (Reveal ships min-height:0 !important) */
+.reveal .slides section.growslide{top:24px !important;}
+.g-ans{background:#1b234d; color:var(--ice); border-radius:8px; font-family:'Courier New',monospace;
+  font-weight:bold; font-size:.4em; line-height:1.35; padding:6px 9px; margin:3px 0 0; white-space:pre-wrap;
+  text-align:left; max-height:132px; overflow-y:auto;}
+.g-lbl{font-size:.5em; color:#5b6488; margin:5px 0 3px;}
+.g-res .g-tot{font-size:1.1em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace; text-align:center; margin:2px 0 4px;}
+.g-fin{text-align:center; font-size:.62em; line-height:1.6;}
+.g-fin .big{font-size:1.5em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace;}
+/* ===== the LLM reader — ported 2026-08-24 (Kepei: "A02a's challenge does not have an LLM grader") ===== */
+#llmchip{position:fixed; top:16px; right:16px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px;
+  border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0; cursor:pointer; border:none;}
+#llmchip.on{color:#5FD6C9;} #llmchip.off{color:#F2B53C;}
+#llmhelp{display:none; position:fixed; top:54px; right:16px; z-index:99; width:340px; background:#fff; color:#222B5A;
+  border:2px solid #F2B53C; border-radius:12px; padding:12px 16px; font-size:14px; line-height:1.5; box-shadow:0 8px 30px rgba(0,0,0,.25);}
+#llmhelp b{color:#B8860B;} #llmhelp .x{float:right; cursor:pointer; font-weight:bold; color:#98a0c0;}
+.g-llm{margin-top:6px;}
+.g-llm:empty{display:none;}
+.g-grid.three{grid-template-columns:minmax(0,.86fr) minmax(0,1.07fr) minmax(0,1.07fr); gap:6px 14px;}
+.g-grid.three .g-ans{max-height:250px; overflow:auto;}
+.g-grid.three .g-llm{max-height:228px; overflow:auto;}
+.g-llm .conf{font-size:.82em; opacity:.7; font-style:italic;}
+.g-cons{margin-top:7px; border-radius:9px; padding:7px 12px; font-size:.5em; line-height:1.5; border:2px solid; text-align:left;}
+.g-cons.agree{border-color:var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e;}
+.g-cons.split{border-color:var(--accent3); background:rgba(242,181,60,.14); color:#8a5c00;}
+.g-cons b{font-family:'Courier New',monospace;}
+.g-pickrow{margin-top:7px; font-size:.95em; color:var(--navy);}
+.g-pick{border:1.5px solid var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e; border-radius:7px;
+  padding:2px 10px; font-weight:bold; cursor:pointer; font-size:.95em; margin:0 5px; font-family:'Calibri','Segoe UI',sans-serif;}
+.g-pick:hover{background:rgba(23,179,163,.28);}
+.g-pick.on{background:var(--accent1); color:#fff;}
+</style>
+</head>
+<body data-lang="java">
+<div class="reveal"><div class="slides">
+
+<!-- ============ H1 ============ -->
+<section>
+<section data-background-color="#151B3C" class="dk center">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 1 · 9618 §13.1</p>
+  <h1 style="font-size:1.6em; margin:0 0 6px;">The Sort That Stole<br>Everyone's Grade</h1>
+  <p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">user-defined data types 自定义数据类型</p>
+  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+
+</section>
+  <section data-background-color="#151B3C" class="dk">
+    <div class="bar" style="background:var(--accent3);"></div>
+    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> Write, from nothing, the pseudocode for an <b class="accent1">enumerated</b> type, a <b class="accent1">pointer</b> type, a <b class="accent1">record</b> and a <b class="accent1">set</b></div>
+    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">2.</strong> Know <b class="accent3">which half of each declaration carries which mark</b></div>
+
+</section>
+</section>
+
+<!-- ============ H2 — HOOK ============ -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.94em; margin:0 0 4px;">Put the class in grade order.</h2>
+  <p style="font-size:.52em; color:#98a0c0; margin:0 0 8px;">Three arrays. One sort. Press ▶ Run and read both tables.</p>
+
+  <div class="lane" data-lang="java">
+  <div class="pycell java side" data-out="BEFORE
+  Amir    71
+  Bo      94
+  Chen    58
+  Dara    88
+  Eve     63
+AFTER
+  Amir    58
+  Bo      63
+  Chen    71
+  Dara    88
+  Eve     94"><script type="text/plain" class="pysrc">String[] names  = {"Amir","Bo","Chen","Dara","Eve"};
+int[]    grades = {71, 94, 58, 88, 63};
+
+show("BEFORE");
+Arrays.sort(grades);      // put them in grade order
+show("AFTER");</script></div>
+  </div>
+
+  <div class="lane" data-lang="py">
+  <div class="pycell side"><script type="text/plain" class="pysrc">names  = ["Amir", "Bo", "Chen", "Dara", "Eve"]
+grades = [71, 94, 58, 88, 63]
+
+def show(when):
+    print(when)
+    for i in range(len(names)):
+        print("  %-6s %3d" % (names[i], grades[i]))
+
+show("BEFORE")
+grades.sort()          # put them in grade order
+show("AFTER")</script></div>
+  </div>
+
+  <div class="rule accent2 fragment" style="font-size:.6em; margin-top:10px;">
+    Chen sat down with <b class="mono">58</b> and stood up with <b class="mono">71</b>. Bo lost <b class="mono">94</b>.
+    <b>Nobody wrote a bug.</b> No error, no red, no crash — the program did exactly what it was told.
+    <span class="accent3">Dara kept 88, by coincidence.</span>
+  </div>
+
+</section>
+
+<!-- ============ H3 ============ -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.9em; margin:0 0 10px;">Nothing was wrong with any of the three arrays.</h2>
+  <div class="two-col">
+    <div>
+      <table class="ct" style="font-size:.62em;">
+        <tr><th>index</th><th>names</th><th>grades</th></tr>
+        <tr><td>2</td><td>"Chen"</td><td>58</td></tr>
+      </table>
+      <div class="rule" style="font-size:.66em;">
+        <code class="mono">names[2]</code> and <code class="mono">grades[2]</code> are the same person
+        <b>because you decided so.</b> That decision lives in your head. It was never written down,
+        so the language could not check it, protect it, or move the two together.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent2" style="font-size:.72em;">
+        <b>A type system that cannot see your relationships cannot protect them.</b>
+      </div>
+      <div class="rule accent3" style="font-size:.62em;">
+        Two arrays that must stay in step are called <b>parallel arrays</b>, and every one of them is a
+        bug waiting for someone to sort, insert, or delete. <b>The fix is not to be careful.</b>
+        The fix is to stop having two arrays.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ H4 — the devices ============ -->
+<section data-background-color="#222B5A" class="dk">
+  <h2 style="font-size:.86em; margin:0 0 10px;">Four things you will see all year</h2>
+  <div class="sgrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:.56em;">
+    <div class="rule" style="margin:0; font-size:1em;"><b class="accent3">🍦 the ice-cream challenge</b><br>
+      One optional, unmarked coding problem per lesson, with a file that <b>runs your code and judges it</b>. No marks, no deadline. Ice cream if you clear it.</div>
+    <div class="rule accent2" style="margin:0; font-size:1em;"><b>📐 the divergence box</b><br>
+      Marks a place where <b>Java and Python genuinely disagree</b> and you have to know which one you are writing.</div>
+    <div class="rule accent3" style="margin:0; font-size:1em;"><b>🧾 outside the exam hall</b><br>
+      True, useful, and <b>not on your paper</b>. Labelled so you never confuse the two.</div>
+    <div class="rule navy" style="margin:0; font-size:1em;"><b>🕳 want to dig?</b><br>
+      A hole with something at the bottom. Optional, always.</div>
+  </div>
+  <p class="center" style="font-size:.5em; color:#98a0c0; margin-top:12px;">That is the whole apparatus. It will not be explained again.</p>
+
+</section>
+
+<!-- ============ H5 ============ -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.9em; margin:0 0 8px;">What the language gave you</h2>
+  <div class="ps">INTEGER   REAL   CHAR   STRING   BOOLEAN   DATE          <span class="c">and ARRAY, and FILE</span></div>
+  <div class="two-col" style="margin-top:8px;">
+    <div class="rule" style="font-size:.66em;">
+      Every one of those holds <b>one value</b>.<br>
+      An <code class="mono">ARRAY</code> holds <b>many values of one type</b>.
+    </div>
+    <div class="rule accent2" style="font-size:.66em;">
+      A student is <b>not</b> one value.<br>
+      A student is <b>not</b> many values of one type.<br>
+      <b>Your problem is made of neither.</b>
+    </div>
+  </div>
+  <div class="rule accent3 fragment" style="font-size:.64em;">
+    So you build the type you actually need. That is what <b>§13.1</b> is, and it is worth knowing now that
+    <b>four of the five</b> you are about to meet are things the exam asks you to <b>write out from nothing</b>.
+  </div>
+
+</section>
+
+<!-- ============ H6 ============ -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.88em; margin:0 0 10px;">The five you can make yourself</h2>
+  <div class="two-col">
+    <div class="card" style="border-top:4px solid var(--accent1);">
+      <p style="font-size:.56em; letter-spacing:.05em; color:#8890b5; margin:0 0 6px;"><b>NON-COMPOSITE</b> — built without referring to another type</p>
+      <p style="font-size:.66em; margin:0; line-height:1.7;"><b class="accent1">enumerated</b> — a value from a list you wrote<br>
+      <b class="accent1">pointer</b> — a value that is an address</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent2);">
+      <p style="font-size:.56em; letter-spacing:.05em; color:#8890b5; margin:0 0 6px;"><b>COMPOSITE</b> — built out of other types</p>
+      <p style="font-size:.66em; margin:0; line-height:1.7;"><b class="accent2">record</b> — several named fields, different types<br>
+      <b class="accent2">set</b> — unordered, no duplicates, one type<br>
+      <b class="accent2">class</b> — a record that owns its verbs</p>
+    </div>
+  </div>
+  <div class="rule navy fragment" style="font-size:.62em;">
+    <b>"Non-composite" is an exam answer, not just a heading.</b> <i>A data type that is defined without
+    referencing another data type. It may be built-in or user-defined.</i> Then name one: enumerated, or pointer. <span class="accent2">[3 marks]</span>
+  </div>
+
+</section>
+
+<!-- ============ H7 — record ============ -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.88em; margin:0 0 6px;">Record — the fix for the first slide</h2>
+  <div class="two-col">
+    <div>
+      <div class="ps"><span class="k">TYPE</span> TStudent
+    <span class="k">DECLARE</span> Name  : <span class="k">STRING</span>
+    <span class="k">DECLARE</span> Grade : <span class="k">INTEGER</span>
+<span class="k">ENDTYPE</span>
+
+<span class="k">DECLARE</span> Class : <span class="k">ARRAY</span>[1:30] <span class="k">OF</span> TStudent
+Class[1].Name  <span class="v">&larr;</span> <span class="v">"Chen"</span>
+Class[1].Grade <span class="v">&larr;</span> <span class="v">58</span></div>
+    </div>
+    <div>
+      <div class="rule accent1" style="font-size:.64em;">
+        One name. Two fields. <b>Now sorting moves whole people</b>, because there is only one thing to move.
+      </div>
+      <div class="rule accent2" style="font-size:.62em;">
+        <b>And you were taught this last year.</b> §10.1 — <i>"write pseudocode to define a record structure."</i>
+        The question is not whether you know it. The question is <b>why you did not reach for it.</b>
+      </div>
+      <p style="font-size:.52em; color:#8890b5; margin:6px 0 0;">The dot is how you get at a field. It will be the dot for the rest of your life.</p>
+    </div>
+  </div>
+  <div class="dig">🕳 a record is not the sum of its fields ↓</div>
+
+</section>
+
+<!-- ↓ H7 vertical -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.76em; margin:0 0 8px;">🕳 A record is not the sum of its fields</h3>
+  <p style="font-size:.58em; line-height:1.6;">Put a <span class="mono">CHAR</span>, then an <span class="mono">INTEGER</span>, then a <span class="mono">CHAR</span> in a record and ask how big it is.
+  You expect <b>1 + 4 + 1 = 6</b> bytes. On most machines you get <b class="accent3">12</b>.</p>
+  <p style="font-size:.58em; line-height:1.6;">The processor fetches a 4-byte integer fastest when its address is a multiple of 4, so the compiler
+  quietly inserts <b class="accent1">padding</b> to line each field up. Reorder the same three fields —
+  integer first — and the record shrinks to <b class="accent3">8</b>.</p>
+  <div class="rule accent3" style="font-size:.6em;">Same fields, same data, different size, <b>purely because of the order you typed them in.</b>
+  Nothing on your syllabus asks this. It is the reason real systems programmers order struct fields largest-first.</div>
+
+</section>
+</section>
+
+
+<!-- ============ H8 — code, done properly ============ -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.88em; margin:0 0 4px;">The same job, done properly</h2>
+  <p style="font-size:.5em; color:#98a0c0; margin:0 0 8px;">Same five students. Same sort. One array instead of three.</p>
+
+  <div class="lane" data-lang="java">
+  <div class="pycell java side" data-out="  Chen    58
+  Eve     63
+  Amir    71
+  Dara    88
+  Bo      94"><script type="text/plain" class="pysrc">static class Student {          // the record, in Java
+    String name;
+    int    grade;
+    Student(String n, int g) { name = n; grade = g; }
+}
+
+Student[] klass = { new Student("Amir",71), new Student("Bo",94),
+                    new Student("Chen",58), new Student("Dara",88),
+                    new Student("Eve", 63) };
+
+Arrays.sort(klass, (a, b) -> a.grade - b.grade);
+for (Student s : klass)
+    System.out.printf("  %-6s %3d%n", s.name, s.grade);</script></div>
+  </div>
+
+  <div class="lane" data-lang="py">
+  <div class="pycell side"><script type="text/plain" class="pysrc">klass = [ {"name": "Amir", "grade": 71},
+          {"name": "Bo",   "grade": 94},
+          {"name": "Chen", "grade": 58},
+          {"name": "Dara", "grade": 88},
+          {"name": "Eve",  "grade": 63} ]
+
+klass.sort(key=lambda s: s["grade"])
+
+for s in klass:
+    print("  %-6s %3d" % (s["name"], s["grade"]))</script></div>
+  </div>
+
+  <div class="rule accent1 fragment" style="font-size:.6em; margin-top:9px;">
+    Chen is still on 58. Bo still has 94. <b>The grades moved and the people came with them</b> —
+    not because this program is careful, but because there was never a second array to forget.
+  </div>
+
+</section>
+
+<!-- ============ H9 — enumerated ============ -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.88em; margin:0 0 6px;">Enumerated — the values you list</h2>
+  <div class="two-col">
+    <div>
+      <div class="rule accent2" style="font-size:.62em; margin-top:0;">
+        <code class="mono">DECLARE Day : INTEGER</code><br>
+        <code class="mono">Day &larr; 9</code> &nbsp;— a <b>legal statement</b> and a <b>wrong day</b>.<br>
+        The compiler cannot help. You asked for an integer, and 9 is a fine integer.
+      </div>
+      <div class="rule accent1" style="font-size:.66em;">
+        <b>A good type makes the wrong value impossible to write down.</b>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:.5em; color:#8890b5; margin:0 0 3px; letter-spacing:.05em;"><b>THE EXAM FORM — LEARN THIS SHAPE</b></p>
+      <div class="ps"><span class="k">TYPE</span> Aircraft = (C300, C350, D242, E757, X380)</div>
+      <table class="mk">
+        <tr><th>the two marks</th><th style="width:22%;">worth</th></tr>
+        <tr><td><code>TYPE Aircraft =</code></td><td class="m">1</td></tr>
+        <tr><td><code>(C300, C350, D242, E757, X380)</code></td><td class="m">1</td></tr>
+      </table>
+      <p style="font-size:.46em; color:#8890b5; margin:5px 0 0;">Nov 2022 Paper 32 Q4(a) · © UCLES</p>
+    </div>
+  </div>
+  <div class="dig">🕳 a comment is a wish; a type is a rule ↓</div>
+
+</section>
+
+<!-- ↓ H9 vertical -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.74em; margin:0 0 8px;">🕳 A comment is a wish; a type is a rule</h3>
+  <div class="ps" style="font-size:.52em;"><span class="c">// status must be 0, 1 or 2</span>
+<span class="k">DECLARE</span> Status : <span class="k">INTEGER</span></div>
+  <p style="font-size:.58em; line-height:1.65;">That comment is doing a job the <b class="accent3">type</b> should be doing. It is a note to a human,
+  and humans are exactly the part of the system that forgets. Nothing stops <span class="mono">Status &larr; 7</span>.</p>
+  <div class="rule accent1" style="font-size:.6em;">Whenever you catch yourself writing a comment that restricts a value,
+  you have found a type that wants to exist. Professionals call this <b>making illegal states unrepresentable</b> —
+  and it is the same instinct as this lesson, one floor up.</div>
+
+</section>
+</section>
+
+
+<!-- ============ H10 — the type that refuses ============ -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.86em; margin:0 0 4px;">Watch the type refuse</h2>
+  <p style="font-size:.5em; color:#98a0c0; margin:0 0 8px;">One typo: <span class="mono accent2">MNODAY</span>. Press ▶ Run.</p>
+
+  <div class="lane" data-lang="java">
+  <div class="pycell java" data-err="1" data-out="EnumRefuses.java:7: error: cannot find symbol
+        Day other = Day.MNODAY;          // the typo
+                       ^
+  symbol:   variable MNODAY
+  location: class Day
+1 error"><script type="text/plain" class="pysrc">enum Day { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY }
+
+System.out.println("the program has started");
+Day today = Day.MONDAY;
+Day other = Day.MNODAY;          // the typo
+System.out.println(today + " " + other);</script></div>
+  </div>
+
+  <div class="lane" data-lang="py">
+  <div class="pycell"><script type="text/plain" class="pysrc">from enum import Enum
+
+class Day(Enum):
+    MONDAY = 1
+    TUESDAY = 2
+    WEDNESDAY = 3
+
+print("the program has started")
+today = Day.MONDAY
+other = Day.MNODAY               # the typo
+print(today, other)</script></div>
+  </div>
+
+  <div class="diverge" style="margin-top:9px;">
+    <span class="dh">📐 JAVA AND PYTHON GENUINELY DISAGREE HERE</span><br>
+    <b>Java never ran the program at all.</b> There is no output, because there was no program — the compiler
+    refused to build it. Notice what is missing: <i>"the program has started"</i> never printed.<br>
+    <b>Python ran it</b>, printed that line, and then died at the moment it reached the typo.<br>
+    <span class="accent2"><b>Same protection, two different floors</b></span> — and on this one point Java protects you earlier.
+  </div>
+
+</section>
+
+<!-- ============ H11 — pointer ============ -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.88em; margin:0 0 6px;">Pointer — a variable whose value is an address</h2>
+  <div class="two-col">
+    <div>
+      <div class="rule accent3" style="margin-top:0; font-size:.62em;">
+        <b>You have met this and were not told.</b> Last year, addressing modes:
+        <code class="mono">LDD 5</code> loads <i>what is in cell 5</i> — one hop.
+        <code class="mono">LDI 5</code> reads cell 5, treats what it finds as an <b>address</b>, and loads from
+        <i>there</i> — <b>two hops</b>. That second one is a pointer.
+      </div>
+      <div class="ps" style="font-size:.52em;">cell 5  <span class="v">&rarr;</span>  <span class="c">holds</span> 200
+cell 200 <span class="v">&rarr;</span>  <span class="c">holds</span> 'Chen'   <span class="c">&lt;- the data</span></div>
+    </div>
+    <div>
+      <p style="font-size:.5em; color:#8890b5; margin:0 0 3px; letter-spacing:.05em;"><b>THE EXAM FORM</b></p>
+      <div class="ps"><span class="k">TYPE</span> TDayPointer = ^<span class="k">STRING</span>
+<span class="k">TYPE</span> SelectParts  = ^Parts   <span class="c">&lt;- a type YOU made</span></div>
+      <table class="mk">
+        <tr><th>the two marks</th><th style="width:22%;">worth</th></tr>
+        <tr><td><code>TYPE &lt;name&gt; = ^</code></td><td class="m">1</td></tr>
+        <tr><td>the correct type it points at</td><td class="m">1</td></tr>
+      </table>
+      <p style="font-size:.46em; color:#8890b5; margin:5px 0 0;">Nov 2021 P31 Q3(b) · June 2023 P31 Q4(b) · © UCLES</p>
+    </div>
+  </div>
+  <div class="toll" style="margin-top:8px;">
+    <span class="th">🧾 OUTSIDE THE EXAM HALL</span><br>
+    In <b>five years</b> of Paper 3 — every paper from 2021 to 2025 — a pointer is <span class="no">only ever declared</span>.
+    It is never followed, never dereferenced, never used. <span class="yes">Learn the one line and move on.</span><br>
+    Real pointer arithmetic is a <b>C</b> course. The famous one is Carnegie Mellon's
+    <b>15-213 / 18-213, <i>Introduction to Computer Systems</i></b> — one course, cross-listed between their
+    computer science and engineering schools, and widely held to be among the best undergraduate courses
+    anywhere. Its <b>Bomb Lab</b> hands you a compiled binary with no source code and asks you to defuse it
+    by reading the disassembly. <span class="accent2">If that sentence made you sit up, come and find me.</span>
+  </div>
+  <div class="dig">🕳 the billion-dollar mistake · why 64-bit is faster ↓</div>
+
+</section>
+
+<!-- ↓ H11 vertical -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.74em; margin:0 0 8px;">🕳 The billion-dollar mistake</h3>
+  <p style="font-size:.58em; line-height:1.65;">If a pointer holds an address, what does it hold before you have given it one?
+  In <b class="accent3">1965</b>, designing ALGOL W, <b>Tony Hoare</b> added the <b class="accent1">null reference</b> —
+  a pointer pointing at nothing — <i>"simply because it was so easy to implement."</i></p>
+  <p style="font-size:.58em; line-height:1.65;">In <b class="accent3">2009</b> he stood up at a conference and called it his
+  <b class="accent2">billion-dollar mistake</b>: forty years of crashes, vulnerabilities and repairs, from one convenient shortcut.</p>
+  <div class="rule accent1" style="font-size:.6em;">You will meet it within a fortnight. When a linked list is empty, its
+  first pointer has to point at <b>nothing</b> — and every operation you write has to survive that.</div>
+
+  <div class="rule accent3" style="font-size:.56em;">
+    <b>So where does it actually point?</b> At <span class="mono">0x0000000000000000</span> — address zero, all bits off.
+    And that is not an accident of laziness: the operating system deliberately leaves the <b>lowest page of memory
+    unmapped</b>, so following a null pointer touches an address that belongs to nobody and the hardware traps
+    instantly. <b class="accent1">The crash is engineered.</b> A null dereference is loud and immediate precisely so
+    that it cannot be quiet and gradual — a wrong answer you find in one second instead of one year.<br>
+    <span style="color:#98a0c0;">(Strictly, C only promises that writing <span class="mono">0</span> in your source
+    produces a null pointer — a few historical machines used a different bit pattern. On everything you will ever
+    touch, it is zero.)</span>
+  </div>
+
+</section>
+
+<!-- ↓ H11 vertical 2 — 64-bit -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.72em; margin:0 0 6px;">🕳 Why is a 64-bit machine faster?</h3>
+  <p style="font-size:.54em; line-height:1.55; margin:0 0 6px;">Not because 64 is bigger than 32. The honest answer is
+  three things, and the first one is <b class="accent3">exactly the instinct this slide just gave you</b>.</p>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.54em;">
+        <b>1 · Twice as many registers.</b> 32-bit x86 gave the compiler <b>8</b> general-purpose registers; x86-64 gives
+        <b>16</b>. When registers run out the compiler <b>spills</b> a variable to memory and loads it back later — and
+        every spill is a trip out to RAM. More registers, fewer trips. <b class="accent3">That is your intuition, and it
+        is the real mechanism</b> — the win is not "wider", it is <b>less going to memory</b>.
+      </div>
+      <div class="rule accent3" style="font-size:.54em;">
+        <b>2 · More than 4 GB.</b> 32 bits of address is 4 GiB, and a game that wants more must stream and re-stream.
+        <b>3 · Arguments travel in registers</b> in the 64-bit calling convention instead of being pushed on the stack.
+        Again: fewer memory references.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent2" style="margin-top:0; font-size:.54em;">
+        <b>And the part nobody mentions: it also costs you.</b> Every pointer doubles from 4 bytes to 8. A structure
+        full of pointers gets bigger, so <b>fewer of them fit in cache</b>, so you go to memory more often.
+        64-bit is a <b>trade</b>, not a free upgrade — which is why an ABI once existed to give you the 16 registers
+        while keeping 32-bit pointers.
+      </div>
+      <div class="toll" style="font-size:.52em;">
+        <span class="th">🧾 YOU CAN FEEL THIS ONE — HOLLOW KNIGHT</span><br>
+        The early builds and the later ones do not respond the same way. The <b>input latency</b> —
+        the gap between your thumb and the nail — got measurably shorter, and players noticed before
+        anyone explained why. <b class="accent1">The 64-bit build is what did it</b>, and Team Cherry
+        wrote it up rather than leaving players to guess.<br>
+        That last part is the bit worth keeping. Other things changed in those releases too, so
+        <b>"it got faster when X changed" is never by itself the same claim as "X made it faster"</b>
+        — the two only become the same claim when <b>somebody measures and says so.</b>
+        Here, somebody did.
+      </div>
+    </div>
+  </div>
+
+</section>
+</section>
+
+
+<!-- ============ H12 — set ============ -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.88em; margin:0 0 6px;">Set — and the statement nobody guesses</h2>
+  <div class="two-col">
+    <div>
+      <div class="rule" style="margin-top:0; font-size:.6em;">
+        <b>Unordered</b> — <span class="mono">{1,2,3}</span> and <span class="mono">{3,2,1}</span> are the <b>same set</b><br>
+        <b>No duplicates</b> · <b>all one type</b><br>
+        Its operations come from mathematics: <b>union</b>, <b>intersection</b>, <b>membership</b>
+      </div>
+      <div class="rule accent3" style="font-size:.58em;">
+        <b>Describe a set data type [3]:</b> a <b>composite</b> type · holding an <b>unordered</b> list of elements ·
+        <b>set-theory operations</b> such as union and intersection apply · <b>all elements of the same type</b>.
+      </div>
+    </div>
+    <div>
+      <p style="font-size:.5em; color:#8890b5; margin:0 0 3px; letter-spacing:.05em;"><b>THE EXAM FORM — AND IT IS TWO STATEMENTS</b></p>
+      <div class="ps"><span class="k">TYPE</span> SymbolSet = <span class="k">SET OF CHAR</span>
+<span class="k">DEFINE</span> Operators (<span class="v">'+'</span>, <span class="v">'-'</span>, <span class="v">'*'</span>, <span class="v">'/'</span>, <span class="v">'^'</span>) : SymbolSet</div>
+      <div class="rule accent2" style="font-size:.58em;">
+        <b>Half the marks live in the second line.</b> Write only the <code class="mono">TYPE</code> and you have
+        written half an answer — and this is the one declaration on the syllabus that nobody guesses.
+      </div>
+      <p style="font-size:.46em; color:#8890b5; margin:5px 0 0;">Nov 2024 P31 Q6(b) · June 2024 P32 Q3(b) · © UCLES</p>
+    </div>
+  </div>
+  <div class="dig">🕳 what a set is underneath ↓</div>
+
+</section>
+
+<!-- ↓ H12 vertical -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.72em; margin:0 0 6px;">🕳 What a set is underneath — the hash table</h3>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <p style="font-size:.54em; line-height:1.55; margin:0 0 6px;">Almost every real set is a <b class="accent1">hash table</b>.
+      Take an array of, say, 16 slots. Run the element through a <b>hash function</b> that turns it into a number,
+      take that number <span class="mono">MOD 16</span>, and <b>that is the slot it lives in</b>.</p>
+      <div class="ps" style="font-size:.5em; margin:4px 0;">"Chen"  <span class="v">&rarr;</span> hash <span class="v">&rarr;</span> 90514  <span class="v">&rarr;</span> MOD 16 <span class="v">&rarr;</span> slot <b>2</b>
+"Dara"  <span class="v">&rarr;</span> hash <span class="v">&rarr;</span> 41127  <span class="v">&rarr;</span> MOD 16 <span class="v">&rarr;</span> slot <b>7</b></div>
+      <p style="font-size:.54em; line-height:1.55; margin:0;">So <i>"is this in the set?"</i> is <b>one calculation and one look</b>,
+      whatever the size. Not a search. A <b class="accent3">calculated address</b>.</p>
+      <div class="rule accent2" style="font-size:.52em;">
+        <b>Two things land in the same slot?</b> That is a <b>collision</b>, it is completely normal, and the table
+        just keeps a little list there. A good hash function does not avoid collisions — it <b>spreads them evenly</b>.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.54em;">
+        <b>And now the set's two rules are one rule.</b><br>
+        <b>Order is gone</b> because the slot is decided by the hash, not by you.<br>
+        <b>Duplicates are impossible</b> because the same value hashes to the same slot every time, so the second copy
+        arrives where the first one already is.<br>
+        <b class="accent3">Those are not two facts about sets. They are one fact about hashing.</b>
+      </div>
+      <div class="diverge" style="font-size:.52em;">
+        <span class="dh">📐 SAME WORD, COMPLETELY DIFFERENT JOB</span><br>
+        You will meet <b>hashing</b> again in security, and it will look like the same idea. <b>It is not.</b><br>
+        <b>This</b> hash wants to be <b>fast</b> and to <b>spread things out</b>; collisions are fine and reversing it
+        is nobody's concern.<br>
+        A <b>cryptographic</b> hash wants to be <b>impossible to run backwards</b>, and a single collision that anyone
+        can find is treated as the death of the algorithm.<br>
+        <b class="accent2">One shares out. One locks up.</b> Do not let the shared word talk you into thinking they are relatives.
+      </div>
+    </div>
+  </div>
+  <p style="font-size:.5em; color:#98a0c0; margin-top:6px;">You will build one of these yourself later in the year — twice.
+  Once when a <b>dictionary</b> needs somewhere to live, and once when a <b>file</b> needs to find one record among two hundred thousand without reading them all.</p>
+
+</section>
+</section>
+
+
+<!-- ============ H13 — class ============ -->
+<section data-background-color="#151B3C" class="dk center">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.92em; margin:0 0 14px;">The fifth one</h2>
+  <p style="font-size:.86em; line-height:1.5; margin:0 0 14px;">A <b class="accent3">class</b> is a record<br>that owns its verbs.</p>
+  <div class="rule accent2" style="font-size:.6em; max-width:820px; margin:0 auto;">
+    <code class="mono">TStudent</code> knows what a student <b>is</b> — a name and a grade.<br>
+    It knows nothing about what a student <b>does</b>. A class is what happens when you put those in the same box.
+  </div>
+  <div class="lane" data-lang="java">
+    <div class="rule accent3" style="font-size:.58em; max-width:820px; margin:12px auto 0;">
+      <b>And you have been writing one for a year.</b> Every program you have ever run began
+      <code class="mono">public class Main</code>. Nobody told you what the word meant.
+    </div>
+  </div>
+  <p style="font-size:.5em; color:#98a0c0; margin-top:14px;">Not today. Four lessons from now, and it takes two of them.</p>
+
+</section>
+
+<!-- ============ H14 — THE EXAM QUESTION ============ -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.84em; margin:0 0 3px;">The question, whole — <span class="accent2">10 marks</span></h2>
+  <p style="font-size:.48em; color:#8890b5; margin:0 0 7px;">This exact chain: Nov 2022 P32 Q4 · June 2025 P31 Q1 · Nov 2025 P31 Q1. It was <b>Question 1</b> in both 2025 sittings.</p>
+  <div class="rule navy" style="font-size:.56em; margin:0 0 7px;">
+    <b>A program manages regular flights at an airport.</b> The aircraft used are C300, C350, D242, E757 and X380.
+    Each flight has a flight number (letters and digits), a destination, a date of departure, and the type of aircraft used.
+  </div>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <p style="font-size:.46em; color:#8890b5; margin:0 0 2px;"><b>(a) the enumerated type &nbsp;<span class="accent2">[2]</span></b> &nbsp;<i>Tool: TYPE name = (list)</i></p>
+      <div class="ps" style="font-size:.5em; margin:2px 0 6px;"><span class="k">TYPE</span> Aircraft = (C300, C350, D242, E757, X380)</div>
+      <p style="font-size:.46em; color:#8890b5; margin:0 0 2px;"><b>(b) the record &nbsp;<span class="accent2">[4]</span></b> &nbsp;<i>Tool: TYPE / DECLARE each field / ENDTYPE</i></p>
+      <div class="ps" style="font-size:.5em; margin:2px 0 0;"><span class="k">TYPE</span> Flight
+    <span class="k">DECLARE</span> FlightNumber  : <span class="k">STRING</span>
+    <span class="k">DECLARE</span> Destination   : <span class="k">STRING</span>
+    <span class="k">DECLARE</span> DepartureDate : <span class="k">DATE</span>
+    <span class="k">DECLARE</span> AircraftType  : Aircraft   <span class="c">&lt;- part (a)</span>
+<span class="k">ENDTYPE</span></div>
+    </div>
+    <div>
+      <p style="font-size:.46em; color:#8890b5; margin:0 0 2px;"><b>(c)(i) one variable of it &nbsp;<span class="accent2">[1]</span></b></p>
+      <div class="ps" style="font-size:.5em; margin:2px 0 6px;"><span class="k">DECLARE</span> Flight1 : Flight</div>
+      <p style="font-size:.46em; color:#8890b5; margin:0 0 2px;"><b>(c)(ii) store one flight &nbsp;<span class="accent2">[3]</span></b></p>
+      <div class="ps" style="font-size:.5em; margin:2px 0 0;">Flight1.FlightNumber  <span class="v">&larr;</span> <span class="v">"XA782"</span>
+Flight1.Destination   <span class="v">&larr;</span> <span class="v">"Cambridge"</span>
+Flight1.DepartureDate <span class="v">&larr;</span> <span class="v">12/12/2022</span>
+Flight1.AircraftType  <span class="v">&larr;</span> C350        <span class="c">&lt;- no quotes!</span></div>
+      <div class="rule accent2" style="font-size:.52em; margin-top:7px;">
+        <b>C350 is a value of a type, not a string.</b> Quote it and the mark is gone.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ H15 — how it is marked ============ -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.86em; margin:0 0 8px;">How it is marked — and the five ways it is lost</h2>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <table class="mk">
+        <tr><th>item</th><th style="width:14%;">mks</th><th>the halves</th></tr>
+        <tr><td>enumerated</td><td class="m">2</td><td><code>TYPE X =</code> · <code>(values)</code></td></tr>
+        <tr><td>pointer</td><td class="m">2</td><td><code>TYPE X = ^</code> · the target type</td></tr>
+        <tr><td>record</td><td class="m">4</td><td><code>TYPE</code>+<code>ENDTYPE</code> · <code>DECLARE</code> on every field · fields right</td></tr>
+        <tr><td>set</td><td class="m">4</td><td><code>TYPE X = SET OF …</code> · <code>DEFINE Y (…) : X</code></td></tr>
+        <tr><td>a variable</td><td class="m">1</td><td><code>DECLARE V : X</code></td></tr>
+      </table>
+      <div class="rule accent1" style="font-size:.56em;">
+        Every declaration is marked in <b>halves</b>. <b class="accent2">So write the half you know.</b>
+        A blank line scores nothing; half a line scores half.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent2" style="margin-top:0; font-size:.55em;">
+        <b>1 · Quoting an enumerated value.</b> <code class="mono">&larr; "C350"</code> is wrong. It is not a string.<br>
+        <b>2 · Declaring the field as STRING</b> when part (a) just made you a type for it. <i>The most expensive mistake on the question.</i>
+      </div>
+      <div class="rule accent3" style="font-size:.55em;">
+        <b>3 · A set with no <code class="mono">DEFINE</code></b> — half the marks left on the table.<br>
+        <b>4 · Forgetting a pointer may point at your own type</b> — <code class="mono">^Parts</code>, not just <code class="mono">^INTEGER</code>.<br>
+        <b>5 · Assuming enumerated values look like words.</b> <code class="mono">TYPE Prime = (2, 3, 5, 7, 11)</code> is a real mark scheme. They are still names.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ H16 — GAME ============ -->
+<section data-background-color="#151B3C" class="growslide dk">
+  <h2 style="font-size:.8em; margin:0 0 8px;">🎮 The Type Designer</h2>
+  <div class="g-wrap" id="gw">
+    <div class="g-top">
+      <span class="g-stage" id="g-stage">Stage 1</span>
+      <span class="g-score" id="g-score"></span>
+      <div class="g-prog" id="g-prog"></div>
+      <button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button>
+    </div>
+    <div class="g-q" id="g-q"></div>
+    <div id="g-body"></div>
+    <div class="g-say" id="g-say">&nbsp;</div>
+  </div>
+
+</section>
+
+<!-- ============ H17 — summary ============ -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <h2 style="font-size:.86em; margin:0 0 10px;">You now own two things</h2>
+  <div class="two-col">
+    <div class="rule accent1" style="margin-top:0; font-size:.62em;">
+      <b>A record</b> — several named fields under one name.<br>
+      <b>A pointer</b> — a value that is an address.
+    </div>
+    <div class="rule accent3" style="margin-top:0; font-size:.62em;">
+      That is <b>everything you need</b> to build a data structure the language does not give you.
+    </div>
+  </div>
+  <div class="rule accent2 fragment" style="font-size:.64em;">
+    <b>And here is the shape of this whole year.</b> Last year you were asked to <i>describe</i> a stack, a queue
+    and a linked list, and to say where you would use one. Your syllabus said, in as many words,
+    <i>"candidates will not be required to write pseudocode for these structures."</i>
+    <b class="accent3">That sentence is gone.</b>
+  </div>
+  <p class="center fragment" style="font-size:.72em; margin-top:16px;">
+    <b>AS told you what they are.<br>A2 makes you build them.</b>
+  </p>
+  <p class="center" style="font-size:.5em; color:#98a0c0; margin-top:10px;">Next lesson: a stack and a queue, from nothing. 🍦 <span class="mono">challenge_A01_Records</span> is live.</p>
+
+</section>
+
+<!-- ↓ vocabulary -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.78em; margin:0 0 10px;">词汇 Vocabulary</h3>
+  <table class="mk" style="font-size:.56em; color:var(--ice);">
+    <tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
+    <tr><td>user-defined data type</td><td>自定义数据类型</td><td>a type you build because the built-in ones do not fit</td></tr>
+    <tr><td>non-composite</td><td>非复合类型</td><td>defined <b>without</b> referring to another type — enumerated, pointer</td></tr>
+    <tr><td>composite</td><td>复合类型</td><td>built <b>out of</b> other types — record, set, class</td></tr>
+    <tr><td>enumerated</td><td>枚举类型</td><td>a value from a list you wrote yourself</td></tr>
+    <tr><td>pointer</td><td>指针</td><td>a variable whose value is an <b>address</b></td></tr>
+    <tr><td>record</td><td>记录</td><td>named fields of different types, under one identifier</td></tr>
+    <tr><td>set</td><td>集合</td><td>unordered, no duplicates, one type — and it needs <b>DEFINE</b></td></tr>
+  </table>
+
+</section>
+
+</div></div>
+<button id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</button>
+<div id="llmhelp"><span class="x" id="llmhelp-x">✕</span><b>Live marking needs the marking server.</b><br>
+Two steps, on the teacher's Mac:<br>1. open the <b>CS_Materials</b> folder<br>2. double-click <b>Start-LLM-Marking.command</b><br>
+This chip lights up by itself a few seconds after the server starts — no reload needed. Without it, the pattern marks and the machine column still work; the reader adds the marker that reads for <i>meaning</i>.</div>
+<div id="py-chip">🐍 waking Python…</div>
+<div id="langsel"><div id="l-java" class="on">Java</div><div id="l-py">Python</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+/* ===== Python runtime (Pyodide) — the audited house harness ===== */
+var pyPromise = null, pyBusy = false, currentOut = null, activeInput = null;
+
+function setRunButtons(enabled, label){
+  document.querySelectorAll('.pycell:not(.java) .pyrun').forEach(function(b){
+    b.disabled = !enabled;
+    b.textContent = enabled ? '▶ Run' : (label || '… running');
+  });
+}
+window.__pyInput = function(promptText){
+  return new Promise(function(resolve, reject){
+    var out = currentOut;
+    if(!out){ resolve(''); return; }
+    var row = document.createElement('span');
+    var lbl = document.createElement('span'); lbl.className='pyin-lbl'; lbl.textContent = promptText;
+    var inp = document.createElement('input'); inp.className='pyin';
+    inp.setAttribute('autocomplete','off'); inp.spellcheck = false;
+    row.appendChild(lbl); row.appendChild(inp); out.appendChild(row);
+    activeInput = {row: row, reject: reject};
+    setTimeout(function(){ inp.focus(); }, 60);
+    inp.addEventListener('keydown', function(ev){
+      if(ev.key === 'Enter'){ ev.stopPropagation(); var v=inp.value; row.remove(); activeInput=null; resolve(v); }
+    });
+  });
+};
+function stopPy(){
+  if(activeInput){ var r=activeInput.reject; activeInput.row.remove(); activeInput=null; r(new Error('__pyStop__')); }
+}
+function bootPython(){
+  if(pyPromise) return pyPromise;
+  pyPromise = loadPyodide().then(function(py){
+    py.runPython(
+      "import builtins, js\n" +
+      "async def __ainput(prompt=''):\n" +
+      "    v = await js.window.__pyInput(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "def _input_fallback(prompt=''):\n" +
+      "    v = js.window.prompt(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "builtins.input = _input_fallback\n" +
+      "builtins.__ainput = __ainput\n");
+    var chip=document.getElementById('py-chip');
+    chip.textContent='🐍 Python ready'; chip.className='ready';
+    if(!pyBusy) setRunButtons(true);
+    return py;
+  });
+  return pyPromise;
+}
+function runPy(code, outEl, doneCb){
+  if(pyBusy) return;
+  pyBusy = true; setRunButtons(false); currentOut = outEl;
+  outEl.style.display='block'; outEl.className='pyout'; outEl.textContent='';
+  var crashed=false, errLine='', sawOutput=false;
+  bootPython().then(function(py){
+    function emit(s){ sawOutput = true; outEl.appendChild(document.createTextNode(s + '\n')); }
+    py.setStdout({batched: emit});
+    py.setStderr({batched: emit});
+    var src = code.replace(/\binput\s*\(/g, 'await __ainput(');
+    var ns = py.toPy({});
+    return py.runPythonAsync(src, {globals: ns})
+      .catch(function(e){
+        crashed = true;
+        var lines = String(e.message||e).trim().split('\n').filter(function(l){ return l.trim(); });
+        errLine = lines[lines.length-1] || 'Error';
+        if(String(e.message||e).indexOf('__pyStop__') !== -1) errLine = '__stopped__';
+      })
+      .finally(function(){ ns.destroy(); });
+  }).then(function(){
+    if(activeInput){ activeInput.row.remove(); activeInput = null; }
+    if(!sawOutput && !crashed) outEl.textContent = '(no output)';
+    if(crashed){
+      var sp=document.createElement('span'); sp.className='crash';
+      sp.textContent = (errLine==='__stopped__') ? '⏹ stopped' : '💥 ' + errLine;
+      outEl.appendChild(sp);
+    }
+    pyBusy=false; setRunButtons(true); currentOut=null;
+    if(doneCb) doneCb(crashed, outEl.textContent, errLine);
+  });
+}
+
+/* ===== cells: Python runs live, Java replays a real build-time run ===== */
+function initPyCells(){
+  document.querySelectorAll('.pycell').forEach(function(cell){
+    var isJava = cell.classList.contains('java');
+    var srcEl  = cell.querySelector('.pysrc');
+    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
+    var capOut = cell.getAttribute('data-out') || '';
+    var isErr  = cell.getAttribute('data-err') === '1';
+    cell.innerHTML='';
+
+    var bar=document.createElement('div'); bar.className='pybar';
+    var dots=document.createElement('div'); dots.className='pydots';
+    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
+    bar.appendChild(dots);
+
+    var run=document.createElement('button'); run.className='pyrun';
+    run.textContent = isJava ? '▶ Run' : '⏳ waking…';
+    run.disabled = !isJava;
+    bar.appendChild(run);
+
+    if(!isJava){
+      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
+      stp.title='stop a program waiting for input';
+      stp.addEventListener('click', stopPy);
+      bar.appendChild(stp);
+    }
+    var st=document.createElement('span'); st.className='pystate' + (isJava?' cap':'');
+    st.textContent = isJava ? '☕ captured from a real run' : '🐍 editable · runs here';
+    bar.appendChild(st);
+
+    var ta=document.createElement('textarea'); ta.className='pyta';
+    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
+    if(isJava) ta.readOnly = true;
+    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
+
+    cell.appendChild(bar);
+    if(cell.classList.contains('side')){
+      var row=document.createElement('div'); row.className='pyrow';
+      row.appendChild(ta); row.appendChild(out);
+      out.style.display='block'; out.textContent='press ▶ Run';
+      cell.appendChild(row);
+    } else {
+      cell.appendChild(ta); cell.appendChild(out);
+    }
+
+    if(isJava){
+      run.addEventListener('click', function(){
+        out.style.display='block';
+        out.className='pyout cap' + (isErr?' err':'');
+        out.textContent = capOut;
+      });
+    } else {
+      run.addEventListener('click', function(){ runPy(ta.value, out); });
+    }
+  });
+  bootPython();
+}
+function autoSizePyTextareas(scope){
+  (scope||document).querySelectorAll('.pyta').forEach(function(ta){
+    if(ta.offsetParent === null) return;         /* hidden lane: scrollHeight is 0 */
+    ta.style.height='auto';
+    ta.style.height=(ta.scrollHeight+4)+'px';
+  });
+}
+
+/* ===== the language switch ===== */
+function setLang(l){
+  document.body.setAttribute('data-lang', l);
+  document.getElementById('l-java').className = (l==='java') ? 'on' : '';
+  document.getElementById('l-py').className   = (l==='py')   ? 'on' : '';
+  try{ localStorage.setItem('a2lang', l); }catch(e){}
+  setTimeout(function(){ autoSizePyTextareas(document); }, 20);
+}
+document.getElementById('l-java').addEventListener('click', function(){ setLang('java'); });
+document.getElementById('l-py').addEventListener('click', function(){ setLang('py'); });
+
+/* ===== 🎮 The Type Designer ===== */
+var G = {i:0, score:0, locked:false, earned:{}};
+
+/* The teacher walks backwards and forwards through the stages, so a stage must
+   be answerable twice without being paid for twice. Record what each stage
+   earned and REPLACE it, rather than adding to a running total. */
+function gAwardAt(idx, n){
+  G.earned[idx] = n;
+  /* the total is DERIVED from the ledger, never accumulated -- so a stage can be
+     answered any number of times, and nothing can leave the two disagreeing */
+  var t = 0;
+  for(var k in G.earned) if(G.earned.hasOwnProperty(k)) t += G.earned[k];
+  G.score = t;
+  var sc = document.getElementById('g-score');
+  if(sc) sc.textContent = G.score > 0 ? ('score ' + G.score) : '';
+}
+function gAward(n){ gAwardAt(G.i, n); }
+var STAGES = [
+ { name:'Stage 1 · spot the smell',
+   q:'Four programs. <b>One of them has two things that must stay in step.</b> Which one is the bug waiting to happen?',
+   opts:[
+     {t:'<span class="mono">total ← 0<br>FOR i ← 1 TO 30<br>&nbsp; total ← total + score[i]</span>', ok:false,
+      why:'One array, read only. Nothing to fall out of step.'},
+     {t:'<span class="mono">name[i] ← "Chen"<br>grade[i] ← 58</span>', ok:true,
+      why:'Two arrays, one index, and the connection between them exists only in your head. This is the hook.'},
+     {t:'<span class="mono">FOR i ← 1 TO 8<br>&nbsp; board[i] ← EMPTY</span>', ok:false,
+      why:'A single array being filled. Nothing paired.'},
+     {t:'<span class="mono">IF temp > 30<br>&nbsp; THEN OUTPUT "hot"</span>', ok:false,
+      why:'One variable, one test. No structure at all.'}
+   ]},
+ { name:'Stage 2 · pick the type',
+   q:'A traffic light can be <b>red, amber or green</b> and nothing else. Which user-defined type?',
+   opts:[
+     {t:'enumerated', ok:true, why:'Three named values, listed by you, and no fourth one can be written down.'},
+     {t:'record', ok:false, why:'A record bundles <i>several fields</i>. A light is one value, not a bundle.'},
+     {t:'set', ok:false, why:'A set is a collection you test membership in. The light is in exactly one state.'},
+     {t:'pointer', ok:false, why:'A pointer holds an address. Nothing here is about where something lives.'}
+   ]},
+ { name:'Stage 3 · write it',
+   q:'Write the pseudocode statement to declare the enumerated data type <b>Grade</b>, to hold the values:<br><span class="mono">A, B, C, D, E, U</span>',
+   ta:'', rows:2, total:2,
+   mps:[ {re:/TYPE\s+Grade\s*=/i,                                  pts:1, label:'<code>TYPE Grade =</code>'},
+         {re:/\(\s*A\s*,\s*B\s*,\s*C\s*,\s*D\s*,\s*E\s*,\s*U\s*\)/i, pts:1, label:'the six values, in brackets, comma-separated'} ],
+   model:'TYPE Grade = (A, B, C, D, E, U)' },
+ { name:'Stage 4 · the trap round',
+   q:'Four answers, each one mark short. <b>Which one has quoted an enumerated value?</b>',
+   opts:[
+     {t:'<span class="mono">Flight1.AircraftType ← "C350"</span>', ok:true,
+      why:'C350 is a value of the type Aircraft, not a string. The quotes cost the mark.'},
+     {t:'<span class="mono">DECLARE Flight1 : Flight</span>', ok:false,
+      why:'Correct — this is exactly how you declare a variable of a record type.'},
+     {t:'<span class="mono">Flight1.Destination ← "Cambridge"</span>', ok:false,
+      why:'Correct — Destination <i>is</i> a STRING, so the quotes belong.'},
+     {t:'<span class="mono">TYPE Aircraft = (C300, C350)</span>', ok:false,
+      why:'Correct — this is the enumerated declaration itself.'}
+   ]},
+ { name:'Stage 5 · BOSS · one chess piece',
+   boss:true, total:10,
+   q:'A program stores one chess piece. A piece has a <b>kind</b> (King, Queen, Rook, Bishop, Knight or Pawn), a <b>file</b> (a single letter), a <b>rank</b> (a whole number) and whether it <b>has moved</b>.',
+   parts:[
+     {lbl:'(a) the enumerated type <b>Piece</b> &nbsp;<span class="accent2">[2]</span>', rows:2,
+      mps:[{re:/TYPE\s+Piece\s*=/i, pts:1, label:'<code>TYPE Piece =</code>'},
+           {re:/\(\s*King\s*,\s*Queen\s*,\s*Rook\s*,\s*Bishop\s*,\s*Knight\s*,\s*Pawn\s*\)/i, pts:1, label:'the six kinds in brackets'}],
+      model:'TYPE Piece = (King, Queen, Rook, Bishop, Knight, Pawn)'},
+     {lbl:'(b) the record <b>ChessPiece</b> &nbsp;<span class="accent2">[4]</span>', rows:6,
+      mps:[{re:/TYPE\s+ChessPiece/i, pts:1, label:'<code>TYPE ChessPiece</code> … <code>ENDTYPE</code>', also:/ENDTYPE/i},
+           {re:/DECLARE[\s\S]*DECLARE[\s\S]*DECLARE[\s\S]*DECLARE/i, pts:1, label:'<code>DECLARE</code> on every one of the four fields'},
+           {re:/Kind\s*:\s*Piece/i, pts:1, label:'<code>Kind : Piece</code> — using part (a), <b>not</b> STRING'},
+           {re:/:\s*CHAR/i, pts:1, label:'<code>CHAR</code> for the file, <code>INTEGER</code> for the rank, <code>BOOLEAN</code> for HasMoved', also:/:\s*INTEGER[\s\S]*:\s*BOOLEAN|:\s*BOOLEAN[\s\S]*:\s*INTEGER/i}],
+      model:'TYPE ChessPiece\n    DECLARE Kind     : Piece\n    DECLARE File     : CHAR\n    DECLARE Rank     : INTEGER\n    DECLARE HasMoved : BOOLEAN\nENDTYPE'},
+     {lbl:'(c) declare one variable, <b>WhiteQueen</b> &nbsp;<span class="accent2">[1]</span>', rows:2,
+      mps:[{re:/DECLARE\s+WhiteQueen\s*:\s*ChessPiece/i, pts:1, label:'<code>DECLARE WhiteQueen : ChessPiece</code>'}],
+      model:'DECLARE WhiteQueen : ChessPiece'},
+     {lbl:'(d) store: kind Queen, file d, rank 1, not yet moved &nbsp;<span class="accent2">[3]</span>', rows:5,
+      mps:[{re:/WhiteQueen\.Kind\s*(<-|←|<--)?\s*=?\s*Queen(?!")/i, pts:1, label:'<code>Kind ← Queen</code> — <b>no quotes</b>'},
+           {re:/File\s*(<-|←)\s*'d'/i, pts:1, label:"<code>File ← 'd'</code> and <code>Rank ← 1</code>", also:/Rank\s*(<-|←)\s*1/i},
+           {re:/HasMoved\s*(<-|←)\s*FALSE/i, pts:1, label:'<code>HasMoved ← FALSE</code>'}],
+      model:"WhiteQueen.Kind     ← Queen\nWhiteQueen.File     ← 'd'\nWhiteQueen.Rank     ← 1\nWhiteQueen.HasMoved ← FALSE"}
+   ]}
+];
+
+function gEl(id){ return document.getElementById(id); }
+function gProg(){
+  var p=gEl('g-prog'); p.innerHTML='';
+  STAGES.forEach(function(_,k){
+    var i=document.createElement('i');
+    i.className = k<G.i ? 'done' : (k===G.i ? 'cur' : '');
+    p.appendChild(i);
+  });
+}
+function gSay(html, cls){ var s=gEl('g-say'); s.innerHTML=html||'&nbsp;'; s.className='g-say'+(cls?' '+cls:''); if(G.llmBusy) gWaiting(true); }
+function markOne(ans, mps){
+  var got=0, rows=[];
+  mps.forEach(function(m){
+    var ok = m.re.test(ans) && (!m.also || m.also.test(ans));
+    if(ok) got += m.pts;
+    rows.push('<li><span class="'+(ok?'y':'n')+'">'+(ok?'✓':'✗')+'</span> '+m.label+' <b>['+m.pts+']</b></li>');
+  });
+  return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
+}
+function gDraw(){
+  var s=STAGES[G.i];
+  gEl('g-stage').textContent = s.name;
+  gEl('g-score').textContent = G.score>0 ? ('score ' + G.score) : '';
+  gNavState();
+  gEl('g-q').innerHTML = s.q;
+  var b=gEl('g-body'); b.innerHTML=''; G.locked=false; gSay('');
+  gProg();
+
+  if(s.opts){
+    var wrap=document.createElement('div'); wrap.className='g-opts';
+    s.opts.forEach(function(o){
+      var btn=document.createElement('button'); btn.className='g-b'; btn.style.flex='1 1 44%';
+      btn.innerHTML=o.t;
+      btn.addEventListener('click', function(){
+        if(G.locked) return;
+        if(o.ok){
+          G.locked=true; btn.className='g-b yes'; gAward(1);
+          gSay('✓ ' + o.why + ' <span style="opacity:.6">— press next → when you are ready</span>', 'ok'); /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */
+        } else {
+          btn.className='g-b no';
+          gSay('✗ ' + o.why, 'bad');
+        }
+      });
+      wrap.appendChild(btn);
+    });
+    b.appendChild(wrap);
+  } else if(s.boss){
+    /* two columns — four stacked textareas plus their feedback overflowed a 720 stage */
+    var grid=document.createElement('div'); grid.className='g-grid';
+    s.parts.forEach(function(p, idx){
+      var col=document.createElement('div');
+      var lab=document.createElement('p'); lab.className='g-lbl'; lab.innerHTML=p.lbl;
+      var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=p.rows; ta.spellcheck=false;
+      ta.id='boss'+idx;
+      col.appendChild(lab); col.appendChild(ta); grid.appendChild(col);
+    });
+    b.appendChild(grid);
+    var sub=document.createElement('button'); sub.className='g-sub'; sub.textContent='mark it, out of 10';
+    sub.addEventListener('click', function(){
+      var total=0, cells='';
+      s.parts.forEach(function(p, idx){
+        var ans=gEl('boss'+idx).value;
+        var r=markOne(ans, p.mps);
+        total+=r.got;
+        /* THE SCORE NEVER APPEARS WITHOUT THE ANSWER: the results replace the
+           inputs, so the student's own text has to be re-rendered beside the
+           marks or a tick points at nothing they can still see. */
+        var esc=String(ans).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        cells += '<div><p class="g-lbl">'+p.lbl+' &mdash; <b class="'+(r.got===p.mps.reduce(function(a,m){return a+m.pts;},0)?'accent1':'accent2')+'">'
+              +  r.got+'</b></p><pre class="g-ans">'+(esc.trim()||'(nothing written)')+'</pre>'+r.html+'</div>';
+      });
+      gAward(total);
+      b.innerHTML = '<div class="g-res"><div class="g-tot">'+total+' / 10</div>'
+                  + '<div class="g-grid">'+cells+'</div>'
+                  + '<div id="g-llm" class="g-llm"></div></div>';
+      var joined = s.parts.map(function(p, i){ return '(' + 'abcd'[i] + ') ' + gEl('boss' + i).value; }).join('\n');
+      llmMark(joined, 'py', total, 10, null, document.getElementById('g-llm'), 'A01-boss', 'Boss');
+      gSay(total>=8 ? 'Strong. Press next → to finish.' : 'Read the ✗ lines — press next → to finish.',
+           total>=8?'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub);
+  } else {
+    var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=s.rows||2; ta.spellcheck=false;
+    b.appendChild(ta);
+    var sub2=document.createElement('button'); sub2.className='g-sub'; sub2.textContent='mark it';
+    sub2.addEventListener('click', function(){
+      var r=markOne(ta.value, s.mps);
+      gAward(r.got);
+      gSay('<b>'+r.got+' / '+s.total+'</b>'+r.html+
+           '<div style="margin-top:5px; font-size:.92em;">model answer: <span class="mono">'+s.model+'</span></div>'+
+           '<div style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           r.got===s.total?'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub2);
+  }
+}
+function gBack(){
+  if(G.i <= 0) return;
+  G.locked = true;
+  G.i--;
+  gDraw();
+}
+function gNavState(){
+  var b = document.getElementById('g-back');
+  if(b) b.style.visibility = (G.i > 0) ? '' : 'hidden';
+}
+function gSkip(){
+  G.locked = true;
+  G.i++;
+  if(G.i >= STAGES.length){ gFinish(); } else { gDraw(); }
+}
+/* Bind immediately. In the A2-era decks this whole block lives inside the
+   Reveal.initialize().then() closure, which resolves AFTER DOMContentLoaded has
+   already fired -- so a DOMContentLoaded listener registered here never runs and
+   the button silently does nothing. */
+/* Reachable from the inline onclick no matter what scope this block is in.
+   (An inline handler resolves names GLOBALLY, so a function declared inside the
+   Reveal.initialize().then() closure would never be found from the attribute.) */
+window.gReplay = function(){
+  G.i = 0; G.score = 0; G.earned = {};
+  var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
+  var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
+  gDraw();
+};
+function gSkipBind(){
+  var b = document.getElementById('g-skip'), k = document.getElementById('g-back');
+  if(!b){ document.addEventListener('DOMContentLoaded', gSkipBind); return; }
+  if(!b.__bound){ b.__bound = true;
+    b.addEventListener('click', function(ev){ ev.stopPropagation(); gSkip(); }); }
+  if(k && !k.__bound){ k.__bound = true;
+    k.addEventListener('click', function(ev){ ev.stopPropagation(); gBack(); }); }
+  gNavState();
+}
+gSkipBind();
+function gNextOnce(){
+  G.i++;
+  if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
+}
+function gFinish(){
+  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
+  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
+  gEl('g-stage').textContent='done';
+  gEl('g-q').innerHTML='';
+  gEl('g-prog').innerHTML='';
+  gEl('g-score').textContent='';
+  gEl('g-body').innerHTML=
+    '<div class="g-fin"><div class="big">'+G.score+'</div>'+
+    '<p style="margin:6px 0 0;">Every mark on that boss came from a real mark scheme.</p>'+
+    '<p style="margin:6px 0 0; font-size:.9em; color:#5b6488;">The two that cost the most were the same two as in the exam: '+
+    '<b>quoting an enumerated value</b>, and <b>declaring the Kind field as STRING</b> when part (a) had just made you a type for it.</p>'+
+    '<button class="g-sub" onclick="gReplay()">play again</button></div>';
+  gSay('');
+}
+
+/* ═══ LIVE LLM MARKING — ported 2026-08-24. The key is never in this file:
+   grade-server.py holds it in .env on the teacher's Mac and marks on request;
+   the absence of the process is the off-switch. ═══ */
+var LLM = { url:'http://127.0.0.1:8788', available:false, on:true };
+function llmChip(){
+  var c = document.getElementById('llmchip'); if(!c) return;
+  if(!LLM.available){ c.className='off'; c.textContent='⚡ no LLM — click for help'; return; }
+  c.className = LLM.on ? 'on' : 'off';
+  c.textContent = LLM.on ? '⚡ LLM marking on' : '⚡ LLM marking off';
+}
+function llmHelp(show){ var h = document.getElementById('llmhelp'); if(h) h.style.display = show ? 'block' : 'none'; }
+function llmDetect(cb){
+  var ctl = new AbortController(); var tm = setTimeout(function(){ ctl.abort(); }, 1200);
+  fetch(LLM.url + '/ping', {signal: ctl.signal, cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ clearTimeout(tm); LLM.available = !!(j && j.ok && j.key); llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
+    .catch(function(){ clearTimeout(tm); LLM.available = false; llmChip(); if(cb) cb(); });
+}
+function llmWatch(){ setInterval(function(){ if(LLM.available || document.hidden) return; llmDetect(); }, 5000); }
+function llmBind(){
+  var c = document.getElementById('llmchip'); if(!c || c.__bound) return; c.__bound = true;
+  c.addEventListener('click', function(){
+    if(!LLM.available){ c.textContent='⚡ looking for the server…'; llmHelp(true); llmDetect(); return; }
+    LLM.on = !LLM.on; llmChip();
+  });
+  var x = document.getElementById('llmhelp-x'); if(x) x.addEventListener('click', function(){ llmHelp(false); });
+  llmDetect(); llmWatch();
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
+else llmBind();
+
+function gPick(idx, n, btn){
+  var s = STAGES[idx]; n = Math.min(n, s.total);
+  gAwardAt(idx, n);
+  if(idx === G.i){ var tot = document.querySelector('#g-body .g-tot'); if(tot) tot.textContent = n + ' / ' + s.total; }
+  if(btn){
+    Array.prototype.forEach.call(btn.parentNode.querySelectorAll('.g-pick'), function(x){ x.classList.remove('on'); });
+    btn.classList.add('on');
+  }
+}
+function pickButtons(r, l){
+  var idx = G.i, s = STAGES[idx]; r = Math.min(r, s.total); l = Math.min(l, s.total);
+  if(r === l) return '';
+  return '<div class="g-pickrow">Which mark stands? '
+       + '<button class="g-pick" onclick="gPick(' + idx + ', ' + r + ', this)">keep the pattern\u2019s ' + r + '</button>'
+       + '<button class="g-pick" onclick="gPick(' + idx + ', ' + l + ', this)">take the reader\u2019s ' + l + '</button>'
+       + '<span style="font-size:.85em; color:#8890b5;">\u2014 the total moves with your choice.</span></div>';
+}
+function consensusHtml(regexRaw, llmAwarded, ofPoints, behaviour){
+  var gap = Math.abs(regexRaw - llmAwarded);
+  var beh = null;
+  if(behaviour && behaviour.indexOf('|') > -1){
+    var parts = behaviour.split('||')[0].split('|');
+    var ok = parts.filter(function(p){ return p.charAt(0) === '1'; }).length;
+    beh = {ok: ok, of: parts.length};
+  }
+  var rows = '<b>pattern ' + regexRaw + '/' + ofPoints + '</b> &nbsp;\u00b7&nbsp; <b>reader ' + llmAwarded + '/' + ofPoints + '</b>'
+           + (beh ? ' &nbsp;\u00b7&nbsp; <b>ran ' + beh.ok + '/' + beh.of + '</b>' : '');
+  if(gap > 1)
+    return '<div class="g-cons split">' + rows + ' \u2014 <b>the two markers disagree by ' + gap + '.</b> '
+         + 'The pattern-matcher looks for shapes and the reader looks for meaning, so a gap this big '
+         + 'usually means one of them is being fooled. <b>Worth a human eye</b>.' + pickButtons(regexRaw, llmAwarded) + '</div>';
+  if(!beh)
+    return '<div class="g-cons agree">' + rows + ' \u2014 the two markers agree.</div>';
+  var markFrac = (regexRaw + llmAwarded) / (2 * Math.max(1, ofPoints));
+  var behFrac  = beh.ok / Math.max(1, beh.of);
+  if(behFrac - markFrac >= 0.3)
+    return '<div class="g-cons split">' + rows + ' \u2014 <b>it works, and it still scores ' + regexRaw + '.</b> '
+         + 'The machine is satisfied; both markers refused it anyway, because the question asked for a particular '
+         + '<b>method</b>. On this paper that is most of the marks.</div>';
+  if(behFrac >= 1 && markFrac >= 0.6)
+    return '<div class="g-cons agree">' + rows + ' \u2014 <b>all three agree.</b> Two markers read your code the same way '
+         + 'and it does the right thing when run. As certain as marking gets.</div>';
+  if(markFrac >= 0.6)
+    return '<div class="g-cons split">' + rows + ' \u2014 <b>the two markers agree, the machine does not.</b> '
+         + 'The method is visibly there, so an examiner would pay for it \u2014 but it does not work yet. '
+         + 'You would score here and still have a bug to find.</div>';
+  return '<div class="g-cons split">' + rows + ' \u2014 <b>all three agree, and none of them are happy.</b> '
+       + 'Start from the first \u2717 on the left.</div>';
+}
+function gWaiting(on){
+  G.llmBusy = !!on;
+  var say = gEl('g-say'); if(!say) return;
+  var h = document.getElementById('g-nexthint');
+  if(!h){ h = document.createElement('div'); h.id = 'g-nexthint'; h.style.marginTop = '5px'; say.appendChild(h); }
+  if(on){
+    h.style.opacity = '1';
+    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> give it a few seconds \u2014 clicking now moves on without it.</span>';
+  } else { h.style.opacity = '.65'; h.textContent = ''; }
+}
+function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host, task, fn){
+  if(!LLM.available || !LLM.on || !host) return;
+  var grid = host.closest ? host.closest('.g-grid') : null;
+  if(grid) grid.classList.add('three');
+  host.innerHTML = '<p class="g-lbl">a second marker is reading it\u2026 <span class="conf">(this one reads for meaning, not for patterns)</span></p>';
+  var ctl = new AbortController();
+  var timedOut = false, t0 = Date.now();
+  var tm = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
+  gWaiting(true);
+  fetch(LLM.url + '/mark', {
+    method:'POST', signal: ctl.signal, headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task: task, fn: fn, lang: lang, code: code})
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      clearTimeout(tm); gWaiting(false);
+      if(!j || j.error){ host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">(' + ((j && j.error) || 'no reply') + ')</span></p>'; return; }
+      var rows = j.marks.map(function(m){
+        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'\u2713':'\u2717') + '</span> '
+             + m.point + (m.why ? ' <span class="conf">\u2014 ' + m.why + '</span>' : '') + '</li>';
+      }).join('');
+      host.innerHTML = '<p class="g-lbl">what a second marker says \u2014 <b>it read your code, it did not run it</b></p>'
+                     + '<ul class="g-mp">' + rows + '</ul>'
+                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
+                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
+    })
+    .catch(function(){
+      clearTimeout(tm); gWaiting(false);
+      var secs = Math.round((Date.now() - t0) / 1000);
+      host.innerHTML = timedOut
+        ? '<p class="g-lbl">the reader gave up after ' + secs + ' s <span class="conf">(the model is busy, not broken \u2014 the other columns stand. Press mark again to retry.)</span></p>'
+        : '<p class="g-lbl">could not reach the reader <span class="conf">(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
+    });
+}
+
+Reveal.initialize({
+  hash:true, slideNumber:'c/t', width:1280, height:720, margin:.06,
+  plugins:[RevealNotes],
+  transition:'slide', backgroundTransition:'fade'
+}).then(function(){
+  initPyCells();
+  gDraw();
+  try{ var L=localStorage.getItem('a2lang'); if(L) setLang(L); }catch(e){}
+  var ob=document.getElementById('obj-btn');
+  if(ob) ob.addEventListener('click', function(){
+    var o=document.getElementById('obj');
+    o.style.display = (o.style.display==='none') ? 'block' : 'none';
+  });
+});
+Reveal.on('ready', function(e){ autoSizePyTextareas(e.currentSlide); });
+Reveal.on('slidechanged', function(e){ autoSizePyTextareas(e.currentSlide); });
+</script>
+</body>
+</html>
