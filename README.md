@@ -81,4 +81,4 @@ repo.
 
 ---
 
-*Released slides-2026-09-01 · unit in this edition: A01*
+*Released slides-2026-09-04 · unit in this edition: A01*
