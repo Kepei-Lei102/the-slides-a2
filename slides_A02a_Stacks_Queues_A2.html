@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Two Integers and a Promise — Stacks and Queues</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<style>
+:root{
+  --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
+  --accent3:#F2B53C; --navy:#222B5A; --ice:#E8EEF9; --white:#fff;
+}
+.reveal{font-family:'Calibri','Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif; font-size:26px;}
+.reveal h1,.reveal h2,.reveal h3{font-family:'Georgia','Times New Roman','PingFang SC','Microsoft YaHei',serif; text-transform:none; letter-spacing:-.02em;}
+.reveal section{text-align:left;}
+.dk{color:var(--ice);} .dk h1,.dk h2,.dk h3{color:var(--white);}
+.lt{color:var(--navy);} .lt h2,.lt h3{color:var(--navy);}
+.bar{position:absolute; top:0; left:0; right:0; height:5px;}
+.card{background:var(--white); border-radius:10px; padding:16px 20px; box-shadow:0 4px 12px rgba(0,0,0,.07); text-align:left;}
+.rule{background:var(--white); border-radius:8px; padding:11px 16px; box-shadow:0 3px 10px rgba(0,0,0,.05); border-left:5px solid var(--accent1); margin:10px 0; text-align:left; font-size:.74em;}
+.rule.accent2{border-left-color:var(--accent2);} .rule.accent3{border-left-color:var(--accent3);} .rule.navy{border-left-color:var(--navy);}
+.dk .rule{background:rgba(255,255,255,.06); color:var(--ice);}
+.two-col{display:flex; gap:26px; align-items:flex-start;} .two-col>*{flex:1; min-width:0;}
+.three-col{display:flex; gap:16px;} .three-col>*{flex:1; min-width:0;}
+.smaller{font-size:.7em;} .center{text-align:center;}
+.accent1{color:var(--accent1);} .accent2{color:var(--accent2);} .accent3{color:var(--accent3);}
+.mono{font-family:'Courier New',monospace; font-weight:bold;}
+
+.badges{position:absolute; top:-14px; right:0; display:flex; gap:6px; z-index:5;}
+.bg{font-size:.44em; font-weight:bold; letter-spacing:.03em; padding:3px 12px; border-radius:20px; font-family:'Calibri','Segoe UI',sans-serif;}
+.bg-p3{background:rgba(240,101,91,.14); color:#c0392b; border:1.5px solid var(--accent2);}
+.bg-p34{background:rgba(23,179,163,.15); color:#0d7a6e; border:1.5px solid var(--accent1);}
+.dk .bg-p3{color:#ff9d95;} .dk .bg-p34{color:#5FD6C9;}
+
+.dig{position:absolute; bottom:-34px; left:50%; transform:translateX(-50%); font-size:.5em; color:#98a0c0; animation:bob 2s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(5px);}}
+#obj-btn{background:rgba(255,255,255,.08); color:var(--ice); border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:5px 14px; cursor:pointer; font-size:.42em; opacity:.55;}
+#obj-btn:hover{opacity:1;}
+
+/* ===== py-cell: live Python ===== */
+.pycell{background:var(--navy); border-radius:12px; padding:10px 12px 12px; box-shadow:0 4px 14px rgba(0,0,0,.14); text-align:left;}
+.pycell .pybar{display:flex; gap:8px; align-items:center; margin-bottom:6px;}
+.pycell .pydots{display:flex; gap:5px;}
+.pycell .pydots i{width:9px; height:9px; border-radius:50%; display:block;}
+.pyta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.45; padding:10px 12px; resize:none; outline:none; display:block;}
+.pyta[readonly]{color:#aeb8dd;}
+.pyta:focus{box-shadow:0 0 0 2px var(--accent1);}
+.pyrun{background:var(--accent1); color:#fff; border:none; border-radius:7px; padding:4px 16px; font-size:.5em; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.pyrun:hover{background:#12907f;} .pyrun:disabled{background:#5a6394; cursor:wait;}
+.pylock{background:transparent; color:#98a0c0; border:1.5px solid #454e82; border-radius:7px; padding:3px 9px; font-size:.5em; font-weight:bold; cursor:pointer;}
+.pylock:hover{color:var(--accent3); border-color:var(--accent3);}
+.pyout{background:#0d1230; color:#5FD6C9; border-radius:8px; font-family:'Courier New',monospace; font-weight:bold;
+  font-size:.54em; line-height:1.45; padding:9px 12px; margin:8px 0 0; min-height:1.4em; white-space:pre-wrap; text-align:left;}
+.pyout .crash{color:var(--accent2);}
+.pyin-lbl{color:#5FD6C9;}
+.pyin{background:#1b234d; border:2px solid var(--accent1); border-radius:6px; color:var(--ice);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:1em; padding:1px 8px; width:130px; outline:none;}
+.pystate{font-size:.44em; color:#98a0c0; margin-left:auto;}
+.pycell.tight .pyta{font-size:.485em; line-height:1.34;}
+.pycell.tight .pyout{font-size:.485em; line-height:1.34;}
+.pycell.side .pyrow{display:flex; gap:10px; align-items:stretch;}
+.pycell.side .pyrow .pyta{flex:1; min-width:0;}
+.pycell.side .pyrow .pyout{margin:0; flex:0 0 auto; min-width:190px;}
+#py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
+#py-chip.ready{color:#5FD6C9;}
+
+/* ===== the Java lane: captured, not live ===== */
+.pycell.java .pyrun{background:#8a6100;} .pycell.java .pyrun:hover{background:#a87700;}
+.pystate.cap{color:#e0b050;}
+.pyout.cap{color:#e8c98a;}
+.pyout.err{color:#ff9d95;}
+
+/* ===== the language switch ===== */
+#langsel{position:fixed; top:14px; right:16px; z-index:99; display:flex; border:2px solid #6b74a8;
+  border-radius:9px; overflow:hidden; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+#langsel div{padding:5px 15px; background:rgba(20,26,60,.72); color:#98a0c0; transition:.12s;}
+#langsel div.on{background:var(--accent1); color:#fff;}
+#fsbtn{position:fixed; top:14px; right:calc(16px + 152px); z-index:99; background:rgba(20,26,60,.72);
+  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
+  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
+#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
+body[data-lang="java"] .lane[data-lang="py"]{display:none;}
+body[data-lang="py"] .lane[data-lang="java"]{display:none;}
+
+/* ===== 🧾 outside the exam hall ===== */
+.toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
+.toll .th{display:inline-block; font-weight:bold; font-size:.86em; letter-spacing:.05em; color:#8a6100; margin-bottom:3px;}
+.toll .yes{color:#0d7a6e; font-weight:bold;} .toll .no{color:#c0392b; font-weight:bold;}
+
+/* ===== 📐 the divergence box ===== */
+.diverge{background:#f7f5ff; border:2px dashed #b3a6e8; border-radius:10px; padding:10px 15px; text-align:left; font-size:.55em; line-height:1.5; color:var(--navy); margin:9px 0;}
+.diverge .dh{display:inline-block; font-weight:bold; font-size:.85em; letter-spacing:.04em; color:#6d4fd0; margin-bottom:3px;}
+
+/* ===== pseudocode block ===== */
+.ps{background:#f4f6fb; border:1px solid #d9deed; border-left:4px solid var(--accent3); border-radius:8px;
+  padding:10px 14px; font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.5;
+  color:var(--navy); white-space:pre; margin:8px 0; overflow-x:auto;}
+.dk .ps{background:rgba(255,255,255,.07); color:var(--ice); border-color:rgba(255,255,255,.16); border-left-color:var(--accent3);}
+.ps .k{color:#6d4fd0;} .dk .ps .k{color:#c0aef5;}
+.ps .v{color:#c0392b;} .dk .ps .v{color:#ff9d95;}
+.ps .c{color:#8890b5; font-weight:normal;}
+
+/* ===== the class table (hook) ===== */
+.ct{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.58em; margin:0;}
+.ct td,.ct th{border:1px solid rgba(255,255,255,.18); padding:3px 14px; text-align:left;}
+.lt .ct td,.lt .ct th{border-color:#ccd3e8;}
+.ct th{font-size:.85em; letter-spacing:.05em; color:#98a0c0; border:none;}
+.ct td.bad{color:var(--accent2);} .ct td.ok{color:#5FD6C9;}
+.lt .ct td.ok{color:#0d7a6e;}
+
+/* ===== marks table ===== */
+.mk{border-collapse:collapse; font-size:.5em; width:100%;}
+.mk td,.mk th{border:1px solid #ccd3e8; padding:4px 9px; text-align:left; vertical-align:top;}
+.mk th{background:#eef2fb; font-weight:bold; color:var(--navy);}
+.mk td.m{text-align:center; font-weight:bold; color:var(--accent2); white-space:nowrap;}
+.mk code{font-family:'Courier New',monospace; font-weight:bold; color:#6d4fd0;}
+
+/* ===== 🎮 The Type Designer ===== */
+.g-wrap{background:var(--white); border-radius:12px; padding:14px 18px; box-shadow:0 5px 18px rgba(0,0,0,.09); color:var(--navy);}
+/* a teacher must be able to move on without answering */
+.g-skip{margin-left:8px; background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;
+  border-radius:7px; padding:2px 11px; font-size:.44em; font-weight:bold; cursor:pointer;
+  font-family:'Calibri','Segoe UI',sans-serif;}
+.g-skip:hover{color:var(--accent1); border-color:var(--accent1);}
+.g-top{display:flex; align-items:center; gap:14px; margin-bottom:9px;}
+.g-stage{font-size:.56em; font-weight:bold; color:var(--navy); background:rgba(242,181,60,.18); border:2px solid var(--accent3); border-radius:22px; padding:3px 20px;}
+.pbadge{display:inline-block; font-size:.82em; letter-spacing:.04em; padding:1px 9px; border-radius:14px; margin-left:5px; border:1.5px solid;}
+.pbadge.p3{background:rgba(240,101,91,.13); color:#c0392b; border-color:var(--accent2);}
+.pbadge.p4{background:rgba(23,179,163,.15); color:#0d7a6e; border-color:var(--accent1);}
+.formwarn{background:#fdeeec; border:2px solid var(--accent2); border-radius:9px; padding:8px 13px; margin:7px 0 0;
+  font-size:.92em; line-height:1.5; color:var(--navy);}
+.formwarn b{color:#c0392b;}
+.g-prog{display:flex; gap:6px; margin-left:auto;}
+.g-prog i{width:9px; height:9px; border-radius:50%; background:#d3d9ec; display:block; transition:.2s;}
+.g-prog i.done{background:var(--accent1);} .g-prog i.cur{background:var(--accent3); transform:scale(1.35);}
+.g-score{font-size:.52em; font-weight:bold; color:var(--accent2); font-family:'Courier New',monospace;}
+.g-q{font-size:.6em; line-height:1.5; margin-bottom:8px;}
+.g-q b{color:var(--accent2);}
+.g-opts{display:flex; flex-wrap:wrap; gap:8px;}
+.g-b{background:#f4f6fb; border:2px solid #ccd3e8; border-radius:9px; padding:7px 14px; font-size:.54em;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; color:var(--navy); text-align:left; line-height:1.4;}
+.g-b:hover{border-color:var(--accent1);}
+.g-b.no{border-color:var(--accent2); background:#fdeeec; animation:shake .35s;}
+.g-b.yes{border-color:var(--accent1); background:#e6f7f4;}
+.g-b .mono{display:block; font-size:.92em;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.g-ta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.54em; line-height:1.5; padding:9px 12px; resize:none; outline:none;}
+.g-ta:focus{box-shadow:0 0 0 2px var(--accent3);}
+.g-sub{background:var(--accent3); color:#4a3500; border:none; border-radius:8px; padding:5px 20px; font-size:.52em;
+  font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; margin-top:7px;}
+.g-sub:hover{background:#e0a52c;}
+.g-say{font-size:.54em; min-height:1.5em; margin-top:7px; line-height:1.5;}
+.g-say.ok{color:#0d7a6e; font-weight:bold;} .g-say.bad{color:var(--accent2); font-weight:bold;}
+.g-mp{list-style:none; padding:0; margin:6px 0 0; font-size:.5em; line-height:1.6;}
+.g-mp li{padding-left:2px;} .g-mp .y{color:#0d7a6e; font-weight:bold;} .g-mp .n{color:var(--accent2); font-weight:bold;}
+.g-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 20px;}
+.g-lbl{font-size:.5em; color:#5b6488; margin:5px 0 3px;}
+.g-res .g-tot{font-size:1.1em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace; text-align:center; margin:2px 0 4px;}
+.g-fin{text-align:center; font-size:.62em; line-height:1.6;}
+.g-fin .big{font-size:1.5em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace;}
+/* ===== the array strip — one widget, used for both structures ===== */
+.viz{background:var(--white); border-radius:12px; padding:12px 16px; box-shadow:0 4px 14px rgba(0,0,0,.08); color:var(--navy);}
+.dk .viz{background:rgba(255,255,255,.07); color:var(--ice);}
+.cells{display:flex; gap:8px; justify-content:center; margin:4px 0 2px;}
+.cell{width:74px; text-align:center;}
+.cell .box{height:52px; border:2px solid #ccd3e8; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.72em; color:#aab2cc; background:#f7f9fe; transition:.18s;}
+.dk .cell .box{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.2); color:#7b85ab;}
+.cell .box.on{border-color:var(--accent1); background:rgba(23,179,163,.14); color:var(--navy); font-size:.82em;}
+.dk .cell .box.on{color:#8ff0e4;}
+.cell .box.gone{border-style:dashed; color:#c9cfe2;}
+.cell .idx{font-size:.42em; color:#98a0c0; margin-top:3px; font-family:'Courier New',monospace;}
+.cell .ptr{font-size:.42em; font-weight:bold; height:1.5em; font-family:'Courier New',monospace;}
+.cell .ptr .h{color:var(--accent2);} .cell .ptr .t{color:var(--accent3);} .cell .ptr .p{color:var(--accent1);}
+.vzc{display:flex; gap:10px; align-items:center; justify-content:center; margin-top:8px; flex-wrap:wrap;}
+.vzb{background:var(--navy); color:#fff; border:none; border-radius:8px; padding:6px 18px; font-size:.5em; font-weight:bold;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.vzb:hover{background:var(--accent1);} .vzb:disabled{background:#c6cde4; cursor:default;}
+.vzb.alt{background:#6d4fd0;} .vzb.alt:hover{background:#8467e0;}
+.vzs{font-size:.5em; font-family:'Courier New',monospace; font-weight:bold; color:var(--accent2); min-width:210px; text-align:center;}
+.dk .vzs{color:#ffb4ad;}
+.vzmsg{text-align:center; font-size:.52em; min-height:1.5em; margin-top:5px; font-weight:bold;}
+.vzmsg.ok{color:#0d7a6e;} .vzmsg.bad{color:var(--accent2);}
+.dk .vzmsg.ok{color:#5FD6C9;} .dk .vzmsg.bad{color:#ff9d95;}
+
+/* THE GAME SLIDE GROWS AFTER REVEAL HAS LAID IT OUT, and Reveal centres a slide
+   only ONCE, at slide-change time. Stage 1 is short, so Reveal pinned top:232px
+   — and the boss then grew downward off the bottom of the 720 stage (measured
+   at 799px, i.e. 79px of the panel below the visible area). scrollHeight said
+   "fits" the whole time, because scrollHeight is not where the slide SITS.
+   min-height cannot fix it: Reveal's own stylesheet sets
+   `.reveal.center .slides section { min-height: 0 !important }`.
+   So anchor the top instead — a stylesheet !important beats Reveal's inline
+   top. The panel now sits high, does not jump between stages, and has ~50px of
+   headroom below its tallest state. Any slide whose content expands WITHOUT a
+   slide change needs this class. */
+.reveal .slides section.growslide{top:40px !important;}
+
+/* the student's own code stays on screen beside the feedback, so a tick and the
+   line that earned it can be read on the same screen */
+.g-ans{background:#1b234d; color:var(--ice); border-radius:8px; font-family:'Courier New',monospace;
+  font-weight:bold; font-size:.5em; line-height:1.45; padding:9px 12px; margin:0; white-space:pre;
+  overflow:auto; max-height:300px; text-align:left;}
+.g-ans:empty::before{content:'(you did not write anything)'; color:#7b85ab; font-weight:normal;}
+
+/* ===== the LLM reader — ported 2026-08-24 (Kepei: "A02a's challenge does not have an LLM grader") ===== */
+#llmchip{position:fixed; top:16px; right:16px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px;
+  border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0; cursor:pointer; border:none;}
+#llmchip.on{color:#5FD6C9;} #llmchip.off{color:#F2B53C;}
+#llmhelp{display:none; position:fixed; top:54px; right:16px; z-index:99; width:340px; background:#fff; color:#222B5A;
+  border:2px solid #F2B53C; border-radius:12px; padding:12px 16px; font-size:14px; line-height:1.5; box-shadow:0 8px 30px rgba(0,0,0,.25);}
+#llmhelp b{color:#B8860B;} #llmhelp .x{float:right; cursor:pointer; font-weight:bold; color:#98a0c0;}
+.g-llm{margin-top:6px;}
+.g-llm:empty{display:none;}
+.g-grid.three{grid-template-columns:minmax(0,.86fr) minmax(0,1.07fr) minmax(0,1.07fr); gap:6px 14px;}
+.g-grid.three .g-ans{max-height:250px; overflow:auto;}
+.g-grid.three .g-llm{max-height:228px; overflow:auto;}
+.g-llm .conf{font-size:.82em; opacity:.7; font-style:italic;}
+.g-cons{margin-top:7px; border-radius:9px; padding:7px 12px; font-size:.5em; line-height:1.5; border:2px solid; text-align:left;}
+.g-cons.agree{border-color:var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e;}
+.g-cons.split{border-color:var(--accent3); background:rgba(242,181,60,.14); color:#8a5c00;}
+.g-cons b{font-family:'Courier New',monospace;}
+.g-pickrow{margin-top:7px; font-size:.95em; color:var(--navy);}
+.g-pick{border:1.5px solid var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e; border-radius:7px;
+  padding:2px 10px; font-weight:bold; cursor:pointer; font-size:.95em; margin:0 5px; font-family:'Calibri','Segoe UI',sans-serif;}
+.g-pick:hover{background:rgba(23,179,163,.28);}
+.g-pick.on{background:var(--accent1); color:#fff;}
+</style></head>
+<body data-lang="java">
+<div class="reveal"><div class="slides">
+
+<!-- H1 -->
+<section>
+<section data-background-color="#151B3C" class="dk center">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 2 · 9618 §19.1</p>
+  <h1 style="font-size:1.55em; margin:0 0 6px;">Two Integers<br>and a Promise</h1>
+  <p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">stacks and queues 栈与队列</p>
+  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+
+</section>
+  <section data-background-color="#151B3C" class="dk">
+    <div class="bar" style="background:var(--accent3);"></div>
+    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> Write <b class="accent1">Push</b>, <b class="accent1">Pop</b>, <b class="accent1">Enqueue</b> and <b class="accent1">Dequeue</b> from nothing</div>
+    <div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">2.</strong> Handle the <b class="accent1">overflow and underflow</b> cases — because that is where every mark is</div>
+    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">3.</strong> Explain why an empty structure is marked with <b class="accent3">−1</b> rather than 0</div>
+
+</section>
+</section>
+
+<!-- H2 HOOK -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.92em; margin:0 0 8px;">You closed twenty tabs. Now undo it.</h2>
+  <div class="two-col">
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.64em;">
+        Press <b class="mono">Ctrl-Shift-T</b> twenty times and the tabs come back —
+        <b>in exactly the reverse order you closed them.</b>
+      </div>
+      <div class="rule accent3" style="font-size:.6em;">
+        Nobody at Google sat down and designed that reversal. It is not a feature.
+        <b>It falls out of the shape of the box the tabs were put in.</b>
+      </div>
+      <div class="rule accent2 fragment" style="font-size:.62em;">
+        Same box: <b class="mono">Ctrl-Z</b>. Same box: the <b>Back</b> button.
+        Same box: the call stack your program has been using since the day you wrote your first function.<br>
+        <b>You have used one every day for years and never once built one.</b>
+      </div>
+    </div>
+    <div class="center" style="padding-top:6px;">
+      <div class="ps" style="font-size:.56em; text-align:left; display:inline-block;">close  A
+close  B
+close  C
+       <span class="c">↓ reopen</span>
+       C
+       B
+       A</div>
+      <p style="font-size:.5em; color:#98a0c0; margin-top:8px;">Last in, first out.<br>The only rule there is.</p>
+    </div>
+  </div>
+
+</section>
+
+<!-- H3 -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.86em; margin:0 0 10px;">One sentence disappeared over the summer</h2>
+  <div class="two-col">
+    <div class="card" style="border-top:4px solid #aab2cc;">
+      <p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>LAST YEAR · AS §10.4</b></p>
+      <p style="font-size:.58em; line-height:1.6; margin:0;">Describe the key features of a stack, queue and linked list · justify their use · add, edit and delete data · describe how they can be implemented using arrays.<br><br>
+      <span style="text-decoration:line-through; color:#a0a8c4;">Candidates will not be required to write pseudocode for these structures.</span></p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent2);">
+      <p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>THIS YEAR · A2 §19.1</b></p>
+      <p style="font-size:.58em; line-height:1.6; margin:0;"><b>Write algorithms</b> to <b>find</b> an item in a linked list and a binary tree.<br>
+      <b>Write algorithms</b> to <b>insert</b> into a stack, queue, linked list and binary tree.<br>
+      <b>Write algorithms</b> to <b>delete</b> from a stack, queue and linked list.</p>
+    </div>
+  </div>
+  <p class="center fragment" style="font-size:.76em; margin-top:16px;"><b>AS told you what they are.<br>A2 makes you build them.</b></p>
+
+</section>
+
+<!-- H4 stack -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 4px;">A stack is an array and <span class="accent2">one integer</span></h2>
+  <p style="font-size:.5em; color:#8890b5; margin:0 0 6px;">Push and pop it yourself. Watch what <span class="mono">Top</span> does.</p>
+  <div class="viz" id="stackviz"></div>
+  <div class="rule accent1 fragment" style="font-size:.6em;">
+    <b>Push:</b> move <span class="mono">Top</span> up one, then store. &nbsp;<b>Pop:</b> read, then move <span class="mono">Top</span> down one.<br>
+    That is the entire data structure. <b>Nothing is ever moved</b> — only the integer changes.
+  </div>
+
+</section>
+
+<!-- H5 keystone -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 6px;">Why <span class="accent2">−1</span>, and not 0?</h2>
+  <p style="font-size:.52em; color:#8890b5; margin:0 0 7px;">Last lesson a null pointer was <span class="mono">0x0000…0</span>. This lesson empty is <span class="mono">−1</span>. <b>Both are right, and the reason they differ is the whole idea.</b></p>
+  <table class="mk" style="font-size:.54em;">
+    <tr><th style="width:50%;">a real machine</th><th>Cambridge's array</th></tr>
+    <tr><td>A pointer holds an <b>address</b>.</td><td>A "pointer" holds an <b>array index</b>.</td></tr>
+    <tr><td>Address <b>0</b> is legal to write down, but the OS <b>deliberately leaves it unmapped</b> — nothing can ever live there.</td>
+        <td>Index <b>0</b> is an ordinary element. <span class="mono">Contents[0]</span> is the <b>first item</b>.</td></tr>
+    <tr><td>So 0 is free to mean "nothing". It was <b>made</b> impossible, by decree.</td>
+        <td>So 0 <b>cannot</b> mean "nothing" — it already means something.</td></tr>
+    <tr><td><b class="accent1">null = 0</b></td><td><b class="accent2">null = −1</b></td></tr>
+  </table>
+  <div class="rule accent3" style="font-size:.64em;">
+    <b>A sentinel has to come from outside the set of legal values.</b> Not from the edge of it — from <em>outside</em> it.
+    Real memory has no such value, so the operating system <b>manufactures</b> one. An array index cannot, so you go
+    <b>below</b> the range: <b class="mono">−1 is the largest impossible index.</b>
+  </div>
+  <div class="dig">🕳 and when the sentinel is a lie ↓</div>
+
+</section>
+
+<!-- H5 vertical -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.74em; margin:0 0 8px;">🕳 When the sentinel is a lie</h3>
+  <p style="font-size:.56em; line-height:1.6; margin:0 0 8px;">Here are two sentences from a real Paper 4 question. <b>Read them together.</b></p>
+  <div class="rule accent3" style="font-size:.6em; margin-top:0;">
+    "A linked list stores <b class="accent1">positive integer</b> data in a 2D array…<br>
+    A linked list node with no data is initialised with the integer <b class="accent2">−1</b>."
+    <span style="color:#98a0c0; font-size:.85em;"> — Nov 2024 Paper 41 Q3, © UCLES</span>
+  </div>
+  <div class="two-col" style="gap:16px;">
+    <div class="rule accent2" style="font-size:.55em;">
+      <b>−1 is safe as "empty" only because of the first sentence.</b> The question has quietly promised the data
+      will never be negative. Change it to <b>temperatures</b>, or <b>bank balances</b>, or scores that can drop
+      below zero — and the sentinel <b>collides with real data</b>. There is then no way on earth for the program
+      to tell an empty node from a cold Tuesday.
+    </div>
+    <div class="rule accent1" style="font-size:.55em;">
+      The professional name is <b>in-band signalling</b> — using a value from inside the data's own range to mean
+      something that is not data. It works in an exam and would be rejected in a code review.<br>
+      <b class="accent3">And you will see both designs in one question, one line apart</b> — hold that thought until slide 9.
+    </div>
+  </div>
+  <p class="center" style="font-size:.56em; margin-top:10px;">The habit worth taking away is not <i>"−1 is wrong"</i>.<br><b>It is reading for the promise the sentence above just made.</b></p>
+
+</section>
+</section>
+
+
+<!-- H6 code -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 4px;">Push and Pop, written out</h2>
+  <p style="font-size:.5em; color:#98a0c0; margin:0 0 7px;">A five-element stack. Watch the last two lines.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java side" data-out="push 10 20 30 -> true true true
+Top is now      2
+pop  -> 30   pop -> 20
+Top is now      0
+pop  -> 10   (last one)
+pop  -> -1   <- UNDERFLOW,
+             and it did not crash"><script type="text/plain" class="pysrc">static Integer[] Contents = new Integer[5];
+static Integer Top = -1;            // -1 means empty
+
+static Boolean Push(Integer Data) {
+    if (Top < 4) { Top++; Contents[Top] = Data; return true; }
+    else         { return false; }              // overflow
+}
+static Integer Pop() {
+    if (Top > -1) { Integer v = Contents[Top]; Top--; return v; }
+    else          { return -1; }                // underflow
+}</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell side tight"><script type="text/plain" class="pysrc">Contents = [-1] * 5
+Top = -1                            # -1 means empty
+
+def Push(Data):
+    global Top
+    if Top < 4:
+        Top = Top + 1
+        Contents[Top] = Data
+        return True
+    else:
+        return False                # overflow
+
+def Pop():
+    global Top
+    if Top > -1:
+        v = Contents[Top]
+        Top = Top - 1
+        return v
+    else:
+        return -1                   # underflow
+
+print("push 10 20 30 ->", Push(10), Push(20), Push(30))
+print("Top is now     ", Top)
+print("pop  ->", Pop(), "  pop ->", Pop())
+print("Top is now     ", Top)
+print("pop  ->", Pop(), "  (last one)")
+print("pop  ->", Pop(), "  <- UNDERFLOW, and it did not crash")</script></div>
+  </div>
+  <div class="rule accent3" style="font-size:.46em; margin-top:4px;">
+    <b>How the working world writes this.</b> Real code keeps this state in a class — <span class="mono">self.Top</span>, <span class="mono">self.Contents</span>, no keyword, nothing shared by accident. That form belongs to the OOP chapter and to every codebase you will ever touch. <b>But Paper 4 declares its variables global and pays marks for the paper's shape</b> — so here, and in every challenge, write <span class="mono">global Top</span> inside the function and never forget it: forgetting is an <span class="mono">UnboundLocalError</span> the moment your code actually runs.
+  </div>
+
+</section>
+
+<!-- H7 -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 8px;">The two questions that are actually marked</h2>
+  <div class="two-col">
+    <div class="card" style="border-top:4px solid var(--accent2);">
+      <p style="font-size:.62em; margin:0; line-height:1.55;"><b class="accent2">OVERFLOW</b><br>
+      Push onto a <b>full</b> stack.<br>
+      <span class="mono" style="font-size:.9em;">Top</span> is already at the last index and there is nowhere to put it.</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent3);">
+      <p style="font-size:.62em; margin:0; line-height:1.55;"><b style="color:#B8860B;">UNDERFLOW</b><br>
+      Pop an <b>empty</b> stack.<br>
+      <span class="mono" style="font-size:.9em;">Top</span> is <span class="mono">−1</span> and there is nothing to return.</p>
+    </div>
+  </div>
+  <div class="rule accent1" style="font-size:.64em;">
+    These are <b>not edge cases</b>. They are the question. <b>A stack that works when it is neither full nor empty
+    is worth almost no marks</b> — the middle of the array is the easy part and every candidate gets it.
+  </div>
+  <div class="toll">
+    <span class="th">🧾 OUTSIDE THE EXAM HALL</span><br>
+    Overflowing a real stack is called a <b>stack overflow</b>, and for thirty years it was the most exploited
+    security bug in computing: write past the end of a buffer, land on the return address, and the machine jumps
+    wherever you told it to. <span class="yes">The check you are writing on this slide is the fix.</span>
+    <span class="no">Whole languages were designed because people kept forgetting it.</span><br>
+    <b>It is so famous that the largest programming question-and-answer site on earth is named after it</b> —
+    <b class="mono">stackoverflow.com</b>, where a generation of programmers went to ask why their program had died.
+    And there is a decent chance the answers on it helped train the AI you use to write code, which makes the name
+    quietly perfect: <i>a website about crashing, teaching the machines.</i>
+  </div>
+
+</section>
+
+<!-- H8 queue -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 4px;">A queue is an array and <span class="accent2">two integers</span></h2>
+  <p style="font-size:.5em; color:#8890b5; margin:0 0 6px;">Cambridge's own names: <span class="mono">HeadPointer</span> comes off the front, <span class="mono">TailPointer</span> goes on the back. Both start at <span class="mono">−1</span>.</p>
+  <div class="viz" id="queueviz"></div>
+  <div class="rule accent1" style="font-size:.58em;">
+    <b>Enqueue</b> at the tail, <b>dequeue</b> from the head — first in, first out. The printer queue, the OS
+    process queue, the keyboard buffer holding the letters you typed while the machine was busy.
+  </div>
+
+</section>
+
+<!-- H9 code + divergence -->
+<section>
+
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.82em; margin:0 0 3px;">Enqueue and Dequeue — <span class="accent3">the marked signatures</span></h2>
+  <p style="font-size:.48em; color:#98a0c0; margin:0 0 6px;">This is the shape Cambridge marks. Learn the return values, not just the idea.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java side" data-out="3 in                   Head=0 Tail=2
+3 out - now empty      Head=3 Tail=2
+2 more in              Head=3 Tail=4"><script type="text/plain" class="pysrc">static Boolean Enqueue(Integer DataValue) {
+    if (TailPointer < 4) {
+        TailPointer++;
+        Queue[TailPointer] = DataValue;
+        if (HeadPointer == -1) { HeadPointer = 0; }
+        return true;
+    } else { return false; }          // full
+}
+static Integer Dequeue() {
+    if (HeadPointer > -1 && HeadPointer <= TailPointer) {
+        Integer ReturnValue = Queue[HeadPointer];
+        HeadPointer++;
+        return ReturnValue;
+    } else { return -1; }             // empty
+}</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell side tight"><script type="text/plain" class="pysrc">Queue = [-1] * 5
+HeadPointer = -1
+TailPointer = -1
+
+def Enqueue(DataValue):
+    global HeadPointer, TailPointer
+    if TailPointer < 4:
+        TailPointer = TailPointer + 1
+        Queue[TailPointer] = DataValue
+        if HeadPointer == -1:
+            HeadPointer = 0
+        return True
+    return False                      # full
+
+def Dequeue():
+    global HeadPointer
+    if HeadPointer > -1 and HeadPointer <= TailPointer:
+        ReturnValue = Queue[HeadPointer]
+        HeadPointer = HeadPointer + 1
+        return ReturnValue
+    return -1                         # empty
+
+Enqueue(10); Enqueue(20); Enqueue(30)
+print("3 in   Head=%d Tail=%d" % (HeadPointer, TailPointer))</script></div>
+  </div>
+  <div class="dig">📐 the safe design and the dangerous one ↓</div>
+
+</section>
+
+<!-- H9 vertical — the divergence, given a whole slide -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.72em; margin:0 0 4px;">📐 One question. Both designs. One line apart.</h3>
+  <p style="font-size:.5em; color:#98a0c0; margin:0 0 8px;">Look again at what the two functions hand back.</p>
+  <div class="two-col" style="gap:16px;">
+    <div class="rule accent1" style="margin-top:0; font-size:.58em;">
+      <b>Enqueue → a separate <span class="mono">BOOLEAN</span></b><br><br>
+      The answer to <i>"did it work?"</i> travels in its <b>own channel</b>. It cannot be confused with data,
+      because it is not the same kind of thing as data.<br><br>
+      <b class="accent3">This is the safe design.</b> It stays safe no matter what the queue holds.
+    </div>
+    <div class="rule accent2" style="margin-top:0; font-size:.58em;">
+      <b>Dequeue → <span class="mono">−1</span></b><br><br>
+      The answer to <i>"did it work?"</i> is <b>smuggled inside the value itself</b>. A caller who gets −1
+      cannot tell "the queue was empty" from "the queue held −1".<br><br>
+      <b class="accent3">In-band signalling</b> — and it survives here <b>only</b> because the question
+      promised the data would be positive.
+    </div>
+  </div>
+  <div class="rule accent3" style="font-size:.6em;">
+    <b>Write both exactly as marked</b> — this is the convention the exam uses and the marks follow it.
+    Then notice, out loud, that <b>one of them is better engineering than the other</b>, and that you can
+    now say which and why. <span class="accent2">That sentence is worth more than the six marks.</span>
+  </div>
+
+</section>
+</section>
+
+
+<!-- H10 the walking bug -->
+<section>
+
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">Now break it</h2>
+  <p style="font-size:.48em; color:#98a0c0; margin:0 0 4px;">Press <b>walk it</b>. Three in, three out, two in. Then try to add one more.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java side" data-out="3 in                   Head=0 Tail=2
+3 out - now empty      Head=3 Tail=2
+2 more in              Head=3 Tail=4
+
+Enqueue(60) -> false   <- FULL
+...but the queue holds
+   2 items in an array of 5."><script type="text/plain" class="pysrc">Enqueue(10); Enqueue(20); Enqueue(30);   show("3 in");
+Dequeue();   Dequeue();   Dequeue();     show("3 out - now empty");
+Enqueue(40); Enqueue(50);                show("2 more in");
+
+System.out.println("Enqueue(60) -> " + Enqueue(60) + "   <- FULL");</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell side tight"><script type="text/plain" class="pysrc">Queue = [-1] * 5; HeadPointer = -1; TailPointer = -1
+
+def Enqueue(v):                    # same code as the last slide
+    global HeadPointer, TailPointer
+    if TailPointer < 4:
+        TailPointer = TailPointer + 1
+        Queue[TailPointer] = v
+        if HeadPointer == -1: HeadPointer = 0
+        return True
+    return False
+
+def Dequeue():
+    global HeadPointer
+    if HeadPointer > -1 and HeadPointer <= TailPointer:
+        HeadPointer = HeadPointer + 1
+        return Queue[HeadPointer - 1]
+    return -1
+for v in (10, 20, 30): Enqueue(v)        # three in
+for i in range(3):     Dequeue()         # three out
+Enqueue(40); Enqueue(50)                 # two more
+
+print("Head=%d  Tail=%d" % (HeadPointer, TailPointer))
+print("Enqueue(60) ->", Enqueue(60), " <- FULL, holding 2 of 5")</script></div>
+  </div>
+  <div class="rule accent2 fragment" style="font-size:.6em; margin-top:5px;">
+    <b>The queue walks up the array and never comes back.</b> <span class="mono">TailPointer</span> has hit the end,
+    so it reports <b>full</b> — while three slots sit empty behind <span class="mono">HeadPointer</span>, unreachable.
+    <b class="accent3">A linear queue can be full and nearly empty at the same time.</b>
+  </div>
+
+</section>
+
+<!-- H11 circular queue — main line, because it is examined -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 4px;">The fix is <span class="accent2">one operator</span></h2>
+  <p style="font-size:.5em; color:#8890b5; margin:0 0 7px;">The array does not have to end. Bend it into a ring: when a pointer runs off the last index, send it back to 0.</p>
+  <div class="ps" style="font-size:.62em;">TailPointer <span class="v">←</span> (TailPointer + 1) <span class="k">MOD</span> MaxSize</div>
+  <div class="two-col" style="margin-top:6px;">
+    <div class="rule accent1" style="margin-top:0; font-size:.58em;">
+      That single <span class="mono">MOD</span> reclaims <b>every slot the linear queue abandoned</b>.
+      Index 4 wraps to 0, and the space behind <span class="mono">HeadPointer</span> comes back into use.
+    </div>
+    <div class="rule accent2" style="margin-top:0; font-size:.58em;">
+      <b>And it costs you something.</b> Once the array is a ring you can <b>no longer tell full from empty by
+      comparing the pointers</b> — in both cases they meet. So a circular queue must also <b>count its items</b>,
+      or deliberately waste one slot.
+    </div>
+  </div>
+  <div class="toll" style="font-size:.56em;">
+    <span class="th">🧾 HOW OFTEN THIS IS ASKED — AND IT IS NOT A HOLE</span><br>
+    Circular queues appear in <b>4 of the 24 papers</b> in the archive, and only on <b>Paper 4</b>.
+    That is rarer than the linear queue and <span class="yes">it is still examinable</span>, which is exactly why
+    this is a slide and not an optional dig. <b>Know the <span class="mono">MOD</span> line, and know the
+    counting problem it creates.</b> That is the whole of it — but know it.
+  </div>
+
+</section>
+</section>
+
+
+<!-- H11 where you've met them -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 8px;">Where these have been hiding</h2>
+  <div class="two-col">
+    <div class="card" style="border-top:4px solid var(--accent1);">
+      <p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>STACKS</b></p>
+      <p style="font-size:.56em; line-height:1.65; margin:0;">Undo · the Back button · reopening tabs<br>
+      <b>The call stack</b> — every function call pushes a frame, every return pops one<br>
+      Evaluating an expression — <b>and that one comes back at the end of the year</b><br>
+      Depth-first search through a maze</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent2);">
+      <p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>QUEUES</b></p>
+      <p style="font-size:.56em; line-height:1.65; margin:0;">The printer · the OS <b>process scheduler</b> <span style="color:#8890b5;">(round robin is a queue)</span><br>
+      The <b>keyboard buffer</b> holding what you typed while the machine was busy<br>
+      Every ticket system, every checkout, every server request</p>
+    </div>
+  </div>
+  <div class="rule accent3 fragment" style="font-size:.62em;">
+    <b>The call stack is the one to keep hold of.</b> You have just built the exact structure a program uses to
+    remember where to go back to — which is a good thing to own, because <b>next lesson but one, a function is
+    going to call itself</b> and the only way to see what happens is to know what a stack does.
+  </div>
+
+</section>
+
+<!-- H12 game -->
+<section data-background-color="#151B3C" class="dk growslide">
+  <h2 style="font-size:.78em; margin:0 0 8px;">🎮 Overflow / Underflow</h2>
+  <div class="g-wrap" id="gw">
+    <div class="g-top">
+      <span class="g-stage" id="g-stage">Stage 1</span>
+      <span class="g-score" id="g-score"></span>
+      <div class="g-prog" id="g-prog"></div>
+      <button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button>
+    </div>
+    <div class="g-q" id="g-q"></div>
+    <div id="g-body"></div>
+    <div class="g-say" id="g-say">&nbsp;</div>
+  </div>
+
+</section>
+
+<!-- H13 the real thing -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.82em; margin:0 0 4px;">The real thing</h2>
+  <p style="font-size:.48em; color:#8890b5; margin:0 0 7px;">June 2025 Paper 43 Question 1 — a whole Paper 4 question, and it is this lesson end to end. © UCLES</p>
+  <table class="mk" style="font-size:.52em;">
+    <tr><th style="width:9%;">part</th><th>what it asks</th><th style="width:9%;">marks</th></tr>
+    <tr><td><b>(a)</b></td><td>Declare and initialise a global <span class="mono">Queue</span> of 50 integers, all <span class="mono">−1</span>, with <span class="mono">HeadPointer</span> and <span class="mono">TailPointer</span> at <span class="mono">−1</span></td><td class="m">3</td></tr>
+    <tr><td><b>(b)</b></td><td>Write <span class="mono">Enqueue()</span> — one parameter, <span class="mono">FALSE</span> if full, <span class="mono">TRUE</span> if stored</td><td class="m">6</td></tr>
+    <tr><td><b>(c)</b></td><td>Write <span class="mono">Dequeue()</span> — the next item, or <span class="mono">−1</span> if empty</td><td class="m">5</td></tr>
+    <tr><td><b>(d)</b></td><td>Write <span class="mono">CreateQueue()</span> — <b>read a text file</b> and enqueue every line, printing "Queue full" if one will not fit</td><td class="m">6</td></tr>
+  </table>
+  <div class="rule accent2" style="font-size:.58em;">
+    <b>Twenty marks, and part (d) is a file-handling question wearing a queue costume.</b>
+    That is how Paper 4 works: the structures do not appear on their own, they appear <b>with a file behind them</b>.
+    You will meet that combination properly in a few weeks — for now, notice that it is coming.
+  </div>
+
+</section>
+
+<!-- H14 summary -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <h2 style="font-size:.84em; margin:0 0 10px;">What you can build now</h2>
+  <div class="two-col">
+    <div class="rule accent1" style="margin-top:0; font-size:.6em;">
+      <b>A stack</b> — an array and one integer.<br>
+      <b>A queue</b> — an array and two integers.<br>
+      Both with <b>overflow and underflow handled</b>, which is where the marks were all along.
+    </div>
+    <div class="rule accent3" style="margin-top:0; font-size:.6em;">
+      And one idea that outlives both: <b>a sentinel must come from outside the range of legal values</b> —
+      which is why empty is <span class="mono">−1</span> and not 0.
+    </div>
+  </div>
+  <div class="rule navy" style="font-size:.62em;">
+    <b>And notice how little separates them.</b> Both are an array and some indices. A stack takes items off
+    <b>the end it puts them on</b>; a queue takes them off <b>the other end</b>. That is the entire difference —
+    <b class="accent3">change which index you read from and the structure becomes the other one.</b>
+    A data structure is never really a thing. It is <b>a rule about which end you are allowed to touch.</b>
+  </div>
+  <div class="rule accent2 fragment" style="font-size:.62em;">
+    <b>But look at what you had to decide before the program ran.</b> Five elements. Fifty. Two hundred.
+    Every structure on this slide has a <b>size chosen in advance</b> — and when it is full it is full, even when,
+    as you saw, it is nearly empty.
+  </div>
+  <p class="center fragment" style="font-size:.72em; margin-top:14px;"><b>Next lesson: the one<br>that does not have a size.</b></p>
+  <p class="center" style="font-size:.48em; color:#98a0c0; margin-top:10px;">🍦 <span class="mono">challenge_A02a_StackQueue</span> is live — 10 000 random operations, and your structure has to survive all of them.</p>
+
+</section>
+
+<!-- vocabulary -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.76em; margin:0 0 10px;">词汇 Vocabulary</h3>
+  <table class="mk" style="font-size:.54em; color:var(--ice);">
+    <tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
+    <tr><td>abstract data type (ADT)</td><td>抽象数据类型</td><td>a collection of data <b>and the operations allowed on it</b></td></tr>
+    <tr><td>stack</td><td>栈</td><td>last in, first out — one pointer, <span class="mono">Top</span></td></tr>
+    <tr><td>queue</td><td>队列</td><td>first in, first out — two pointers, head and tail</td></tr>
+    <tr><td>push / pop</td><td>入栈 / 出栈</td><td>the only two things a stack can do</td></tr>
+    <tr><td>enqueue / dequeue</td><td>入队 / 出队</td><td>add at the tail, remove from the head</td></tr>
+    <tr><td>overflow</td><td>上溢</td><td>adding to a <b>full</b> structure</td></tr>
+    <tr><td>underflow</td><td>下溢</td><td>removing from an <b>empty</b> one</td></tr>
+    <tr><td>sentinel</td><td>哨兵值</td><td>an impossible value used to mean "nothing here" — here, <span class="mono">−1</span></td></tr>
+  </table>
+
+</section>
+
+</div></div>
+<button id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</button>
+<div id="llmhelp"><span class="x" id="llmhelp-x">✕</span><b>Live marking needs the marking server.</b><br>
+Two steps, on the teacher's Mac:<br>1. open the <b>CS_Materials</b> folder<br>2. double-click <b>Start-LLM-Marking.command</b><br>
+This chip lights up by itself a few seconds after the server starts — no reload needed. Without it, the pattern marks and the machine column still work; the reader adds the marker that reads for <i>meaning</i>.</div>
+<div id="py-chip">🐍 waking Python…</div>
+<div id="langsel"><div id="l-java" class="on">Java</div><div id="l-py">Python</div></div>
+<button id="fsbtn" title="fullscreen (or press F)">⛶</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+/* ===== Python runtime (Pyodide) — the audited house harness ===== */
+var pyPromise = null, pyBusy = false, currentOut = null, activeInput = null;
+
+function setRunButtons(enabled, label){
+  document.querySelectorAll('.pycell:not(.java) .pyrun').forEach(function(b){
+    b.disabled = !enabled;
+    b.textContent = enabled ? '▶ Run' : (label || '… running');
+  });
+}
+window.__pyInput = function(promptText){
+  return new Promise(function(resolve, reject){
+    var out = currentOut;
+    if(!out){ resolve(''); return; }
+    var row = document.createElement('span');
+    var lbl = document.createElement('span'); lbl.className='pyin-lbl'; lbl.textContent = promptText;
+    var inp = document.createElement('input'); inp.className='pyin';
+    inp.setAttribute('autocomplete','off'); inp.spellcheck = false;
+    row.appendChild(lbl); row.appendChild(inp); out.appendChild(row);
+    activeInput = {row: row, reject: reject};
+    setTimeout(function(){ inp.focus(); }, 60);
+    inp.addEventListener('keydown', function(ev){
+      if(ev.key === 'Enter'){ ev.stopPropagation(); var v=inp.value; row.remove(); activeInput=null; resolve(v); }
+    });
+  });
+};
+function stopPy(){
+  if(activeInput){ var r=activeInput.reject; activeInput.row.remove(); activeInput=null; r(new Error('__pyStop__')); }
+}
+function bootPython(){
+  if(pyPromise) return pyPromise;
+  pyPromise = loadPyodide().then(function(py){
+    py.runPython(
+      "import builtins, js\n" +
+      "async def __ainput(prompt=''):\n" +
+      "    v = await js.window.__pyInput(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "def _input_fallback(prompt=''):\n" +
+      "    v = js.window.prompt(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "builtins.input = _input_fallback\n" +
+      "builtins.__ainput = __ainput\n");
+    var chip=document.getElementById('py-chip');
+    chip.textContent='🐍 Python ready'; chip.className='ready';
+    if(!pyBusy) setRunButtons(true);
+    return py;
+  });
+  return pyPromise;
+}
+function runPy(code, outEl, doneCb){
+  if(pyBusy) return;
+  pyBusy = true; setRunButtons(false); currentOut = outEl;
+  outEl.style.display='block'; outEl.className='pyout'; outEl.textContent='';
+  var crashed=false, errLine='', sawOutput=false;
+  bootPython().then(function(py){
+    function emit(s){ sawOutput = true; outEl.appendChild(document.createTextNode(s + '\n')); }
+    py.setStdout({batched: emit});
+    py.setStderr({batched: emit});
+    var src = code.replace(/\binput\s*\(/g, 'await __ainput(');
+    var ns = py.toPy({});
+    return py.runPythonAsync(src, {globals: ns})
+      .catch(function(e){
+        crashed = true;
+        var lines = String(e.message||e).trim().split('\n').filter(function(l){ return l.trim(); });
+        errLine = lines[lines.length-1] || 'Error';
+        if(String(e.message||e).indexOf('__pyStop__') !== -1) errLine = '__stopped__';
+      })
+      .finally(function(){ ns.destroy(); });
+  }).then(function(){
+    if(activeInput){ activeInput.row.remove(); activeInput = null; }
+    if(!sawOutput && !crashed) outEl.textContent = '(no output)';
+    if(crashed){
+      var sp=document.createElement('span'); sp.className='crash';
+      sp.textContent = (errLine==='__stopped__') ? '⏹ stopped' : '💥 ' + errLine;
+      outEl.appendChild(sp);
+    }
+    pyBusy=false; setRunButtons(true); currentOut=null;
+    if(doneCb) doneCb(crashed, outEl.textContent, errLine);
+  });
+}
+
+/* ===== cells: Python runs live, Java replays a real build-time run ===== */
+function initPyCells(){
+  document.querySelectorAll('.pycell').forEach(function(cell){
+    var isJava = cell.classList.contains('java');
+    var srcEl  = cell.querySelector('.pysrc');
+    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
+    var capOut = cell.getAttribute('data-out') || '';
+    var isErr  = cell.getAttribute('data-err') === '1';
+    cell.innerHTML='';
+
+    var bar=document.createElement('div'); bar.className='pybar';
+    var dots=document.createElement('div'); dots.className='pydots';
+    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
+    bar.appendChild(dots);
+
+    var run=document.createElement('button'); run.className='pyrun';
+    run.textContent = isJava ? '▶ Run' : '⏳ waking…';
+    run.disabled = !isJava;
+    bar.appendChild(run);
+
+    if(!isJava){
+      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
+      stp.title='stop a program waiting for input';
+      stp.addEventListener('click', stopPy);
+      bar.appendChild(stp);
+    }
+    var st=document.createElement('span'); st.className='pystate' + (isJava?' cap':'');
+    st.textContent = isJava ? '☕ captured from a real run' : '🐍 editable · runs here';
+    bar.appendChild(st);
+
+    var ta=document.createElement('textarea'); ta.className='pyta';
+    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
+    if(isJava) ta.readOnly = true;
+    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
+
+    cell.appendChild(bar);
+    if(cell.classList.contains('side')){
+      var row=document.createElement('div'); row.className='pyrow';
+      row.appendChild(ta); row.appendChild(out);
+      out.style.display='block'; out.textContent='press ▶ Run';
+      cell.appendChild(row);
+    } else {
+      cell.appendChild(ta); cell.appendChild(out);
+    }
+
+    if(isJava){
+      run.addEventListener('click', function(){
+        out.style.display='block';
+        out.className='pyout cap' + (isErr?' err':'');
+        out.textContent = capOut;
+      });
+    } else {
+      run.addEventListener('click', function(){ runPy(ta.value, out); });
+    }
+  });
+  bootPython();
+}
+function autoSizePyTextareas(scope){
+  (scope||document).querySelectorAll('.pyta').forEach(function(ta){
+    if(ta.offsetParent === null) return;         /* hidden lane: scrollHeight is 0 */
+    ta.style.height='auto';
+    ta.style.height=(ta.scrollHeight+4)+'px';
+  });
+}
+
+/* ===== the language switch ===== */
+function setLang(l){
+  document.body.setAttribute('data-lang', l);
+  document.getElementById('l-java').className = (l==='java') ? 'on' : '';
+  document.getElementById('l-py').className   = (l==='py')   ? 'on' : '';
+  try{ localStorage.setItem('a2lang', l); }catch(e){}
+  setTimeout(function(){ autoSizePyTextareas(document); }, 20);
+}
+document.getElementById('l-java').addEventListener('click', function(){ setLang('java'); });
+document.getElementById('l-py').addEventListener('click', function(){ setLang('py'); });
+document.getElementById('fsbtn').addEventListener('click', function(){
+  var d=document.documentElement;
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else if(d.requestFullscreen){ d.requestFullscreen(); }
+});
+/* Tab must INDENT, not move focus — Python answers are whitespace-sensitive and
+   the browser's default steals the key. Shift-Tab dedents the current line. */
+document.addEventListener('keydown', function(e){
+  var t = e.target;
+  if(e.key !== 'Tab' || !t || !t.matches || !t.matches('textarea.pyta, textarea.g-ta')) return;
+  if(t.readOnly) return;
+  e.preventDefault(); e.stopPropagation();
+  if(e.shiftKey){
+    var ls = t.value.lastIndexOf('\n', t.selectionStart - 1) + 1, n = 0;
+    while(n < 4 && t.value.charAt(ls + n) === ' ') n++;
+    if(n) t.setRangeText('', ls, ls + n, 'preserve');
+  } else {
+    t.setRangeText('    ', t.selectionStart, t.selectionEnd, 'end');
+  }
+}, true);
+
+
+/* ===== the array strip — one widget, two structures ===== */
+function makeViz(hostId, kind){
+  var host = document.getElementById(hostId); if(!host) return null;
+  var N = 5, vals = new Array(N).fill(null), next = 10;
+  var Top = -1, Head = -1, Tail = -1;
+
+  host.innerHTML =
+    '<div class="cells"></div><div class="vzc"></div><div class="vzmsg">&nbsp;</div>';
+  var cellsEl = host.querySelector('.cells'),
+      ctrlEl  = host.querySelector('.vzc'),
+      msgEl   = host.querySelector('.vzmsg');
+
+  for(var i=0;i<N;i++){
+    var c=document.createElement('div'); c.className='cell';
+    c.innerHTML='<div class="ptr">&nbsp;</div><div class="box">−1</div><div class="idx">'+i+'</div>';
+    cellsEl.appendChild(c);
+  }
+  var boxes = host.querySelectorAll('.cell .box'),
+      ptrs  = host.querySelectorAll('.cell .ptr');
+
+  function say(t,c){ msgEl.textContent=t||' '; msgEl.className='vzmsg'+(c?' '+c:''); }
+
+  function draw(){
+    for(var i=0;i<N;i++){
+      var live = (kind==='stack') ? (i<=Top) : (Head>-1 && i>=Head && i<=Tail);
+      var used = vals[i]!==null;
+      boxes[i].textContent = used ? vals[i] : '−1';
+      boxes[i].className = 'box' + (live ? ' on' : (used ? ' gone' : ''));
+      var p='';
+      if(kind==='stack'){ if(i===Top) p='<span class="p">▲ Top</span>'; }
+      else{
+        if(i===Head && i===Tail) p='<span class="h">▲H</span><span class="t">T</span>';
+        else if(i===Head) p='<span class="h">▲ Head</span>';
+        else if(i===Tail) p='<span class="t">▲ Tail</span>';
+      }
+      ptrs[i].innerHTML = p || '&nbsp;';
+    }
+    stat.innerHTML = (kind==='stack')
+      ? 'Top = ' + Top
+      : 'Head = ' + Head + ' &nbsp; Tail = ' + Tail;
+  }
+
+  function btn(label, cls, fn){
+    var b=document.createElement('button'); b.className='vzb'+(cls?' '+cls:'');
+    b.textContent=label; b.addEventListener('click', fn); ctrlEl.appendChild(b); return b;
+  }
+
+  var stat=document.createElement('span'); stat.className='vzs';
+
+  if(kind==='stack'){
+    btn('Push', null, function(){
+      if(Top < N-1){ Top++; vals[Top]=next; say('Push '+next+' — Top moved up to '+Top, 'ok'); next+=10; draw(); }
+      else say('OVERFLOW — the stack is full, so Push refused and returned FALSE', 'bad');
+    });
+    btn('Pop', null, function(){
+      if(Top > -1){ var v=vals[Top]; Top--; say('Pop returned '+v+' — Top moved down to '+Top+'. The value is still in the array; it is just unreachable.', 'ok'); draw(); }
+      else say('UNDERFLOW — the stack is empty, so Pop returned −1', 'bad');
+    });
+    ctrlEl.appendChild(stat);
+    btn('reset', 'alt', function(){ vals=new Array(N).fill(null); Top=-1; next=10; say(''); draw(); });
+  } else {
+    btn('Enqueue', null, function(){
+      if(Tail < N-1){ Tail++; vals[Tail]=next; if(Head===-1) Head=0;
+        say('Enqueue '+next+' — Tail moved to '+Tail, 'ok'); next+=10; draw(); }
+      else say('FULL — Tail has reached the end of the array, so Enqueue returned FALSE', 'bad');
+    });
+    btn('Dequeue', null, function(){
+      if(Head > -1 && Head <= Tail){ var v=vals[Head]; Head++;
+        say('Dequeue returned '+v+' — Head moved to '+Head, 'ok'); draw(); }
+      else say('EMPTY — Dequeue returned −1', 'bad');
+    });
+    ctrlEl.appendChild(stat);
+    btn('walk it', 'alt', function(){
+      vals=new Array(N).fill(null); Head=-1; Tail=-1; next=10;
+      var script=['e','e','e','d','d','d','e','e'], i=0;
+      (function step(){
+        if(i>=script.length){
+          say('Tail is at the end, so the queue says FULL — and it is holding 2 items in an array of 5.', 'bad');
+          draw(); return;
+        }
+        if(script[i]==='e'){ Tail++; vals[Tail]=next; if(Head===-1) Head=0; next+=10; }
+        else { Head++; }
+        i++; draw();
+        setTimeout(step, 620);
+      })();
+    });
+    btn('reset', 'alt', function(){ vals=new Array(N).fill(null); Head=-1; Tail=-1; next=10; say(''); draw(); });
+  }
+  draw();
+  return true;
+}
+
+
+/* THE ANSWER FORM IS WORTH ALL OF THE MARKS, and it flips between the two papers:
+     Paper 3 — pseudocode. No 9618 P3 mark scheme 2021-2025 offers program code.
+     Paper 4 — Java, Python or VB, and the front page of all 23 papers in the
+               archive says "a mark of zero will be awarded if a programming
+               language other than those listed here is used."
+   So a boss adapted from a Paper 4 question must REFUSE pseudocode outright.
+   Accepting it teaches a habit that scores nothing in the exam it prepares for. */
+function looksLikePseudocode(src){
+  return /←|<-|\bENDPROCEDURE\b|\bENDFUNCTION\b|\bENDWHILE\b|\bENDIF\b|\bDECLARE\b|\bTHEN\b|\bRETURNS\b/i.test(src);
+}
+function looksLikeProgramCode(src){
+  return /\bdef\s+\w+|\bpublic\s+static\b|System\.out|\bprintln\b|\bprint\s*\(|;\s*$|\{[\s\S]*\}/m.test(src);
+}
+
+/* ===== behavioural grading — when we can RUN it, we do not guess ===== */
+function bossBehaviour(studentCode, cb){
+  if(document.body.getAttribute('data-lang') !== 'py'){ cb(null, 'java'); return; }
+  if(/\bclass\s+\w+/.test(studentCode)){ cb(null, 'crash: this answer is a class — but the paper declares Queue, HeadPointer and TailPointer global and asks for a module-level function. Match the paper: global HeadPointer, TailPointer inside Enqueue().'); return; }
+  if(pyBusy){ cb(null, 'busy'); return; }
+  pyBusy = true; setRunButtons(false, '… judging');
+  var harness =
+    "Queue = [-1]*50\n" +
+    "HeadPointer = -1\n" +
+    "TailPointer = -1\n" +
+    studentCode + "\n" +
+    "__r = []\n" +
+    "def __chk(name, f):\n" +
+    "    try: __r.append((name, bool(f())))\n" +
+    "    except Exception: __r.append((name, False))\n" +
+    "__chk('stores the first item and returns TRUE', lambda: Enqueue(7) is True and Queue[0] == 7)\n" +
+    "__chk('sets HeadPointer to 0 on the first item', lambda: HeadPointer == 0)\n" +
+    "__chk('accepts all 50 items', lambda: all(Enqueue(i) is True for i in range(49)))\n" +
+    "__chk('refuses the 51st and returns FALSE', lambda: Enqueue(99) is False)\n" +
+    "__chk('TailPointer finishes at 49, not 50', lambda: TailPointer == 49)\n" +
+    "'|'.join(('1' if v else '0') + ':' + k for k, v in __r)";
+  bootPython().then(function(py){
+    var ns = py.toPy({});
+    return py.runPythonAsync(harness, {globals: ns})
+      .then(function(res){ ns.destroy(); pyBusy=false; setRunButtons(true); cb(String(res), null); })
+      .catch(function(e){
+        ns.destroy(); pyBusy=false; setRunButtons(true);
+        var m = String(e.message||e).trim().split('\n');
+        cb(null, 'crash:' + (m[m.length-1] || 'error'));
+      });
+  });
+}
+function behaviourHtml(raw, err){
+  if(err === 'java')
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li style="color:#8890b5;">'
+         + 'This deck cannot run Java, so the ticks on the left are a <b>checklist</b>, not a test. '
+         + 'Switch the language to <b>Python</b> and press mark again — then the machine actually runs your code.</li></ul>';
+  if(err && err.indexOf('crash:') === 0)
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li><span class="n">✗</span> '
+         + 'it did not run — <span class="mono">' + err.slice(6) + '</span></li>'
+         + '<li style="color:#8890b5;">Mark points can be ticked by text that never executes. This is why both columns exist.</li></ul>';
+  if(!raw) return '';
+  var rows = raw.split('|').map(function(t){
+    var ok = t.charAt(0) === '1', label = t.slice(2);
+    return '<li><span class="' + (ok?'y':'n') + '">' + (ok?'✓':'✗') + '</span> ' + label + '</li>';
+  }).join('');
+  return '<p class="g-lbl">what the machine says — <b>your code was actually run</b></p><ul class="g-mp">' + rows + '</ul>';
+}
+
+/* ===== 🎮 Overflow / Underflow ===== */
+var G = {i:0, score:0, locked:false, earned:{}};
+
+/* The teacher walks backwards and forwards through the stages, so a stage must
+   be answerable twice without being paid for twice. Record what each stage
+   earned and REPLACE it, rather than adding to a running total. */
+function gAwardAt(idx, n){
+  G.earned[idx] = n;
+  /* the total is DERIVED from the ledger, never accumulated -- so a stage can be
+     answered any number of times, and nothing can leave the two disagreeing */
+  var t = 0;
+  for(var k in G.earned) if(G.earned.hasOwnProperty(k)) t += G.earned[k];
+  G.score = t;
+  var sc = document.getElementById('g-score');
+  if(sc) sc.textContent = G.score > 0 ? ('score ' + G.score) : '';
+}
+function gAward(n){ gAwardAt(G.i, n); }
+var STAGES = [
+ { name:'Stage 1 · trace it',
+   q:'A five-element stack starts empty. Then: <b>Push, Push, Push, Pop, Push</b>.<br>What is <span class="mono">Top</span> now?',
+   opts:[
+     {t:'2', ok:true,  why:'Three up to 2, one down to 1, one back up to 2. Top is an index, not a count — and the difference is worth a mark.'},
+     {t:'3', ok:false, why:'That is how many items are in the stack. Top is the <i>index</i> of the last one, and the array starts at 0.'},
+     {t:'4', ok:false, why:'Four pushes happened, but one pop undid one of them.'},
+     {t:'−1', ok:false, why:'−1 means empty. The stack has three items in it.'}
+   ]},
+ { name:'Stage 2 · which one refuses',
+   q:'A five-element stack currently has <span class="mono">Top = 4</span>. Which operation returns a value meaning <b>"I could not do that"</b>?',
+   opts:[
+     {t:'Push', ok:true,  why:'Top is already at the last index, so there is nowhere to put it. Overflow — Push returns FALSE.'},
+     {t:'Pop',  ok:false, why:'Pop is fine — there are five items to take. Underflow only happens at Top = −1.'},
+     {t:'both', ok:false, why:'Only one of them is in trouble. A full stack pops perfectly well.'},
+     {t:'neither', ok:false, why:'One of them has run out of room. Look at what Top = 4 means in an array of 5.'}
+   ]},
+ { name:'Stage 3 · write the missing line',
+   q:'Here is <span class="mono">Pop</span> with one line removed. Type the missing line.<br><span class="mono" style="font-size:.9em;">if Top > -1 :&nbsp;&nbsp; v = Contents[Top] &nbsp;·&nbsp; <b class="accent2">______</b> &nbsp;·&nbsp; return v</span>',
+   ta:'', rows:2, total:2,
+   mps:[ {re:/Top/i, pts:1, label:'it changes <code>Top</code>'},
+         {re:/Top\s*(=|←|<-)\s*Top\s*-\s*1|Top\s*--|--\s*Top|Top\s*-=\s*1/i, pts:1, label:'it <b>decreases</b> Top by one — <code>Top = Top - 1</code>'} ],
+   model:'Top = Top - 1' },
+ { name:'Stage 4 · full, empty, or both',
+   q:'A five-element linear queue has <span class="mono">Head = 3</span>, <span class="mono">Tail = 4</span>. What is true?',
+   opts:[
+     {t:'It reports FULL, but holds only 2 items', ok:true,
+      why:'Tail is at the last index so Enqueue refuses — while indices 0, 1 and 2 sit empty behind Head, unreachable forever. That is the linear queue’s one real flaw.'},
+     {t:'It is empty', ok:false, why:'Head ≤ Tail, so there are items: indices 3 and 4.'},
+     {t:'It is genuinely full — 5 items', ok:false, why:'Count the live cells between Head and Tail. There are two.'},
+     {t:'Enqueue will work fine', ok:false, why:'Enqueue only checks whether Tail has hit the end. It has.'}
+   ]},
+ { name:'Stage 5 · BOSS · write Enqueue',
+   boss:true, total:6,
+   paper:'P4',
+   q:'<b>June 2025 Paper 43 Q1(b), six marks.</b> A <b>linear</b> queue is stored as a global <b>1D array</b> <span class="mono">Queue</span> of <b>50 integers</b>, indices <span class="mono">0</span> to <span class="mono">49</span>, every element initialised to −1. Two global integers, <span class="mono">HeadPointer</span> and <span class="mono">TailPointer</span>, both start at <span class="mono">−1</span>.<br>Write <span class="mono">Enqueue()</span>. It takes <b>one integer parameter</b>, returns <b>FALSE</b> if the queue is full, and <b>TRUE</b> if the value was stored.<br><span style="font-size:.88em; color:#c0392b;"><b>Paper 4 is answered in Java, Python or VB.</b> The front page of the paper says <i>“a mark of zero will be awarded if a programming language other than those listed here is used”</i> — and pseudocode is not one of them.</span>',
+   parts:[
+     {lbl:'Write the whole function &nbsp;<span class="accent2">[6]</span>', rows:11,
+      mps:[
+        {re:/Enqueue\s*\(/i,                                             pts:1, label:'function header taking one parameter'},
+        {re:/TailPointer\s*<\s*(49|50|MaxSize|Max|SIZE|N)\b|TailPointer\s*(=|==)\s*49/i, pts:1, label:'checks whether the queue is <b>full</b>'},
+        {re:/return\s*\(?\s*true/i,                                      pts:1, label:'returns TRUE when stored, FALSE when full', also:/return\s*\(?\s*false/i},
+        {re:/Queue\s*\[\s*TailPointer\s*\]\s*(=|←|<-)/i,                 pts:1, label:'stores the value at <code>Queue[TailPointer]</code>'},
+        {re:/TailPointer\s*(=|←|<-)\s*TailPointer\s*\+\s*1|TailPointer\s*\+\+|TailPointer\s*\+=\s*1/i, pts:1, label:'increments <code>TailPointer</code>'},
+        {re:/HeadPointer\s*(==|=)\s*-\s*1/i,                             pts:1, label:'handles the <b>first</b> element — if HeadPointer is −1, set it to 0', also:/HeadPointer\s*(=|←|<-)\s*0/i}
+      ],
+      model:'# the scheme\'s own form — the paper declares the globals, so the answer uses them\ndef Enqueue(DataValue):\n    global HeadPointer, TailPointer\n    if TailPointer < 49:\n        TailPointer = TailPointer + 1\n        Queue[TailPointer] = DataValue\n        if HeadPointer == -1:\n            HeadPointer = 0\n        return True\n    return False'}
+   ]}
+];
+
+function bossCodePane(code){
+  var esc = String(code).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<div><p class="g-lbl">your answer</p><pre class="g-ans">' + esc + '</pre></div>';
+}
+function gEl(id){ return document.getElementById(id); }
+function gProg(){
+  var p=gEl('g-prog'); p.innerHTML='';
+  STAGES.forEach(function(_,k){
+    var i=document.createElement('i');
+    i.className = k<G.i ? 'done' : (k===G.i ? 'cur' : '');
+    p.appendChild(i);
+  });
+}
+function gSay(html, cls){ var s=gEl('g-say'); s.innerHTML=html||'&nbsp;'; s.className='g-say'+(cls?' '+cls:''); if(G.llmBusy) gWaiting(true); }
+function markOne(ans, mps){
+  var got=0, rows=[];
+  mps.forEach(function(m){
+    var ok = m.re.test(ans) && (!m.also || m.also.test(ans));
+    if(ok) got += m.pts;
+    rows.push('<li><span class="'+(ok?'y':'n')+'">'+(ok?'✓':'✗')+'</span> '+m.label+' <b>['+m.pts+']</b></li>');
+  });
+  return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
+}
+function gDraw(){
+  var s=STAGES[G.i];
+  /* which paper this stage is, because the ANSWER FORM changes with it */
+  gEl('g-stage').innerHTML = s.name
+    + (s.paper ? ' <span class="pbadge ' + (s.paper==='P4'?'p4':'p3') + '">' + s.paper + '</span>' : '');
+  gEl('g-score').textContent = G.score>0 ? ('score ' + G.score) : '';
+  gNavState();
+  gEl('g-q').innerHTML = s.q;
+  var b=gEl('g-body'); b.innerHTML=''; G.locked=false; gSay('');
+  gProg();
+
+  if(s.opts){
+    var wrap=document.createElement('div'); wrap.className='g-opts';
+    s.opts.forEach(function(o){
+      var btn=document.createElement('button'); btn.className='g-b'; btn.style.flex='1 1 44%';
+      btn.innerHTML=o.t;
+      btn.addEventListener('click', function(){
+        if(G.locked) return;
+        if(o.ok){
+          G.locked=true; btn.className='g-b yes'; gAward(1);
+          gSay('✓ ' + o.why + ' <span style="opacity:.6">— press next → when you are ready</span>', 'ok'); /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */
+        } else {
+          btn.className='g-b no';
+          gSay('✗ ' + o.why, 'bad');
+        }
+      });
+      wrap.appendChild(btn);
+    });
+    b.appendChild(wrap);
+  } else if(s.boss){
+    /* two columns — four stacked textareas plus their feedback overflowed a 720 stage */
+    var grid=document.createElement('div'); grid.className='g-grid';
+    s.parts.forEach(function(p, idx){
+      var col=document.createElement('div');
+      var lab=document.createElement('p'); lab.className='g-lbl'; lab.innerHTML=p.lbl;
+      var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=p.rows; ta.spellcheck=false;
+      ta.id='boss'+idx;
+      col.appendChild(lab); col.appendChild(ta); grid.appendChild(col);
+    });
+    b.appendChild(grid);
+    var sub=document.createElement('button'); sub.className='g-sub'; sub.textContent='mark it, out of '+s.total;
+    sub.addEventListener('click', function(){
+      var code = gEl('boss0').value;
+      /* Paper 4 refuses pseudocode by rubric, so this marker refuses it too — but it
+         still shows what the logic would have earned, because the logic is not the
+         thing that was wrong. */
+      var wrongForm = looksLikePseudocode(code) && !looksLikeProgramCode(code);
+      var total=0, cells='';
+      s.parts.forEach(function(p, idx){
+        var r=markOne(gEl('boss'+idx).value, p.mps);
+        total+=r.got;
+        if(wrongForm) return;      /* the ticks match against CODE, so a pseudocode
+                                     answer fails some of them on notation alone --
+                                     showing them next to a refusal reads as a second fault */
+        cells += '<div><p class="g-lbl">'
+              +  (p.lbl)
+              +  ' &mdash; <b class="'+(r.got===p.mps.reduce(function(a,m){return a+m.pts;},0)?'accent1':'accent2')+'">'
+              +  r.got+'</b></p>'+r.html+'</div>';
+      });
+      if(wrongForm){
+        b.innerHTML = '<div class="g-res"><div class="g-tot" style="color:var(--accent2);">0 / '+s.total+'</div>'
+                    + '<div class="g-grid">' + bossCodePane(code)
+                    + '<div>'
+                    + '<div class="formwarn"><b>That is pseudocode, and this is Paper 4.</b><br>'
+                    + 'The front page of every Paper 4 says: <i>"a mark of zero will be awarded if a programming '
+                    + 'language other than those listed here is used"</i> — Java, Python or Visual Basic, console mode. '
+                    + 'Pseudocode is not one of them.<br><br>'
+                    + 'Nothing here has been marked, because the mark points attach to <b>code</b>. '
+                    + 'Write the same answer in <b>'
+                    + (document.body.getAttribute('data-lang')==='py' ? 'Python' : 'Java')
+                    + '</b> and press mark again — then you find out what it is actually worth.</div></div>'
+                    + '</div></div>';
+        gSay('<b>Zero — and not for anything that was wrong with your answer.</b> '
+           + 'On this paper the form is worth all of the marks. Press next → to finish.', 'bad');
+        if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+        return;
+      }
+      gAward(total);
+      /* the results REPLACE the inputs rather than stacking below them; the reader,
+         when the server is up, takes a third column */
+      b.innerHTML = '<div class="g-res"><div class="g-tot">'+total+' / '+s.total+'</div>'
+                  + '<div class="g-grid">' + bossCodePane(code)
+                  + '<div>' + cells + '</div>'
+                  + '<div><div id="g-beh"><p class="g-lbl">what the machine says</p>'
+                  +   '<ul class="g-mp"><li style="color:#8890b5;">running your code…</li></ul></div>'
+                  +   '<div id="g-llm" class="g-llm"></div>'
+                  + '</div>'
+                  + '</div></div>';
+      bossBehaviour(code, function(raw, err){
+        var el = document.getElementById('g-beh');
+        if(el) el.innerHTML = behaviourHtml(raw, err);
+        llmMark(code, document.body.getAttribute('data-lang') === 'py' ? 'py' : 'java',
+                total, s.total, raw, document.getElementById('g-llm'), 'A02a', 'Enqueue');
+        /* the verdict line must read BOTH columns — full marks on a program that
+           does not work is the most instructive result this game can produce */
+        if(raw && raw.indexOf('0:') !== -1){
+          if(total === s.total){
+            gSay('<b>Full marks on the mark points — and it still does not work.</b> '
+               + 'An examiner would give you ' + total + '. The machine would not. '
+               + 'Read the right-hand column: that is the difference between looking right and being right.', 'bad');
+          } else {
+            gSay('Marks missing on the left, behaviour failing on the right — '
+               + 'fix the right-hand column first. Press next → to finish.', 'bad');
+          }
+        }
+      });
+      gSay(total >= s.total-1 ? 'Strong. Press next → to finish.' : 'Read the ✗ lines — press next → to finish.',
+           total >= s.total-1 ? 'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub);
+  } else {
+    var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=s.rows||2; ta.spellcheck=false;
+    b.appendChild(ta);
+    var sub2=document.createElement('button'); sub2.className='g-sub'; sub2.textContent='mark it';
+    sub2.addEventListener('click', function(){
+      var r=markOne(ta.value, s.mps);
+      gAward(r.got);
+      gSay('<b>'+r.got+' / '+s.total+'</b>'+r.html+
+           '<div style="margin-top:5px; font-size:.92em;">model answer: <span class="mono">'+s.model+'</span></div>'+
+           '<div style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           r.got===s.total?'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub2);
+  }
+}
+function gBack(){
+  if(G.i <= 0) return;
+  G.locked = true;
+  G.i--;
+  gDraw();
+}
+function gNavState(){
+  var b = document.getElementById('g-back');
+  if(b) b.style.visibility = (G.i > 0) ? '' : 'hidden';
+}
+function gSkip(){
+  G.locked = true;
+  G.i++;
+  if(G.i >= STAGES.length){ gFinish(); } else { gDraw(); }
+}
+/* Bind immediately. In the A2-era decks this whole block lives inside the
+   Reveal.initialize().then() closure, which resolves AFTER DOMContentLoaded has
+   already fired -- so a DOMContentLoaded listener registered here never runs and
+   the button silently does nothing. */
+/* Reachable from the inline onclick no matter what scope this block is in.
+   (An inline handler resolves names GLOBALLY, so a function declared inside the
+   Reveal.initialize().then() closure would never be found from the attribute.) */
+window.gReplay = function(){
+  G.i = 0; G.score = 0; G.earned = {};
+  var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
+  var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
+  gDraw();
+};
+function gSkipBind(){
+  var b = document.getElementById('g-skip'), k = document.getElementById('g-back');
+  if(!b){ document.addEventListener('DOMContentLoaded', gSkipBind); return; }
+  if(!b.__bound){ b.__bound = true;
+    b.addEventListener('click', function(ev){ ev.stopPropagation(); gSkip(); }); }
+  if(k && !k.__bound){ k.__bound = true;
+    k.addEventListener('click', function(ev){ ev.stopPropagation(); gBack(); }); }
+  gNavState();
+}
+gSkipBind();
+function gNextOnce(){
+  G.i++;
+  if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
+}
+function gFinish(){
+  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
+  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
+  gEl('g-stage').textContent='done';
+  gEl('g-q').innerHTML='';
+  gEl('g-prog').innerHTML='';
+  gEl('g-score').textContent='';
+  gEl('g-body').innerHTML=
+    '<div class="g-fin"><div class="big">'+G.score+'</div>'+
+    '<p style="margin:6px 0 0;">Every mark on that boss came from a real mark scheme.</p>'+
+    '<p style="margin:6px 0 0; font-size:.9em; color:#5b6488;">The two that cost the most are the two that only matter '+
+    'at the edges: <b>setting HeadPointer to 0 for the very first item</b>, and <b>checking that the queue is full</b> '+
+    'before writing. The middle of the array was never the difficult part.</p>'+
+    '<button class="g-sub" onclick="gReplay()">play again</button></div>';
+  gSay('');
+}
+
+
+/* ═══ LIVE LLM MARKING — ported 2026-08-24. The key is never in this file:
+   grade-server.py holds it in .env on the teacher's Mac and marks on request;
+   the absence of the process is the off-switch. ═══ */
+var LLM = { url:'http://127.0.0.1:8788', available:false, on:true };
+function llmChip(){
+  var c = document.getElementById('llmchip'); if(!c) return;
+  if(!LLM.available){ c.className='off'; c.textContent='⚡ no LLM — click for help'; return; }
+  c.className = LLM.on ? 'on' : 'off';
+  c.textContent = LLM.on ? '⚡ LLM marking on' : '⚡ LLM marking off';
+}
+function llmHelp(show){ var h = document.getElementById('llmhelp'); if(h) h.style.display = show ? 'block' : 'none'; }
+function llmDetect(cb){
+  var ctl = new AbortController(); var tm = setTimeout(function(){ ctl.abort(); }, 1200);
+  fetch(LLM.url + '/ping', {signal: ctl.signal, cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ clearTimeout(tm); LLM.available = !!(j && j.ok && j.key); llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
+    .catch(function(){ clearTimeout(tm); LLM.available = false; llmChip(); if(cb) cb(); });
+}
+function llmWatch(){ setInterval(function(){ if(LLM.available || document.hidden) return; llmDetect(); }, 5000); }
+function llmBind(){
+  var c = document.getElementById('llmchip'); if(!c || c.__bound) return; c.__bound = true;
+  c.addEventListener('click', function(){
+    if(!LLM.available){ c.textContent='⚡ looking for the server…'; llmHelp(true); llmDetect(); return; }
+    LLM.on = !LLM.on; llmChip();
+  });
+  var x = document.getElementById('llmhelp-x'); if(x) x.addEventListener('click', function(){ llmHelp(false); });
+  llmDetect(); llmWatch();
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
+else llmBind();
+
+function gPick(idx, n, btn){
+  var s = STAGES[idx]; n = Math.min(n, s.total);
+  gAwardAt(idx, n);
+  if(idx === G.i){ var tot = document.querySelector('#g-body .g-tot'); if(tot) tot.textContent = n + ' / ' + s.total; }
+  if(btn){
+    Array.prototype.forEach.call(btn.parentNode.querySelectorAll('.g-pick'), function(x){ x.classList.remove('on'); });
+    btn.classList.add('on');
+  }
+}
+function pickButtons(r, l){
+  var idx = G.i, s = STAGES[idx]; r = Math.min(r, s.total); l = Math.min(l, s.total);
+  if(r === l) return '';
+  return '<div class="g-pickrow">Which mark stands? '
+       + '<button class="g-pick" onclick="gPick(' + idx + ', ' + r + ', this)">keep the pattern\u2019s ' + r + '</button>'
+       + '<button class="g-pick" onclick="gPick(' + idx + ', ' + l + ', this)">take the reader\u2019s ' + l + '</button>'
+       + '<span style="font-size:.85em; color:#8890b5;">\u2014 the total moves with your choice.</span></div>';
+}
+function consensusHtml(regexRaw, llmAwarded, ofPoints, behaviour){
+  var gap = Math.abs(regexRaw - llmAwarded);
+  var beh = null;
+  if(behaviour && behaviour.indexOf('|') > -1){
+    var parts = behaviour.split('||')[0].split('|');
+    var ok = parts.filter(function(p){ return p.charAt(0) === '1'; }).length;
+    beh = {ok: ok, of: parts.length};
+  }
+  var rows = '<b>pattern ' + regexRaw + '/' + ofPoints + '</b> &nbsp;\u00b7&nbsp; <b>reader ' + llmAwarded + '/' + ofPoints + '</b>'
+           + (beh ? ' &nbsp;\u00b7&nbsp; <b>ran ' + beh.ok + '/' + beh.of + '</b>' : '');
+  if(gap > 1)
+    return '<div class="g-cons split">' + rows + ' \u2014 <b>the two markers disagree by ' + gap + '.</b> '
+         + 'The pattern-matcher looks for shapes and the reader looks for meaning, so a gap this big '
+         + 'usually means one of them is being fooled. <b>Worth a human eye</b>.' + pickButtons(regexRaw, llmAwarded) + '</div>';
+  if(!beh)
+    return '<div class="g-cons agree">' + rows + ' \u2014 the two markers agree.</div>';
+  var markFrac = (regexRaw + llmAwarded) / (2 * Math.max(1, ofPoints));
+  var behFrac  = beh.ok / Math.max(1, beh.of);
+  if(behFrac - markFrac >= 0.3)
+    return '<div class="g-cons split">' + rows + ' \u2014 <b>it works, and it still scores ' + regexRaw + '.</b> '
+         + 'The machine is satisfied; both markers refused it anyway, because the question asked for a particular '
+         + '<b>method</b>. On this paper that is most of the marks.</div>';
+  if(behFrac >= 1 && markFrac >= 0.6)
+    return '<div class="g-cons agree">' + rows + ' \u2014 <b>all three agree.</b> Two markers read your code the same way '
+         + 'and it does the right thing when run. As certain as marking gets.</div>';
+  if(markFrac >= 0.6)
+    return '<div class="g-cons split">' + rows + ' \u2014 <b>the two markers agree, the machine does not.</b> '
+         + 'The method is visibly there, so an examiner would pay for it \u2014 but it does not work yet. '
+         + 'You would score here and still have a bug to find.</div>';
+  return '<div class="g-cons split">' + rows + ' \u2014 <b>all three agree, and none of them are happy.</b> '
+       + 'Start from the first \u2717 on the left.</div>';
+}
+function gWaiting(on){
+  G.llmBusy = !!on;
+  var say = gEl('g-say'); if(!say) return;
+  var h = document.getElementById('g-nexthint');
+  if(!h){ h = document.createElement('div'); h.id = 'g-nexthint'; h.style.marginTop = '5px'; say.appendChild(h); }
+  if(on){
+    h.style.opacity = '1';
+    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> give it a few seconds \u2014 clicking now moves on without it.</span>';
+  } else { h.style.opacity = '.65'; h.textContent = ''; }
+}
+function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host, task, fn){
+  if(!LLM.available || !LLM.on || !host) return;
+  var grid = host.closest ? host.closest('.g-grid') : null;
+  if(grid) grid.classList.add('three');
+  host.innerHTML = '<p class="g-lbl">a second marker is reading it\u2026 <span class="conf">(this one reads for meaning, not for patterns)</span></p>';
+  var ctl = new AbortController();
+  var timedOut = false, t0 = Date.now();
+  var tm = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
+  gWaiting(true);
+  fetch(LLM.url + '/mark', {
+    method:'POST', signal: ctl.signal, headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task: task, fn: fn, lang: lang, code: code})
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      clearTimeout(tm); gWaiting(false);
+      if(!j || j.error){ host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">(' + ((j && j.error) || 'no reply') + ')</span></p>'; return; }
+      var rows = j.marks.map(function(m){
+        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'\u2713':'\u2717') + '</span> '
+             + m.point + (m.why ? ' <span class="conf">\u2014 ' + m.why + '</span>' : '') + '</li>';
+      }).join('');
+      host.innerHTML = '<p class="g-lbl">what a second marker says \u2014 <b>it read your code, it did not run it</b></p>'
+                     + '<ul class="g-mp">' + rows + '</ul>'
+                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
+                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
+    })
+    .catch(function(){
+      clearTimeout(tm); gWaiting(false);
+      var secs = Math.round((Date.now() - t0) / 1000);
+      host.innerHTML = timedOut
+        ? '<p class="g-lbl">the reader gave up after ' + secs + ' s <span class="conf">(the model is busy, not broken \u2014 the other columns stand. Press mark again to retry.)</span></p>'
+        : '<p class="g-lbl">could not reach the reader <span class="conf">(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
+    });
+}
+
+Reveal.initialize({
+  hash:true, slideNumber:'c/t', width:1280, height:720, margin:.06,
+  plugins:[RevealNotes],
+  transition:'slide', backgroundTransition:'fade'
+}).then(function(){
+  initPyCells();
+  makeViz('stackviz','stack');
+  makeViz('queueviz','queue');
+  gDraw();
+  try{ var L=localStorage.getItem('a2lang'); if(L) setLang(L); }catch(e){}
+  var ob=document.getElementById('obj-btn');
+  if(ob) ob.addEventListener('click', function(){
+    var o=document.getElementById('obj');
+    o.style.display = (o.style.display==='none') ? 'block' : 'none';
+  });
+});
+Reveal.on('ready', function(e){ autoSizePyTextareas(e.currentSlide); });
+Reveal.on('slidechanged', function(e){ autoSizePyTextareas(e.currentSlide); });
+</script>
+</body>
+</html>
