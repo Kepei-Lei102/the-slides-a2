@@ -227,6 +227,29 @@ body[data-lang="py"] .lane[data-lang="java"]{display:none;}
   padding:2px 10px; font-weight:bold; cursor:pointer; font-size:.95em; margin:0 5px; font-family:'Calibri','Segoe UI',sans-serif;}
 .g-pick:hover{background:rgba(23,179,163,.28);}
 .g-pick.on{background:var(--accent1); color:#fff;}
+
+/* ===== the ring — steppable circular queue (added 2026-09-09) ===== */
+.cq-bar{display:flex; gap:7px; align-items:center; justify-content:center; flex-wrap:wrap; margin:2px 0 6px;}
+.cq-btn{background:rgba(255,255,255,.08); color:var(--ice); border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:4px 13px; font-size:.5em; font-family:'Calibri','Segoe UI',sans-serif; cursor:pointer;}
+.cq-btn:hover{background:rgba(255,255,255,.16);} .cq-btn.go{background:var(--accent3); color:#4a3500; border-color:var(--accent3); font-weight:bold;}
+.cq-btn.walk{background:var(--accent1); color:#062c28; border-color:var(--accent1); font-weight:bold;}
+.cq-wrap{display:flex; gap:18px; align-items:flex-start; justify-content:center;}
+.cq-ring{position:relative; width:200px; height:200px; flex:0 0 auto;}
+.cq-ring svg{width:100%; height:100%;}
+.cq-slot{position:absolute; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:10px; border:2px solid rgba(255,255,255,.35); background:rgba(255,255,255,.06); color:var(--ice); display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Courier New',monospace; font-weight:bold; font-size:.62em; transition:.25s;}
+.cq-slot .ix{font-size:.62em; color:#98a0c0; font-family:'Calibri','Segoe UI',sans-serif; font-weight:normal;}
+.cq-slot.full{background:rgba(23,179,163,.28); border-color:var(--accent1);}
+.cq-slot.head{box-shadow:0 0 0 3px var(--accent3);} .cq-slot.tail{border-color:var(--accent2); border-width:3px;}
+.cq-slot.dead{background:rgba(255,255,255,.02); color:#5b6488; border-style:dashed;}
+.cq-side{flex:1; min-width:0; max-width:560px; text-align:left;}
+.cq-state{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px;}
+.cq-state span{font-family:'Courier New',monospace; font-weight:bold; font-size:.55em; padding:3px 10px; border-radius:8px; background:rgba(255,255,255,.08); color:var(--ice);}
+.cq-state span.h{color:var(--accent3);} .cq-state span.t{color:#ff9d95;} .cq-state span.c{color:#5FD6C9;}
+.cq-say{background:rgba(255,255,255,.07); border-left:4px solid var(--accent1); border-radius:8px; padding:7px 12px; font-size:.54em; line-height:1.42; color:var(--ice); min-height:4.4em;}
+.cq-say b{color:#5FD6C9;} .cq-say .bad{color:#ff9d95;} .cq-say .amb{color:var(--accent3);}
+.cq-log{font-family:'Courier New',monospace; font-size:.46em; color:#98a0c0; margin-top:6px; line-height:1.4; min-height:2.8em;}
+.cq-arrow{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:.42em; color:#98a0c0; text-align:center; line-height:1.3; white-space:nowrap;}
+.cq-arrow b{color:var(--accent3); font-family:'Courier New',monospace;}
 </style></head>
 <body data-lang="java">
 <div class="reveal"><div class="slides">
@@ -642,6 +665,58 @@ print("Enqueue(60) ->", Enqueue(60), " <- FULL, holding 2 of 5")</script></div>
   </div>
 
 </section>
+
+<!-- H11 the ring, stepped — widget + the code in both languages (added 2026-09-09, Kepei: "it is being tested; it is useful") -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">Step the ring</h2>
+  <p style="font-size:.48em; color:#98a0c0; margin:0 0 3px;">The same five slots, bent round. <b>walk it</b> replays the walking bug's sequence — three in, three out, two in, one more — and this time the one more <b>lands</b>.</p>
+  <div id="cq-host"></div>
+  <div class="lane" data-lang="java" style="margin-top:6px;">
+  <div class="pycell java side" data-out="3 in                   Head=0 Tail=2 Count=3
+3 out - now empty      Head=3 Tail=2 Count=0
+2 more in              Head=3 Tail=4 Count=2
+Enqueue(60) -> true  <- wrapped to index 0
+3 in the ring          Head=3 Tail=0 Count=3"><script type="text/plain" class="pysrc">static int HeadPointer = 0, TailPointer = -1, Count = 0;   // Queue = new Integer[5]
+static Boolean Enqueue(Integer v) {
+    if (Count == 5) return false;                    // full is a COUNT question now
+    TailPointer = (TailPointer + 1) % 5;             // the one operator
+    Queue[TailPointer] = v; Count++; return true;
+}
+static Integer Dequeue() {
+    if (Count == 0) return -1;                       // and so is empty
+    Integer v = Queue[HeadPointer];
+    HeadPointer = (HeadPointer + 1) % 5; Count--; return v;
+}
+Enqueue(10); Enqueue(20); Enqueue(30);   show("3 in");
+Dequeue();   Dequeue();   Dequeue();     show("3 out - now empty");
+Enqueue(40); Enqueue(50);                show("2 more in");
+System.out.println("Enqueue(60) -> " + Enqueue(60) + "  <- wrapped to index " + TailPointer);
+show("3 in the ring");</script></div>
+  </div>
+  <div class="lane" data-lang="py" style="margin-top:6px;">
+  <div class="pycell side tight"><script type="text/plain" class="pysrc">Queue = [-1] * 5; HeadPointer = 0; TailPointer = -1; Count = 0
+def Enqueue(v):
+    global TailPointer, Count
+    if Count == 5: return False              # full is a COUNT question now
+    TailPointer = (TailPointer + 1) % 5      # the one operator
+    Queue[TailPointer] = v; Count += 1; return True
+def Dequeue():
+    global HeadPointer, Count
+    if Count == 0: return -1                 # and so is empty
+    v = Queue[HeadPointer]; HeadPointer = (HeadPointer + 1) % 5; Count -= 1
+    return v
+def show(l): print("%-22s Head=%d Tail=%d Count=%d" % (l, HeadPointer, TailPointer, Count))
+for v in (10, 20, 30): Enqueue(v)
+show("3 in")
+for i in range(3): Dequeue()
+show("3 out - now empty")
+Enqueue(40); Enqueue(50); show("2 more in")
+print("Enqueue(60) ->", Enqueue(60), " <- wrapped to index", TailPointer); show("3 in the ring")</script></div>
+  </div>
+
+</section>
+
 </section>
 
 
@@ -1090,7 +1165,20 @@ function bossBehaviour(studentCode, cb){
       });
   });
 }
-function behaviourHtml(raw, err){
+function editDist(a, b){
+  var m=a.length, n=b.length, d=[]; for(var i=0;i<=m;i++){ d[i]=[i]; } for(var j=1;j<=n;j++) d[0][j]=j;
+  for(var i=1;i<=m;i++) for(var j=1;j<=n;j++) d[i][j]=Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return d[m][n];
+}
+function nearMisses(src){
+  var names=['HeadPointer','TailPointer','Queue','Contents','Top'], seen={}, out=[];
+  (src.match(/[A-Za-z_]\w*/g)||[]).forEach(function(w){
+    if(seen[w] || names.indexOf(w)>-1 || w.length<4 || /^(Enqueue|Dequeue|Push|Pop|Queue|True|False|global|return|def)$/i.test(w) || /queue/i.test(w)) return; seen[w]=1;
+    names.forEach(function(n){ if(w.length>=n.length-2 && w.toLowerCase()!==n.toLowerCase() && editDist(w.toLowerCase(), n.toLowerCase())<=2) out.push(w); });
+  });
+  return out;
+}
+function behaviourHtml(raw, err, code){
   if(err === 'java')
     return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li style="color:#8890b5;">'
          + 'This deck cannot run Java, so the ticks on the left are a <b>checklist</b>, not a test. '
@@ -1104,6 +1192,9 @@ function behaviourHtml(raw, err){
     var ok = t.charAt(0) === '1', label = t.slice(2);
     return '<li><span class="' + (ok?'y':'n') + '">' + (ok?'✓':'✗') + '</span> ' + label + '</li>';
   }).join('');
+  var slips = nearMisses(code || '');
+  if(slips.length && raw.indexOf('0:') > -1)
+    rows += '<li style="color:#c0392b;">a name that is <b>almost</b> a global: <span class="mono">' + slips.join('</span>, <span class="mono">') + '</span> — Python quietly made a new local variable, so the real one never changed. One letter is the whole bug.</li>';
   return '<p class="g-lbl">what the machine says — <b>your code was actually run</b></p><ul class="g-mp">' + rows + '</ul>';
 }
 
@@ -1289,9 +1380,9 @@ function gDraw(){
                   + '</div></div>';
       bossBehaviour(code, function(raw, err){
         var el = document.getElementById('g-beh');
-        if(el) el.innerHTML = behaviourHtml(raw, err);
+        if(el) el.innerHTML = behaviourHtml(raw, err, code);
         llmMark(code, document.body.getAttribute('data-lang') === 'py' ? 'py' : 'java',
-                total, s.total, raw, document.getElementById('g-llm'), 'A02a', 'Enqueue');
+                total, s.total, raw, document.getElementById('g-llm'), 'A02a-boss', 'Enqueue');
         /* the verdict line must read BOTH columns — full marks on a program that
            does not work is the most instructive result this game can produce */
         if(raw && raw.indexOf('0:') !== -1){
@@ -1530,6 +1621,41 @@ Reveal.initialize({
 });
 Reveal.on('ready', function(e){ autoSizePyTextareas(e.currentSlide); });
 Reveal.on('slidechanged', function(e){ autoSizePyTextareas(e.currentSlide); });
+</script>
+
+<script>
+/* ===== the ring — a steppable circular queue ===== */
+var CQ = {N:5, q:[], head:0, tail:-1, count:0, next:10, timer:null, log:[]};
+function cqBuild(){
+  var host=document.getElementById('cq-host'); if(!host) return;
+  var slots='', R=74, cx=100, cy=100;
+  for(var i=0;i<CQ.N;i++){ var a=-Math.PI/2 + i*2*Math.PI/CQ.N; var x=cx+R*Math.cos(a), y=cy+R*Math.sin(a);
+    slots+='<div class="cq-slot" id="cq-s'+i+'" style="left:'+x.toFixed(0)+'px; top:'+y.toFixed(0)+'px;"><span class="v">·</span><span class="ix">['+i+']</span></div>'; }
+  host.innerHTML='<div class="cq-bar"><button class="cq-btn go" onclick="cqEnq()">enqueue</button><button class="cq-btn" onclick="cqDeq()">dequeue</button><button class="cq-btn walk" onclick="cqWalk()">▶ walk it</button><button class="cq-btn" onclick="cqReset()">reset</button></div>'
+    +'<div class="cq-wrap"><div class="cq-ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="74" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" stroke-dasharray="4 5"/></svg>'+slots
+    +'<div class="cq-arrow">[4] → [0]<br><b>(i + 1) MOD 5</b></div></div>'
+    +'<div class="cq-side"><div class="cq-state"><span class="h">Head = <i id="cq-h">0</i></span><span class="t">Tail = <i id="cq-t">-1</i></span><span class="c">Count = <i id="cq-c">0</i></span><span id="cq-verdict">empty</span></div><div class="cq-say" id="cq-say"></div><div class="cq-log" id="cq-log"></div></div></div>';
+  cqReset();
+}
+function cqReset(){ if(CQ.timer){ clearInterval(CQ.timer); CQ.timer=null; } CQ.q=[]; for(var i=0;i<CQ.N;i++) CQ.q.push(null); CQ.head=0; CQ.tail=-1; CQ.count=0; CQ.next=10; CQ.log=[];
+  cqDraw('Five slots in a ring. <b>Head</b> (gold) is where the next dequeue reads; <b>Tail</b> (red) is where the last enqueue wrote. Press <b>enqueue</b> a few times, then <b>dequeue</b> — and watch what the pointers can and cannot tell you.'); }
+function cqEnq(){ if(CQ.count===CQ.N){ cqDraw('<span class="bad">Enqueue → FALSE.</span> Count is 5, so it is full — <b>not</b> because Tail hit the end. Read the pointers: Tail is one slot behind Head. Remember that shape.'); return; }
+  var was=CQ.tail; CQ.tail=(CQ.tail+1)%CQ.N; CQ.q[CQ.tail]=CQ.next; CQ.count++; CQ.log.push('Enqueue('+CQ.next+') → ['+CQ.tail+']'); CQ.next+=10;
+  var msg = was===CQ.N-1 ? '<b>The wrap.</b> Tail was at [4]; (4 + 1) MOD 5 = <b>0</b>, so the value lands in [0] — a slot the linear queue had abandoned for good.' : 'Written to [<b>'+CQ.tail+'</b>]. Tail moved one step round.';
+  if(CQ.count===CQ.N) msg += ' <span class="amb">Now full — and Tail sits one behind Head.</span>';
+  cqDraw(msg); }
+function cqDeq(){ if(CQ.count===0){ cqDraw('<span class="bad">Dequeue → nothing.</span> Count is 0, so it is empty. Look at the pointers though: '+(((CQ.tail+1)%CQ.N)===CQ.head?'Tail is one slot behind Head — <span class="amb">exactly the shape of FULL</span>. The pointers cannot tell; only Count can.':'they are wherever the last run left them.')); return; }
+  var v=CQ.q[CQ.head]; CQ.q[CQ.head]=null; var from=CQ.head; CQ.head=(CQ.head+1)%CQ.N; CQ.count--; CQ.log.push('Dequeue() → '+v+' from ['+from+']');
+  var msg='Read <b>'+v+'</b> from [<b>'+from+'</b>]; Head moved on'+(from===CQ.N-1?' — and wrapped to [0]':'')+'. The slot is free again, and the ring will reuse it.';
+  if(CQ.count===0) msg += ' <span class="amb">Now empty — and Tail sits one behind Head. The same shape as full.</span>';
+  cqDraw(msg); }
+function cqWalk(){ cqReset(); var steps=[cqEnq,cqEnq,cqEnq,cqDeq,cqDeq,cqDeq,cqEnq,cqEnq,cqEnq], i=0;
+  CQ.timer=setInterval(function(){ if(i>=steps.length){ clearInterval(CQ.timer); CQ.timer=null; cqDraw('<b>Enqueue(60) landed.</b> The walking bug said FULL here with two items in five slots; the ring wrapped Tail from [4] to [0] and took it. Three items, Head=3, Tail=0 — and the only reason we know it is not full is <b>Count</b>.'); return; } steps[i](); i++; }, 750); }
+function cqDraw(msg){ for(var i=0;i<CQ.N;i++){ var el=document.getElementById('cq-s'+i), v=CQ.q[i]; el.className='cq-slot'+(v!==null?' full':' dead')+(CQ.count>0&&i===CQ.head?' head':'')+(CQ.tail>=0&&i===CQ.tail&&CQ.count>0?' tail':''); el.querySelector('.v').textContent = v!==null? v : '·'; }
+  document.getElementById('cq-h').textContent=CQ.head; document.getElementById('cq-t').textContent=CQ.tail; document.getElementById('cq-c').textContent=CQ.count;
+  var vd=document.getElementById('cq-verdict'); vd.textContent = CQ.count===0?'empty':(CQ.count===CQ.N?'FULL':CQ.count+' of '+CQ.N); vd.style.color = CQ.count===CQ.N?'#ff9d95':(CQ.count===0?'#98a0c0':'#5FD6C9');
+  document.getElementById('cq-say').innerHTML=msg; document.getElementById('cq-log').textContent=CQ.log.slice(-4).join('   ·   '); }
+cqBuild();
 </script>
 </body>
 </html>
