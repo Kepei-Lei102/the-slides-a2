@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>When a Node Has Two Pointers — Binary Trees</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<style>
+:root{
+  --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
+  --accent3:#F2B53C; --navy:#222B5A; --ice:#E8EEF9; --white:#fff;
+}
+.reveal{font-family:'Calibri','Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif; font-size:26px;}
+.reveal h1,.reveal h2,.reveal h3{font-family:'Georgia','Times New Roman','PingFang SC','Microsoft YaHei',serif; text-transform:none; letter-spacing:-.02em;}
+.reveal section{text-align:left;}
+.dk{color:var(--ice);} .dk h1,.dk h2,.dk h3{color:var(--white);}
+.lt{color:var(--navy);} .lt h2,.lt h3{color:var(--navy);}
+.bar{position:absolute; top:0; left:0; right:0; height:5px;}
+.card{background:var(--white); border-radius:10px; padding:16px 20px; box-shadow:0 4px 12px rgba(0,0,0,.07); text-align:left;}
+.rule{background:var(--white); border-radius:8px; padding:11px 16px; box-shadow:0 3px 10px rgba(0,0,0,.05); border-left:5px solid var(--accent1); margin:10px 0; text-align:left; font-size:.74em;}
+.rule.accent2{border-left-color:var(--accent2);} .rule.accent3{border-left-color:var(--accent3);} .rule.navy{border-left-color:var(--navy);}
+.dk .rule{background:rgba(255,255,255,.06); color:var(--ice);}
+.two-col{display:flex; gap:26px; align-items:flex-start;} .two-col>*{flex:1; min-width:0;}
+.three-col{display:flex; gap:16px;} .three-col>*{flex:1; min-width:0;}
+.smaller{font-size:.7em;} .center{text-align:center;}
+.accent1{color:var(--accent1);} .accent2{color:var(--accent2);} .accent3{color:var(--accent3);}
+.mono{font-family:'Courier New',monospace; font-weight:bold;}
+
+.badges{position:absolute; top:-14px; right:0; display:flex; gap:6px; z-index:5;}
+.bg{font-size:.44em; font-weight:bold; letter-spacing:.03em; padding:3px 12px; border-radius:20px; font-family:'Calibri','Segoe UI',sans-serif;}
+.bg-p3{background:rgba(240,101,91,.14); color:#c0392b; border:1.5px solid var(--accent2);}
+.bg-p34{background:rgba(23,179,163,.15); color:#0d7a6e; border:1.5px solid var(--accent1);}
+.dk .bg-p3{color:#ff9d95;} .dk .bg-p34{color:#5FD6C9;}
+
+.dig{position:absolute; bottom:-34px; left:50%; transform:translateX(-50%); font-size:.5em; color:#98a0c0; animation:bob 2s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(5px);}}
+#obj-btn{background:rgba(255,255,255,.08); color:var(--ice); border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:5px 14px; cursor:pointer; font-size:.42em; opacity:.55;}
+#obj-btn:hover{opacity:1;}
+
+/* ===== py-cell: live Python ===== */
+.pycell{background:var(--navy); border-radius:12px; padding:10px 12px 12px; box-shadow:0 4px 14px rgba(0,0,0,.14); text-align:left;}
+.pycell .pybar{display:flex; gap:8px; align-items:center; margin-bottom:6px;}
+.pycell .pydots{display:flex; gap:5px;}
+.pycell .pydots i{width:9px; height:9px; border-radius:50%; display:block;}
+.pyta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.45; padding:10px 12px; resize:none; outline:none; display:block;}
+.pyta[readonly]{color:#aeb8dd;}
+.pyta:focus{box-shadow:0 0 0 2px var(--accent1);}
+.pyrun{background:var(--accent1); color:#fff; border:none; border-radius:7px; padding:4px 16px; font-size:.5em; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.pyrun:hover{background:#12907f;} .pyrun:disabled{background:#5a6394; cursor:wait;}
+.pylock{background:transparent; color:#98a0c0; border:1.5px solid #454e82; border-radius:7px; padding:3px 9px; font-size:.5em; font-weight:bold; cursor:pointer;}
+.pylock:hover{color:var(--accent3); border-color:var(--accent3);}
+.pyout{background:#0d1230; color:#5FD6C9; border-radius:8px; font-family:'Courier New',monospace; font-weight:bold;
+  font-size:.54em; line-height:1.45; padding:9px 12px; margin:8px 0 0; min-height:1.4em; white-space:pre-wrap; text-align:left;}
+.pyout .crash{color:var(--accent2);}
+.pyin-lbl{color:#5FD6C9;}
+.pyin{background:#1b234d; border:2px solid var(--accent1); border-radius:6px; color:var(--ice);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:1em; padding:1px 8px; width:130px; outline:none;}
+.pystate{font-size:.44em; color:#98a0c0; margin-left:auto;}
+.pycell.tight .pyta{font-size:.485em; line-height:1.34;}
+.pycell.tight .pyout{font-size:.485em; line-height:1.34;}
+.pycell.xtight .pyta{font-size:.43em; line-height:1.3;}
+.pycell.xtight .pyout{font-size:.43em; line-height:1.3;}
+.pycell.side .pyrow{display:flex; gap:10px; align-items:stretch;}
+.pycell.side .pyrow .pyta{flex:1; min-width:0;}
+.pycell.side .pyrow .pyout{margin:0; flex:0 0 auto; min-width:190px;}
+#py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
+#py-chip.ready{color:#5FD6C9;}
+
+/* ===== the Java lane: captured, not live ===== */
+.pycell.java .pyrun{background:#8a6100;} .pycell.java .pyrun:hover{background:#a87700;}
+.pystate.cap{color:#e0b050;}
+.pyout.cap{color:#e8c98a;}
+.pyout.err{color:#ff9d95;}
+
+/* ===== the language switch ===== */
+#langsel{position:fixed; top:14px; right:16px; z-index:99; display:flex; border:2px solid #6b74a8;
+  border-radius:9px; overflow:hidden; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+#langsel div{padding:5px 15px; background:rgba(20,26,60,.72); color:#98a0c0; transition:.12s;}
+#langsel div.on{background:var(--accent1); color:#fff;}
+#fsbtn{position:fixed; top:14px; right:calc(16px + 152px); z-index:99; background:rgba(20,26,60,.72);
+  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
+  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
+#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
+body[data-lang="java"] .lane[data-lang="py"]{display:none;}
+body[data-lang="py"] .lane[data-lang="java"]{display:none;}
+
+/* ===== 🧾 outside the exam hall ===== */
+.toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
+.toll .th{display:inline-block; font-weight:bold; font-size:.86em; letter-spacing:.05em; color:#8a6100; margin-bottom:3px;}
+.toll .yes{color:#0d7a6e; font-weight:bold;} .toll .no{color:#c0392b; font-weight:bold;}
+
+/* ===== 📐 the divergence box ===== */
+.diverge{background:#f7f5ff; border:2px dashed #b3a6e8; border-radius:10px; padding:10px 15px; text-align:left; font-size:.55em; line-height:1.5; color:var(--navy); margin:9px 0;}
+.diverge .dh{display:inline-block; font-weight:bold; font-size:.85em; letter-spacing:.04em; color:#6d4fd0; margin-bottom:3px;}
+
+/* ===== pseudocode block ===== */
+.ps{background:#f4f6fb; border:1px solid #d9deed; border-left:4px solid var(--accent3); border-radius:8px;
+  padding:10px 14px; font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.5;
+  color:var(--navy); white-space:pre; margin:8px 0; overflow-x:auto;}
+.dk .ps{background:rgba(255,255,255,.07); color:var(--ice); border-color:rgba(255,255,255,.16); border-left-color:var(--accent3);}
+.ps .k{color:#6d4fd0;} .dk .ps .k{color:#c0aef5;}
+.ps .v{color:#c0392b;} .dk .ps .v{color:#ff9d95;}
+.ps .c{color:#8890b5; font-weight:normal;}
+
+/* ===== marks table ===== */
+.mk{border-collapse:collapse; font-size:.5em; width:100%;}
+.mk td,.mk th{border:1px solid #ccd3e8; padding:4px 9px; text-align:left; vertical-align:top;}
+.mk th{background:#eef2fb; font-weight:bold; color:var(--navy);}
+.mk td.m{text-align:center; font-weight:bold; color:var(--accent2); white-space:nowrap;}
+.mk code{font-family:'Courier New',monospace; font-weight:bold; color:#6d4fd0;}
+
+/* ===== 🎮 game ===== */
+.g-wrap{background:var(--white); border-radius:12px; padding:14px 18px; box-shadow:0 5px 18px rgba(0,0,0,.09); color:var(--navy);}
+/* a teacher must be able to move on without answering */
+.g-skip{margin-left:8px; background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;
+  border-radius:7px; padding:2px 11px; font-size:.44em; font-weight:bold; cursor:pointer;
+  font-family:'Calibri','Segoe UI',sans-serif;}
+.g-skip:hover{color:var(--accent1); border-color:var(--accent1);}
+.g-top{display:flex; align-items:center; gap:14px; margin-bottom:9px;}
+.g-stage{font-size:.56em; font-weight:bold; color:var(--navy); background:rgba(242,181,60,.18); border:2px solid var(--accent3); border-radius:22px; padding:3px 20px;}
+.pbadge{display:inline-block; font-size:.82em; letter-spacing:.04em; padding:1px 9px; border-radius:14px; margin-left:5px; border:1.5px solid;}
+.pbadge.p3{background:rgba(240,101,91,.13); color:#c0392b; border-color:var(--accent2);}
+.pbadge.p4{background:rgba(23,179,163,.15); color:#0d7a6e; border-color:var(--accent1);}
+.formwarn{background:#fdeeec; border:2px solid var(--accent2); border-radius:9px; padding:8px 13px; margin:7px 0 0;
+  font-size:.92em; line-height:1.5; color:var(--navy);}
+.formwarn b{color:#c0392b;}
+.g-prog{display:flex; gap:6px; margin-left:auto;}
+.g-prog i{width:9px; height:9px; border-radius:50%; background:#d3d9ec; display:block; transition:.2s;}
+.g-prog i.done{background:var(--accent1);} .g-prog i.cur{background:var(--accent3); transform:scale(1.35);}
+.g-score{font-size:.52em; font-weight:bold; color:var(--accent2); font-family:'Courier New',monospace;}
+.g-q{font-size:.58em; line-height:1.5; margin-bottom:8px;}
+.g-q b{color:var(--accent2);}
+.g-opts{display:flex; flex-wrap:wrap; gap:8px;}
+.g-b{background:#f4f6fb; border:2px solid #ccd3e8; border-radius:9px; padding:7px 14px; font-size:.54em;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; color:var(--navy); text-align:left; line-height:1.4;}
+.g-b:hover{border-color:var(--accent1);}
+.g-b.no{border-color:var(--accent2); background:#fdeeec; animation:shake .35s;}
+.g-b.yes{border-color:var(--accent1); background:#e6f7f4;}
+.g-b .mono{display:block; font-size:.92em;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.g-ta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.54em; line-height:1.5; padding:9px 12px; resize:none; outline:none;}
+.g-ta:focus{box-shadow:0 0 0 2px var(--accent3);}
+.g-sub{background:var(--accent3); color:#4a3500; border:none; border-radius:8px; padding:5px 20px; font-size:.52em;
+  font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; margin-top:7px;}
+.g-sub:hover{background:#e0a52c;}
+.g-say{font-size:.54em; min-height:1.5em; margin-top:7px; line-height:1.5;}
+.g-say.ok{color:#0d7a6e; font-weight:bold;} .g-say.bad{color:var(--accent2); font-weight:bold;}
+/* .g-mp nested inside .g-say compounds two em reductions down to ~7px — reset it */
+.g-say .g-mp{font-size:.92em; font-weight:normal; color:var(--navy);}
+.g-say .g-mp .y{color:#0d7a6e;} .g-say .g-mp .n{color:var(--accent2);}
+/* the game panel is white even on a dark slide, so .dk .ps must not win inside it */
+.dk .g-wrap .ps{background:#f4f6fb; color:var(--navy); border-color:#d9deed; border-left-color:var(--accent3);}
+.dk .g-wrap .ps .k{color:#6d4fd0;} .dk .g-wrap .ps .v{color:#c0392b;}
+.g-say .ps{font-weight:bold;}
+.g-mp{list-style:none; padding:0; margin:6px 0 0; font-size:.48em; line-height:1.55;}
+.g-mp li{padding-left:2px;} .g-mp .y{color:#0d7a6e; font-weight:bold;} .g-mp .n{color:var(--accent2); font-weight:bold;}
+.g-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 20px;}
+.g-lbl{font-size:.5em; color:#5b6488; margin:5px 0 3px;}
+.g-res .g-tot{font-size:1.1em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace; text-align:center; margin:2px 0 4px;}
+.g-fin{text-align:center; font-size:.62em; line-height:1.6;}
+.g-fin .big{font-size:1.5em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace;}
+/* a small node table inside a game question */
+.qt{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.86em; margin:5px 0 0;}
+.qt td,.qt th{border:1px solid #ccd3e8; padding:1px 11px; text-align:center;}
+.qt th{background:#eef2fb; font-size:.85em; color:#5b6488;}
+.qt td.f{color:#b3bad2;}
+
+/* ===== the step-through trace — one line runs, one cell lights up ===== */
+.tr2{display:flex; gap:20px; align-items:flex-start;}
+.tr2 .tcode{flex:1.15; min-width:0;} .tr2 .tstate{flex:1; min-width:0;}
+.tline{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; line-height:1.5;
+  padding:3px 11px; border-radius:6px; color:#8f98c2; white-space:pre; transition:.15s;}
+.tline.cur{background:rgba(242,181,60,.24); color:#fff3d6;}
+.tline.done{color:#5FD6C9; opacity:.72;}
+.tnote{font-size:.5em; min-height:3.6em; margin-top:8px; line-height:1.55; color:#c3cae6;}
+.tnote b{color:var(--accent3);} .tnote .warn{color:#ff9d95; font-weight:bold;}
+.tbtns{display:flex; gap:8px; margin-top:6px; align-items:center;}
+.treads{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; margin-top:6px; color:#8ff0e4; min-height:1.4em;}
+.treads .lp{color:#ff9d95;}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+
+/* ===== the node table widget ===== */
+.lt-wrap{background:var(--white); border-radius:12px; padding:12px 16px; box-shadow:0 4px 14px rgba(0,0,0,.08); color:var(--navy);}
+.dk .lt-wrap{background:rgba(255,255,255,.07); color:var(--ice);}
+.ltab{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.62em; width:100%;}
+.ltab th{background:#eef2fb; color:#5b6488; padding:3px 8px; font-size:.88em; border:1px solid #ccd3e8;}
+.dk .ltab th{background:rgba(255,255,255,.08); color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.ltab td{border:1px solid #ccd3e8; padding:3px 8px; text-align:center; transition:.15s;}
+.dk .ltab td{border-color:rgba(255,255,255,.18);}
+.ltab tr.free td{color:#b3bad2; background:#fbfcff;}
+.dk .ltab tr.free td{color:#6d7699; background:rgba(255,255,255,.02);}
+.ltab tr.used td{color:var(--navy); background:rgba(23,179,163,.10);}
+.dk .ltab tr.used td{color:#d8f5f1; background:rgba(23,179,163,.16);}
+.ltab tr.hit td{background:rgba(242,181,60,.42); color:#4a3500;}
+.dk .ltab tr.hit td{background:rgba(242,181,60,.38); color:#fff3d6;}
+.ltab tr.fhit td{background:rgba(109,79,208,.28);}
+.ltab td.ix{color:#98a0c0; background:transparent;}
+.dk .ltab td.ix{color:#7b85ab;}
+.ptrchip{display:inline-block; font-family:'Courier New',monospace; font-weight:bold; font-size:.58em;
+  border-radius:16px; padding:3px 14px; margin:0 7px 7px 0; border:2px solid;}
+.ptrchip.fn{border-color:var(--accent2); color:#c0392b; background:rgba(240,101,91,.10);}
+.ptrchip.fe{border-color:#6d4fd0; color:#6d4fd0; background:rgba(109,79,208,.09);}
+.dk .ptrchip.fn{color:#ff9d95;} .dk .ptrchip.fe{color:#c0aef5;}
+.vzc{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;}
+.vzb{background:var(--navy); color:#fff; border:none; border-radius:8px; padding:6px 15px; font-size:.52em; font-weight:bold;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.vzb:hover{background:var(--accent1);} .vzb:disabled{background:#c6cde4; cursor:default;}
+.vzb.alt{background:#6d4fd0;} .vzb.alt:hover{background:#8467e0;}
+.vzb.gh{background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;}
+.dk .vzb.gh{border-color:rgba(255,255,255,.25);}
+.vzmsg{font-size:.54em; min-height:3.2em; margin-top:8px; font-weight:bold; line-height:1.5;}
+.vzmsg.ok{color:#0d7a6e;} .vzmsg.bad{color:var(--accent2);} .vzmsg.nt{color:#6d4fd0;}
+.dk .vzmsg.ok{color:#5FD6C9;} .dk .vzmsg.bad{color:#ff9d95;} .dk .vzmsg.nt{color:#c0aef5;}
+.reads{font-family:'Courier New',monospace; font-weight:bold; font-size:.64em; margin-top:9px;}
+.reads b{color:var(--accent1);}
+
+/* THE GAME SLIDE GROWS AFTER REVEAL HAS LAID IT OUT, and Reveal centres a slide
+   only ONCE, at slide-change time. Stage 1 is short, so Reveal pinned top:232px
+   — and the boss then grew downward off the bottom of the 720 stage (measured
+   at 799px, i.e. 79px of the panel below the visible area). scrollHeight said
+   "fits" the whole time, because scrollHeight is not where the slide SITS.
+   min-height cannot fix it: Reveal's own stylesheet sets
+   `.reveal.center .slides section { min-height: 0 !important }`.
+   So anchor the top instead — a stylesheet !important beats Reveal's inline
+   top. The panel now sits high, does not jump between stages, and has ~50px of
+   headroom below its tallest state. Any slide whose content expands WITHOUT a
+   slide change needs this class. */
+.reveal .slides section.growslide{top:40px !important;}
+
+/* the student's own code stays on screen beside the feedback, so a tick and the
+   line that earned it can be read on the same screen */
+.g-ans{background:#1b234d; color:var(--ice); border-radius:8px; font-family:'Courier New',monospace;
+  font-weight:bold; font-size:.5em; line-height:1.45; padding:9px 12px; margin:0; white-space:pre;
+  overflow:auto; max-height:300px; text-align:left;}
+.g-ans:empty::before{content:'(you did not write anything)'; color:#7b85ab; font-weight:normal;}
+
+/* ===== the tree canvas — geometry in SVG, every label in HTML ===== */
+.tcv{position:relative; width:100%; height:270px;}
+.tcv svg{position:absolute; inset:0; width:100%; height:100%;}
+.tnode{position:absolute; transform:translate(-50%,-50%); background:var(--white); border:2.5px solid var(--accent1);
+  border-radius:50%; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.6em; color:var(--navy); transition:.2s;}
+.dk .tnode{background:#1b234d; color:var(--ice);}
+.tnode.hot{border-color:var(--accent3); background:rgba(242,181,60,.3); transform:translate(-50%,-50%) scale(1.18);}
+.tnode.new{border-color:var(--accent2);}
+.tnode .ix{position:absolute; top:-15px; right:-9px; font-size:.72em; color:#98a0c0; font-family:'Courier New',monospace;}
+.tmsg{font-size:.52em; min-height:2.9em; font-weight:bold; line-height:1.45; margin-top:4px;}
+.tmsg.ok{color:#0d7a6e;} .dk .tmsg.ok{color:#5FD6C9;}
+.tmsg.bad{color:var(--accent2);} .dk .tmsg.bad{color:#ff9d95;}
+.tmsg.nt{color:#6d4fd0;} .dk .tmsg.nt{color:#c0aef5;}
+.tio{font-family:'Courier New',monospace; font-weight:bold; font-size:.52em; margin-top:3px; color:#0d7a6e; min-height:1.4em;}
+.dk .tio{color:#8ff0e4;}
+.tin{background:#fff; border:2px solid var(--accent1); border-radius:6px; color:var(--navy);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; padding:3px 8px; width:64px; outline:none;}
+.dk .tin{background:#1b234d; color:var(--ice);}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+/* ===== the LLM reader — ported 2026-08-24 (Kepei: "A02a's challenge does not have an LLM grader") ===== */
+#llmchip{position:fixed; top:16px; right:16px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px;
+  border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0; cursor:pointer; border:none;}
+#llmchip.on{color:#5FD6C9;} #llmchip.off{color:#F2B53C;}
+#llmhelp{display:none; position:fixed; top:54px; right:16px; z-index:99; width:340px; background:#fff; color:#222B5A;
+  border:2px solid #F2B53C; border-radius:12px; padding:12px 16px; font-size:14px; line-height:1.5; box-shadow:0 8px 30px rgba(0,0,0,.25);}
+#llmhelp b{color:#B8860B;} #llmhelp .x{float:right; cursor:pointer; font-weight:bold; color:#98a0c0;}
+.g-llm{margin-top:6px;}
+.g-llm:empty{display:none;}
+.g-grid.three{grid-template-columns:minmax(0,.86fr) minmax(0,1.07fr) minmax(0,1.07fr); gap:6px 14px;}
+.g-grid.three .g-ans{max-height:250px; overflow:auto;}
+.g-grid.three .g-llm{max-height:228px; overflow:auto;}
+.g-llm .conf{font-size:.82em; opacity:.7; font-style:italic;}
+.g-cons{margin-top:7px; border-radius:9px; padding:7px 12px; font-size:.5em; line-height:1.5; border:2px solid; text-align:left;}
+.g-cons.agree{border-color:var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e;}
+.g-cons.split{border-color:var(--accent3); background:rgba(242,181,60,.14); color:#8a5c00;}
+.g-cons b{font-family:'Courier New',monospace;}
+.g-pickrow{margin-top:7px; font-size:.95em; color:var(--navy);}
+.g-pick{border:1.5px solid var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e; border-radius:7px;
+  padding:2px 10px; font-weight:bold; cursor:pointer; font-size:.95em; margin:0 5px; font-family:'Calibri','Segoe UI',sans-serif;}
+.g-pick:hover{background:rgba(23,179,163,.28);}
+.g-pick.on{background:var(--accent1); color:#fff;}
+</style></head>
+<body data-lang="java">
+<div class="reveal"><div class="slides">
+
+<!-- H1 -->
+<section>
+<section data-background-color="#151B3C" class="dk center">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 4 · 9618 §19.1</p>
+  <h1 style="font-size:1.5em; margin:0 0 6px;">When a Node Has<br>Two Pointers</h1>
+  <p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">binary trees 二叉树 · dictionaries · graphs</p>
+  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+
+</section>
+  <section data-background-color="#151B3C" class="dk">
+    <div class="bar" style="background:var(--accent3);"></div>
+    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> <b class="accent1">Insert into</b> and <b class="accent1">search</b> a binary tree held in a 2D array, and <b class="accent1">read a traversal off it</b></div>
+    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">2.</strong> For any structure this unit has built, give the one-sentence <b class="accent3">justification</b> the exam pays for</div>
+
+</section>
+</section>
+
+<!-- H2 HOOK -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.88em; margin:0 0 8px;">The two structures you own have <span class="accent2">opposite</span> weaknesses</h2>
+  <table class="mk" style="font-size:.56em; color:var(--ice);">
+    <tr><th style="background:rgba(255,255,255,.08); color:#fff;"></th>
+        <th style="background:rgba(255,255,255,.08); color:#fff;">find a value</th>
+        <th style="background:rgba(255,255,255,.08); color:#fff;">insert a value</th></tr>
+    <tr><td><b>sorted array</b></td><td style="color:#5FD6C9;"><b>fast</b> — halve, halve, halve: 20 items in 5 looks, a million in 20</td><td style="color:#ff9d95;"><b>slow</b> — shuffle everything up to make room</td></tr>
+    <tr><td><b>linked list</b></td><td style="color:#ff9d95;"><b>slow</b> — ask every node in turn; there is no middle to jump to</td><td style="color:#5FD6C9;"><b>fast</b> — two pointer writes, nothing moves</td></tr>
+  </table>
+  <div class="rule accent3 fragment" style="font-size:.62em;">
+    Halving needs to <b>jump to the middle</b>; cheap insertion needs <b>nothing to move</b>.
+    One structure per column — and somebody is going to ask for <b>both at once</b>.
+  </div>
+  <p class="center fragment" style="font-size:.74em; margin-top:12px;"><b>The binary tree refuses to choose.</b><br>
+  <span style="font-size:.66em; color:#98a0c0;">Halving to find, two writes to insert — and the price appears at the end of the lesson.</span></p>
+
+</section>
+
+<!-- H3 -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 4px;">Give the node a <span class="accent2">second pointer</span></h2>
+  <p style="font-size:.46em; color:#8890b5; margin:0 0 6px;">One field more than the linked list's node. Written the way you would actually write it — <b>names, not column numbers</b>.</p>
+  <div class="two-col">
+    <div>
+      <div class="lane" data-lang="py">
+      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">class</span> Node:
+    <span class="k">def</span> __init__(self, data):
+        self.left  = <span class="v">None</span>   <span class="c"># the smaller side</span>
+        self.data  = data
+        self.right = <span class="v">None</span>   <span class="c"># the larger side</span></div>
+      </div>
+      <div class="lane" data-lang="java">
+      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">class</span> Node {
+    Node left;    <span class="c">// the smaller side</span>
+    <span class="k">int</span>  data;
+    Node right;   <span class="c">// the larger side</span>
+}</div>
+      </div>
+      <div class="rule accent1" style="font-size:.56em;">
+        <b>Three fields, two of them pointing at more nodes.</b> That is the whole new idea —
+        the linked list's node with one extra arrow, and the arrows now have <b>directions that mean something</b>:
+        smaller to the left, larger to the right.
+      </div>
+    </div>
+    <div>
+      <table class="mk" style="font-size:.5em;">
+        <tr><th style="text-align:left;">what you would write</th><th style="text-align:left;">what the exam writes</th></tr>
+        <tr><td class="mono">node.left</td><td class="mono">ArrayNodes[n, 0]</td></tr>
+        <tr><td class="mono">node.data</td><td class="mono">ArrayNodes[n, 1]</td></tr>
+        <tr><td class="mono">node.right</td><td class="mono">ArrayNodes[n, 2]</td></tr>
+      </table>
+      <div class="rule accent2" style="font-size:.56em;">
+        <b>The exam's array is this record with the names filed off.</b> Same object, worse handwriting —
+        a row is a node, a "pointer" is a row number, and the field names become <b>0, 1, 2</b>.
+        Learn the shape here; type the columns in the exam.
+      </div>
+      <div class="rule accent3" style="font-size:.53em;">
+        🧾 <b>And Cambridge writes it both ways.</b> Nov 2024 Paper 31 asks about
+        <span class="mono">BinTree[NowPtr].LeftPtr</span> — named fields, on a real paper — while every
+        Paper 4 tree question uses the numbered columns. <b>Two costumes, one structure.</b>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- H3b the exam's storage -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 6px;">The same node, <span class="accent2">as the exam stores it</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">DECLARE</span> ArrayNodes : <span class="k">ARRAY</span>[0:19, 0:2] <span class="k">OF INTEGER</span>
+<span class="c">// [n, 0] LeftPointer   — index of the smaller side</span>
+<span class="c">// [n, 1] Data</span>
+<span class="c">// [n, 2] RightPointer  — index of the larger side</span>
+
+<span class="k">DECLARE</span> RootPointer : <span class="k">INTEGER</span>   <span class="c">// -1 = empty tree</span>
+<span class="k">DECLARE</span> FreeNode    : <span class="k">INTEGER</span>   <span class="c">// next unused row</span></div>
+      <p style="font-size:.46em; color:#8890b5; margin:3px 0 0; line-height:1.5;">Cambridge's own declaration, from Nov 2022 Paper 41. The names vary by paper —
+      <span class="mono">RootPtr</span>, <span class="mono">FirstNode</span>, <span class="mono">FreePtr</span> — the shape never does.</p>
+    </div>
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.56em;">
+        Same trick as the linked list, one column wider: <b>a row of the array is a node</b>, a
+        "pointer" is an index, and <b class="accent2">−1</b> is the value that cannot be one.
+        Empty tree? <span class="mono">RootPointer = −1</span>. No child? <b>−1</b>. Fourth time this unit — say it before the slide does.
+      </div>
+      <div class="diverge" style="font-size:.52em;">
+        <span class="dh">📐 WHERE DID THE FREE LIST GO?</span><br>
+        The linked list threaded its spare nodes into a second chain, because deleting handed nodes back.
+        <b>The exam's tree never deletes</b> — the syllabus asks for delete on stacks, queues and linked
+        lists only — so nothing is ever handed back, and <span class="mono">FreeNode</span> collapses into a
+        plain counter: <b>the next unused row, plus one after every insert.</b> Simpler on purpose, and the
+        papers say so out loud: <i>"nodes cannot be deleted from this tree."</i>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- H4 the rule -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 8px;">One rule makes it work — <span class="accent2">at every node</span></h2>
+  <div class="two-col">
+    <div class="card" style="border-top:4px solid var(--accent1);">
+      <p style="font-size:.6em; line-height:1.6; margin:0;"><b class="accent1">Smaller → left. Larger → right.</b><br>
+      Not just at the root — <b>at every node, all the way down</b>. The rule is not a property the tree has;
+      <b>the rule is the tree.</b> Break it at one node and the structure is just circles and arrows.</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--accent3);">
+      <p style="font-size:.6em; line-height:1.6; margin:0;"><b style="color:#B8860B;">And equal?</b><br>
+      Cambridge's own pseudocode tests <span class="mono">IF NodeData &lt; Data</span> and sends everything
+      else right — so <b>equal goes right</b>. A convention, not a law; state it and follow it, because the
+      marker follows the paper's.</p>
+    </div>
+  </div>
+  <div class="rule accent2 fragment" style="font-size:.62em;">
+    Read the rule again and notice what it buys: standing at any node, one comparison tells you which
+    <b>half of everything below</b> to abandon. <b>That is binary search, built into the furniture.</b>
+  </div>
+
+</section>
+
+<!-- H5 widget -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">Grow one — <span class="accent2">and watch the table fill</span></h2>
+  <p style="font-size:.46em; color:#8890b5; margin:0 0 5px;">Type a number and insert it. The highlight walks the comparisons; the table is what the exam sees.</p>
+  <div class="lt-wrap" id="treeviz"></div>
+
+</section>
+
+<!-- H6 insert code -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">The insert, written out — <span class="accent3">the walk you just watched</span></h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Nov 2021 Paper 41 asks for exactly this, for eight marks. The marked step: you attach a node by writing <b>the parent's</b> pointer.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java side xtight" data-out="Index  Left  Data  Right
+  0      1    15     2
+  1      3     8     4
+  2     -1    19    -1
+  3     -1     3    -1
+  4     -1    10    -1
+RootPointer=0  FreeNode=5"><script type="text/plain" class="pysrc">static boolean AddNode(int NodeData) {
+    if (FreeNode > SIZE - 1) return false;        // tree full
+    ArrayNodes[FreeNode][0] = -1;                 // a leaf, until someone hangs off it
+    ArrayNodes[FreeNode][1] = NodeData;
+    ArrayNodes[FreeNode][2] = -1;
+    if (RootPointer == -1) {                      // the empty tree: this IS the root
+        RootPointer = 0;
+    } else {
+        int Current = RootPointer;
+        boolean Placed = false;
+        while (!Placed) {
+            if (NodeData < ArrayNodes[Current][1]) {        // smaller -> go left
+                if (ArrayNodes[Current][0] == -1) { ArrayNodes[Current][0] = FreeNode; Placed = true; }
+                else { Current = ArrayNodes[Current][0]; }
+            } else {                                        // larger or equal -> go right
+                if (ArrayNodes[Current][2] == -1) { ArrayNodes[Current][2] = FreeNode; Placed = true; }
+                else { Current = ArrayNodes[Current][2]; }
+            }
+        }
+    }
+    FreeNode = FreeNode + 1;                      // a counter, not a chain
+    return true;
+}</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell side xtight"><script type="text/plain" class="pysrc">SIZE = 20                                        # INTEGER
+ArrayNodes = [[-1,-1,-1] for i in range(SIZE)]   # ARRAY[0:19, 0:2] OF INTEGER
+RootPointer = -1                                 # INTEGER
+FreeNode = 0                                     # INTEGER
+
+def AddNode(NodeData):
+    global RootPointer, FreeNode
+    if FreeNode > SIZE - 1:
+        return False                             # tree full
+    ArrayNodes[FreeNode][0] = -1                 # a leaf, until someone hangs off it
+    ArrayNodes[FreeNode][1] = NodeData
+    ArrayNodes[FreeNode][2] = -1
+    if RootPointer == -1:                        # the empty tree: this IS the root
+        RootPointer = 0
+    else:
+        Current = RootPointer
+        Placed = False
+        while not Placed:
+            if NodeData < ArrayNodes[Current][1]:            # smaller -> go left
+                if ArrayNodes[Current][0] == -1:
+                    ArrayNodes[Current][0] = FreeNode        # write the PARENT's pointer
+                    Placed = True
+                else:
+                    Current = ArrayNodes[Current][0]
+            else:                                            # larger or equal -> go right
+                if ArrayNodes[Current][2] == -1:
+                    ArrayNodes[Current][2] = FreeNode
+                    Placed = True
+                else:
+                    Current = ArrayNodes[Current][2]
+    FreeNode = FreeNode + 1                      # a counter, not a chain
+    return True
+
+for v in (15, 8, 19, 3, 10):
+    AddNode(v)
+print("Index  Left  Data  Right")
+for i in range(FreeNode):
+    print("  %d     %2d    %2d    %2d" % (i, ArrayNodes[i][0], ArrayNodes[i][1], ArrayNodes[i][2]))
+print("RootPointer=%d  FreeNode=%d" % (RootPointer, FreeNode))</script></div>
+  </div>
+
+</section>
+
+<!-- H7 search + degenerate hole -->
+<section>
+
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">Finding is <span class="accent3">halving</span> — built into the shape</h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Binary search from AS needed a sorted array and index arithmetic. Here the comparisons ARE the structure.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java side tight" data-out="SearchTree(10) -> index 4
+SearchTree(99) -> -1   (not there)"><script type="text/plain" class="pysrc">static int SearchTree(int Item) {
+    int Now = RootPointer;
+    while (Now != -1) {
+        if (ArrayNodes[Now][1] == Item) return Now;
+        if (Item < ArrayNodes[Now][1]) Now = ArrayNodes[Now][0];
+        else                           Now = ArrayNodes[Now][2];
+    }
+    return -1;                       // fell off the tree: not there
+}</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell side tight"><script type="text/plain" class="pysrc">ArrayNodes = [[1,15,2],[3,8,4],[-1,19,-1],[-1,3,-1],[-1,10,-1]]
+RootPointer = 0                          # the tree from the last slide
+
+def SearchTree(Item):
+    Now = RootPointer                    # INTEGER
+    while Now != -1:
+        if ArrayNodes[Now][1] == Item:
+            return Now
+        if Item < ArrayNodes[Now][1]:
+            Now = ArrayNodes[Now][0]     # abandon the right half
+        else:
+            Now = ArrayNodes[Now][2]     # abandon the left half
+    return -1                            # fell off the tree: not there
+
+print("SearchTree(10) -> index", SearchTree(10))
+print("SearchTree(99) ->", SearchTree(99), "  (not there)")</script></div>
+  </div>
+  <div class="rule accent1" style="font-size:.56em; margin-top:5px;">
+    Every comparison discards <b>an entire subtree</b>. A million values, about twenty questions —
+    <b>the AS binary-search promise, kept by furniture instead of arithmetic.</b> And "return −1 when it
+    is not there" is the sentinel again, working its fifth job of the unit.
+  </div>
+  <div class="dig">🕳 unless the tree was built wrong ↓</div>
+
+</section>
+
+<!-- H7 vertical: degenerate -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.72em; margin:0 0 4px;">🕳 The tree that is secretly a list</h3>
+  <p style="font-size:.48em; color:#98a0c0; margin:0 0 6px;">Insert <b>1, 2, 3, 4, 5, 6, 7</b> — in order — and look at what the rule builds.</p>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.52em;">Index  Left  Data  Right
+  0     -1     1     1
+  1     -1     2     2
+  2     -1     3     3
+  3     -1     4     4
+  4     -1     5     5
+  5     -1     6     6
+  6     -1     7    -1</div>
+      <p style="font-size:.46em; color:#98a0c0; margin:3px 0 0;">Every left pointer −1. Every node hangs right. <b>Height 7, for 7 nodes.</b></p>
+    </div>
+    <div>
+      <div class="rule accent2" style="margin-top:0; font-size:.56em;">
+        Each value was larger than everything before it, so the rule sent every one <b>right</b> —
+        and built <b>a linked list wearing a tree costume</b>. Searching it asks every node in turn: O(n),
+        the exact thing the tree existed to escape.
+      </div>
+      <div class="rule accent3" style="font-size:.56em;">
+        <b>The tree's advantage depends on the order the data arrived in.</b> You met this exact sentence
+        at AS: insertion sort is fast on nearly-sorted data and slow on reversed data — same lesson,
+        one structure later. Random order → roughly balanced → halving. Sorted order → a stick.
+      </div>
+    </div>
+  </div>
+  <div class="toll" style="font-size:.52em;">
+    <span class="th">🧾 OUTSIDE THE EXAM HALL</span>
+    Real systems cannot choose their arrival order, so real trees <b>rebalance themselves</b> as they grow —
+    the AVL and red-black trees inside every database index and every <span class="mono">TreeMap</span>.
+    <span class="yes">The problem on this slide is why they exist.</span>
+    <span class="no">9618 never asks about them</span> — it asks you to know the problem, which you now do.
+  </div>
+
+</section>
+</section>
+
+
+<!-- H8 traversal -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">Walk it in order — <span class="accent2">and the data comes out sorted</span></h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Left side first, then the node, then the right side — at every node. Three lines.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java side tight" data-out="in-order: 3  8  10  15  19
+<- SORTED.
+Nobody sorted anything."><script type="text/plain" class="pysrc">static void InOrder(int node) {
+    if (node == -1) return;             // the base case: fell off the tree
+    InOrder(ArrayNodes[node][0]);       // everything smaller, first
+    System.out.print(ArrayNodes[node][1] + "  ");
+    InOrder(ArrayNodes[node][2]);       // everything larger, after
+}</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell side tight"><script type="text/plain" class="pysrc">ArrayNodes = [[1,15,2],[3,8,4],[-1,19,-1],[-1,3,-1],[-1,10,-1]]
+RootPointer = 0                          # the same tree again
+
+def InOrder(node):
+    if node == -1:
+        return                           # the base case: fell off the tree
+    InOrder(ArrayNodes[node][0])         # everything smaller, first
+    print(ArrayNodes[node][1], end="  ")
+    InOrder(ArrayNodes[node][2])         # everything larger, after
+
+InOrder(RootPointer)
+print("<- SORTED. Nobody sorted anything.")</script></div>
+  </div>
+  <div class="two-col" style="margin-top:5px; gap:16px;">
+    <div class="rule accent3" style="margin-top:0; font-size:.55em;">
+      <b>Look at line 4.</b> <span class="mono">InOrder</span> calls <span class="mono">InOrder</span>.
+      The function uses itself, twice, and the machine does not object. <b>Nobody has explained why that
+      is allowed</b> — and this deck is not going to. Two lessons.
+    </div>
+    <div class="rule accent1" style="margin-top:0; font-size:.55em;">
+      🧾 Three orders exist and the exam uses them: <b>in-order</b> (left · node · right — sorted output),
+      <b>pre-order</b> (node first), <b>post-order</b> (node last — asked on Nov 2022 Paper 41). Same three
+      lines; only the <span class="mono">print</span> moves.
+    </div>
+  </div>
+
+</section>
+
+<!-- H9 dictionary -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.84em; margin:0 0 6px;">The dictionary — <span class="accent2">ADTs built from ADTs</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.58em;">
+        A <b>key → value</b> store: look up by <i>name</i>, not by position. <span class="mono">"Amir" → 71</span>.
+        The syllabus verb is exact: <b>describe it, and demonstrate how it can be implemented from
+        built-in types or other ADTs</b> — two parallel arrays and a linear search of the keys is a
+        complete, honest answer.
+      </div>
+      <div class="ps" style="font-size:.52em;"><span class="k">FUNCTION</span> Lookup(Key : <span class="k">STRING</span>) <span class="k">RETURNS INTEGER</span>
+    <span class="k">FOR</span> i <span class="v">←</span> 0 <span class="k">TO</span> Count - 1
+        <span class="k">IF</span> Keys[i] = Key <span class="k">THEN</span>
+            <span class="k">RETURN</span> Values[i]
+        <span class="k">ENDIF</span>
+    <span class="k">NEXT</span> i
+    <span class="k">RETURN</span> -1
+<span class="k">ENDFUNCTION</span></div>
+    </div>
+    <div>
+      <div class="rule accent3" style="margin-top:0; font-size:.56em;">
+        <b>And the fast version is the hash idea</b> — feed the key to a function that computes
+        <i>where it lives</i>, and the search disappears: one calculation instead of a walk.
+        That is the machinery behind Python's <span class="mono">dict</span> and Java's
+        <span class="mono">HashMap</span> — both of which are <b>banned in this unit's homework</b>,
+        because using a dictionary to build a dictionary answers a different question.
+      </div>
+      <div class="toll" style="font-size:.52em;">
+        <span class="th">🧾 HOW OFTEN THIS IS ASKED</span>
+        Across every released Paper 3 and Paper 4 from 2021 to 2025, the dictionary has
+        <b>never yet been examined</b>. It is on the syllabus, so it is fair game — and a first
+        appearance lands exactly on the cohort that skipped it.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- H10 graph -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.84em; margin:0 0 6px;">The graph — <span class="accent2">key features only, by decree</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.57em;">
+        <b>Nodes, and the connections between them</b> — where the connections matter more than any order.
+        <b>Directed</b> or not (one-way streets vs handshakes), <b>weighted</b> or not (does each edge carry
+        a cost?). A tree is a graph with rules; a graph is what is left when you delete the rules.
+      </div>
+      <div class="rule accent3" style="font-size:.57em;">
+        What it is <b>for</b>: anything that is genuinely a network — roads, friendships, flight routes,
+        the web's links, your class timetable's clash constraints. The exam's verb is
+        <b>justify its use for a given situation</b>: name the entities as nodes, the relationships as
+        edges, and say why order alone cannot carry the information.
+      </div>
+    </div>
+    <div>
+      <div class="diverge" style="margin-top:0; font-size:.54em;">
+        <span class="dh">📐 THE SYLLABUS'S OWN CARVE-OUT</span><br>
+        Its exact sentence: <i>"Candidates will <b>not</b> be required to write code for a graph
+        structure."</i> The only structure in the unit with a no-code guarantee — so revision time goes
+        to features and justification, not implementation.
+      </div>
+      <div class="rule navy" style="font-size:.54em;">
+        And the payoff is queued: at the end of the year a graph gets <b>searched</b> — shortest routes,
+        A-star, the algorithms inside every map app. The structure arrives now; the verbs arrive then.
+      </div>
+      <div class="toll" style="font-size:.5em;">
+        <span class="th">🧾 HOW OFTEN THIS IS ASKED</span>
+        Like the dictionary: <b>never yet</b>, in five years of released papers. On the syllabus,
+        so know the features and the justify-sentence — that is the whole ask.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- H11 family table -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.82em; margin:0 0 4px;">The whole family — <span class="accent2">one sentence each</span></h2>
+  <p style="font-size:.46em; color:#8890b5; margin:0 0 6px;"><i>"Justify its use for a given situation"</i> is the examined verb, and a justification is one sentence naming the property that fits.</p>
+  <table class="mk" style="font-size:.5em;">
+    <tr><th style="width:15%;">structure</th><th>strong at</th><th>weak at</th><th>the justification sentence</th></tr>
+    <tr><td><b>stack</b></td><td>last-in-first-out, O(1) both ends of one end</td><td>reaching anything below the top</td><td>"the most recent item must be dealt with first" — undo, back button, calls</td></tr>
+    <tr><td><b>queue</b></td><td>first-in-first-out, fairness</td><td>reaching the middle</td><td>"items must be handled in arrival order" — printers, buffers, schedulers</td></tr>
+    <tr><td><b>linked list</b></td><td>insert/delete anywhere, two writes</td><td>no index — finding is O(n)</td><td>"the data changes constantly and never needs jumping into" </td></tr>
+    <tr><td><b>binary tree</b></td><td>find AND insert in O(log n), sorted for free</td><td>arrival order can degrade it to O(n)</td><td>"the data must stay searchable while it grows"</td></tr>
+    <tr><td><b>dictionary</b></td><td>lookup by key, not position</td><td>no order at all</td><td>"items are found by name, never by position"</td></tr>
+    <tr><td><b>graph</b></td><td>relationships between items</td><td>no order, no hierarchy, code not asked</td><td>"the connections carry the information" — routes, networks</td></tr>
+  </table>
+  <div class="rule accent1 fragment" style="font-size:.56em;">
+    Every row is the same move: <b>name the property, match it to the scenario.</b> A justification that
+    does not name a property — <i>"a tree is more efficient"</i> — scores nothing on any paper.
+  </div>
+
+</section>
+
+<!-- H12 game -->
+<section data-background-color="#151B3C" class="dk growslide">
+  <h2 style="font-size:.76em; margin:0 0 8px;">🎮 Grow a Tree</h2>
+  <div class="g-wrap" id="gw">
+    <div class="g-top">
+      <span class="g-stage" id="g-stage">Stage 1</span>
+      <span class="g-score" id="g-score"></span>
+      <div class="g-prog" id="g-prog"></div>
+      <button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button>
+    </div>
+    <div class="g-q" id="g-q"></div>
+    <div id="g-body"></div>
+    <div class="g-say" id="g-say">&nbsp;</div>
+  </div>
+
+</section>
+
+<!-- H13 the real thing -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 3px;">The real thing</h2>
+  <p style="font-size:.46em; color:#8890b5; margin:0 0 6px;">The tree is the most-examined structure in the unit's archive — and it arrives in three costumes. © UCLES</p>
+  <table class="mk" style="font-size:.5em;">
+    <tr><th style="width:22%;">paper</th><th>what it asks</th><th style="width:8%;">marks</th></tr>
+    <tr><td><b>Nov 2024 P31 Q11</b></td><td>the same tree three ways: draw the <b>linked nodes</b> → fill the <b>2D array</b> (with <span class="mono">RootPtr</span> and <span class="mono">FreePtr</span>) → complete a search over a <b>1D array of records</b></td><td class="m">4+4+5</td></tr>
+    <tr><td><b>Nov 2021 P41 Q3</b></td><td>declare the 2D array · write <span class="mono">AddNode()</span> from given pseudocode · print in array order</td><td class="m">4+8+3</td></tr>
+    <tr><td><b>Nov 2022 P41 Q3</b></td><td>declare + preload the array · write a <b>recursive</b> <span class="mono">SearchValue()</span> from a gap-fill · a <b>post-order</b> traversal</td><td class="m">3+2+5+…</td></tr>
+    <tr><td><b>June 2024 P42 Q2</b></td><td>the whole tree again — as <b>classes</b>: a <span class="mono">Node</span> with getters and setters, a <span class="mono">TreeClass</span> holding an array of Node objects, <span class="mono">InsertNode</span>, <span class="mono">OutputTree</span></td><td class="m">25</td></tr>
+  </table>
+  <div class="rule accent2" style="font-size:.56em;">
+    <b>Third time this unit: the container changes, the structure does not.</b> And look at the last row —
+    Cambridge rebuilt this very lesson with objects, for twenty-five marks. <b>That rebuild is a lesson on
+    this course's map</b>, and when it arrives you will already know everything except the costume.
+  </div>
+
+</section>
+
+<!-- H14 summary -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <h2 style="font-size:.82em; margin:0 0 8px;">What you can build now</h2>
+  <div class="two-col">
+    <div class="rule accent1" style="margin-top:0; font-size:.58em;">
+      <b>Insert</b> — walk the comparisons, attach by writing <b>the parent's</b> pointer, count
+      <span class="mono">FreeNode</span> up.<br>
+      <b>Search</b> — the same walk, abandoning half the tree per question.<br>
+      <b>Traverse</b> — left, node, right, and the data falls out sorted.
+    </div>
+    <div class="rule accent3" style="margin-top:0; font-size:.58em;">
+      The unit's one idea, complete: <b>every structure was an array plus a few indices</b>, and
+      <b class="accent2">−1</b> meant "nothing here" in all of them — because a sentinel must come from
+      outside the legal values.
+    </div>
+  </div>
+  <div class="rule navy" style="font-size:.6em;">
+    Stack, queue, linked list, tree — you built all four. <b>The next question is which to reach for</b>,
+    and you now own the one-sentence answer for each: name the property, match the scenario.
+  </div>
+  <div class="rule accent2 fragment" style="font-size:.62em;">
+    <b>And one debt is still open.</b> Three lines walked an entire tree and handed you sorted data —
+    because <span class="mono">InOrder</span> called <span class="mono">InOrder</span>.
+    A function used itself, twice, and it worked. <b>Nobody has said why that is allowed,
+    how the machine keeps track, or what it costs.</b>
+  </div>
+  <p class="center fragment" style="font-size:.72em; margin-top:12px;"><b>Next lesson: the function<br>that calls itself.</b></p>
+  <p class="center" style="font-size:.46em; color:#98a0c0; margin-top:8px;">🍦 <span class="mono">challenge_A02c_BinaryTree</span> — 200 random trees, and every in-order walk must come out sorted.<br>🍨 And at the bottom of the file, a third scoop for the brave: <b>the tree that refuses to become a stick</b>.</p>
+
+</section>
+
+<!-- vocabulary -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.74em; margin:0 0 8px;">词汇 Vocabulary</h3>
+  <table class="mk" style="font-size:.52em; color:var(--ice);">
+    <tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
+    <tr><td>binary tree</td><td>二叉树</td><td>every node holds <b>two</b> pointers: smaller-left, larger-right, at every node</td></tr>
+    <tr><td>root</td><td>根节点</td><td>the entry point — <span class="mono">RootPointer</span>, −1 when the tree is empty</td></tr>
+    <tr><td>leaf</td><td>叶节点</td><td>a node with both pointers −1</td></tr>
+    <tr><td>subtree</td><td>子树</td><td>any node and everything below it — a tree in its own right</td></tr>
+    <tr><td>traversal</td><td>遍历</td><td>visiting every node — <b>in-order</b> 中序 comes out <b>sorted</b></td></tr>
+    <tr><td>dictionary</td><td>字典</td><td><b>key → value</b>: found by name, never by position</td></tr>
+    <tr><td>graph</td><td>图</td><td>nodes + edges; directed 有向 / weighted 带权 — <b>no code required</b></td></tr>
+    <tr><td>edge</td><td>边</td><td>one connection in a graph; where the information lives</td></tr>
+  </table>
+
+</section>
+
+</div></div>
+<button id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</button>
+<div id="llmhelp"><span class="x" id="llmhelp-x">✕</span><b>Live marking needs the marking server.</b><br>
+Two steps, on the teacher's Mac:<br>1. open the <b>CS_Materials</b> folder<br>2. double-click <b>Start-LLM-Marking.command</b><br>
+This chip lights up by itself a few seconds after the server starts — no reload needed. Without it, the pattern marks and the machine column still work; the reader adds the marker that reads for <i>meaning</i>.</div>
+<div id="py-chip">🐍 waking Python…</div>
+<div id="langsel"><div id="l-java" class="on">Java</div><div id="l-py">Python</div></div>
+<button id="fsbtn" title="fullscreen (or press F)">⛶</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+/* ===== Python runtime (Pyodide) — the audited house harness ===== */
+var pyPromise = null, pyBusy = false, currentOut = null, activeInput = null;
+
+function setRunButtons(enabled, label){
+  document.querySelectorAll('.pycell:not(.java) .pyrun').forEach(function(b){
+    b.disabled = !enabled;
+    b.textContent = enabled ? '▶ Run' : (label || '… running');
+  });
+}
+window.__pyInput = function(promptText){
+  return new Promise(function(resolve, reject){
+    var out = currentOut;
+    if(!out){ resolve(''); return; }
+    var row = document.createElement('span');
+    var lbl = document.createElement('span'); lbl.className='pyin-lbl'; lbl.textContent = promptText;
+    var inp = document.createElement('input'); inp.className='pyin';
+    inp.setAttribute('autocomplete','off'); inp.spellcheck = false;
+    row.appendChild(lbl); row.appendChild(inp); out.appendChild(row);
+    activeInput = {row: row, reject: reject};
+    setTimeout(function(){ inp.focus(); }, 60);
+    inp.addEventListener('keydown', function(ev){
+      if(ev.key === 'Enter'){ ev.stopPropagation(); var v=inp.value; row.remove(); activeInput=null; resolve(v); }
+    });
+  });
+};
+function stopPy(){
+  if(activeInput){ var r=activeInput.reject; activeInput.row.remove(); activeInput=null; r(new Error('__pyStop__')); }
+}
+function bootPython(){
+  if(pyPromise) return pyPromise;
+  pyPromise = loadPyodide().then(function(py){
+    py.runPython(
+      "import builtins, js\n" +
+      "async def __ainput(prompt=''):\n" +
+      "    v = await js.window.__pyInput(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "def _input_fallback(prompt=''):\n" +
+      "    v = js.window.prompt(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "builtins.input = _input_fallback\n" +
+      "builtins.__ainput = __ainput\n");
+    var chip=document.getElementById('py-chip');
+    chip.textContent='🐍 Python ready'; chip.className='ready';
+    if(!pyBusy) setRunButtons(true);
+    return py;
+  });
+  return pyPromise;
+}
+function runPy(code, outEl, doneCb){
+  if(pyBusy) return;
+  pyBusy = true; setRunButtons(false); currentOut = outEl;
+  outEl.style.display='block'; outEl.className='pyout'; outEl.textContent='';
+  var crashed=false, errLine='', sawOutput=false;
+  bootPython().then(function(py){
+    function emit(s){ sawOutput = true; outEl.appendChild(document.createTextNode(s + '\n')); }
+    py.setStdout({batched: emit});
+    py.setStderr({batched: emit});
+    var src = code.replace(/\binput\s*\(/g, 'await __ainput(');
+    var ns = py.toPy({});
+    return py.runPythonAsync(src, {globals: ns})
+      .catch(function(e){
+        crashed = true;
+        var lines = String(e.message||e).trim().split('\n').filter(function(l){ return l.trim(); });
+        errLine = lines[lines.length-1] || 'Error';
+        if(String(e.message||e).indexOf('__pyStop__') !== -1) errLine = '__stopped__';
+      })
+      .finally(function(){ ns.destroy(); });
+  }).then(function(){
+    if(activeInput){ activeInput.row.remove(); activeInput = null; }
+    if(!sawOutput && !crashed) outEl.textContent = '(no output)';
+    if(crashed){
+      var sp=document.createElement('span'); sp.className='crash';
+      sp.textContent = (errLine==='__stopped__') ? '⏹ stopped' : '💥 ' + errLine;
+      outEl.appendChild(sp);
+    }
+    pyBusy=false; setRunButtons(true); currentOut=null;
+    if(doneCb) doneCb(crashed, outEl.textContent, errLine);
+  });
+}
+
+/* ===== cells: Python runs live, Java replays a real build-time run ===== */
+function initPyCells(){
+  document.querySelectorAll('.pycell').forEach(function(cell){
+    var isJava = cell.classList.contains('java');
+    var srcEl  = cell.querySelector('.pysrc');
+    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
+    var capOut = cell.getAttribute('data-out') || '';
+    var isErr  = cell.getAttribute('data-err') === '1';
+    cell.innerHTML='';
+
+    var bar=document.createElement('div'); bar.className='pybar';
+    var dots=document.createElement('div'); dots.className='pydots';
+    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
+    bar.appendChild(dots);
+
+    var run=document.createElement('button'); run.className='pyrun';
+    run.textContent = isJava ? '▶ Run' : '⏳ waking…';
+    run.disabled = !isJava;
+    bar.appendChild(run);
+
+    if(!isJava){
+      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
+      stp.title='stop a program waiting for input';
+      stp.addEventListener('click', stopPy);
+      bar.appendChild(stp);
+    }
+    var st=document.createElement('span'); st.className='pystate' + (isJava?' cap':'');
+    st.textContent = isJava ? '☕ captured from a real run' : '🐍 editable · runs here';
+    bar.appendChild(st);
+
+    var ta=document.createElement('textarea'); ta.className='pyta';
+    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
+    if(isJava) ta.readOnly = true;
+    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
+
+    cell.appendChild(bar);
+    if(cell.classList.contains('side')){
+      var row=document.createElement('div'); row.className='pyrow';
+      row.appendChild(ta); row.appendChild(out);
+      out.style.display='block'; out.textContent='press ▶ Run';
+      cell.appendChild(row);
+    } else {
+      cell.appendChild(ta); cell.appendChild(out);
+    }
+
+    if(isJava){
+      run.addEventListener('click', function(){
+        out.style.display='block';
+        out.className='pyout cap' + (isErr?' err':'');
+        out.textContent = capOut;
+      });
+    } else {
+      run.addEventListener('click', function(){ runPy(ta.value, out); });
+    }
+  });
+  bootPython();
+}
+function autoSizePyTextareas(scope){
+  (scope||document).querySelectorAll('.pyta').forEach(function(ta){
+    if(ta.offsetParent === null) return;         /* hidden lane: scrollHeight is 0 */
+    ta.style.height='auto';
+    ta.style.height=(ta.scrollHeight+4)+'px';
+  });
+}
+
+/* ===== the language switch ===== */
+function setLang(l){
+  document.body.setAttribute('data-lang', l);
+  document.getElementById('l-java').className = (l==='java') ? 'on' : '';
+  document.getElementById('l-py').className   = (l==='py')   ? 'on' : '';
+  try{ localStorage.setItem('a2lang', l); }catch(e){}
+  setTimeout(function(){ autoSizePyTextareas(document); }, 20);
+}
+document.getElementById('l-java').addEventListener('click', function(){ setLang('java'); });
+document.getElementById('l-py').addEventListener('click', function(){ setLang('py'); });
+document.getElementById('fsbtn').addEventListener('click', function(){
+  var d=document.documentElement;
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else if(d.requestFullscreen){ d.requestFullscreen(); }
+});
+/* Tab must INDENT, not move focus — Python answers are whitespace-sensitive and
+   the browser's default steals the key. Shift-Tab dedents the current line. */
+document.addEventListener('keydown', function(e){
+  var t = e.target;
+  if(e.key !== 'Tab' || !t || !t.matches || !t.matches('textarea.pyta, textarea.g-ta')) return;
+  if(t.readOnly) return;
+  e.preventDefault(); e.stopPropagation();
+  if(e.shiftKey){
+    var ls = t.value.lastIndexOf('\n', t.selectionStart - 1) + 1, n = 0;
+    while(n < 4 && t.value.charAt(ls + n) === ' ') n++;
+    if(n) t.setRangeText('', ls, ls + n, 'preserve');
+  } else {
+    t.setRangeText('    ', t.selectionStart, t.selectionEnd, 'end');
+  }
+}, true);
+
+
+/* THE ANSWER FORM IS WORTH ALL OF THE MARKS, and it flips between the two papers:
+     Paper 3 — pseudocode. No 9618 P3 mark scheme 2021-2025 offers program code.
+     Paper 4 — Java, Python or VB, and the front page of all 23 papers in the
+               archive says "a mark of zero will be awarded if a programming
+               language other than those listed here is used."
+   So a boss adapted from a Paper 4 question must REFUSE pseudocode outright.
+   Accepting it teaches a habit that scores nothing in the exam it prepares for. */
+function looksLikePseudocode(src){
+  return /←|<-|\bENDPROCEDURE\b|\bENDFUNCTION\b|\bENDWHILE\b|\bENDIF\b|\bDECLARE\b|\bTHEN\b|\bRETURNS\b/i.test(src);
+}
+function looksLikeProgramCode(src){
+  return /\bdef\s+\w+|\bpublic\s+static\b|System\.out|\bprintln\b|\bprint\s*\(|;\s*$|\{[\s\S]*\}/m.test(src);
+}
+</script>
+<script>
+/* ===== the tree canvas — grow it, watch the table fill =====
+   Geometry in SVG (lines only), every label in HTML — the house rule. */
+function makeTree(hostId){
+  var host=document.getElementById(hostId); if(!host) return;
+  var SIZE=10, A, Root, Free, busy=false, timers=[];
+
+  host.innerHTML =
+    '<div class="two-col" style="gap:18px;">'
+  + '  <div style="flex:1.25; min-width:0;"><div class="tcv"><svg viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div></div>'
+  + '  <div style="flex:1; min-width:0;">'
+  + '    <table class="ltab"><thead><tr><th>Index</th><th>Left</th><th>Data</th><th>Right</th></tr></thead><tbody></tbody></table>'
+  + '    <div class="reads" style="font-size:.5em;"></div>'
+  + '  </div>'
+  + '</div>'
+  + '<div class="vzc"><input class="tin" id="'+hostId+'-in" value="12"> '
+  + '  <button class="vzb" data-act="ins">insert it</button>'
+  + '  <button class="vzb alt" data-act="demo">build 15 · 8 · 19 · 3 · 10</button>'
+  + '  <button class="vzb alt" data-act="sorted">1 · 2 · 3 · 4 · 5 · 6 · 7</button>'
+  + '  <button class="vzb gh" data-act="reset">reset</button>'
+  + '  <span class="tio" id="'+hostId+'-io"></span></div>'
+  + '<div class="tmsg" id="'+hostId+'-msg">&nbsp;</div>';
+
+  var cv=host.querySelector('.tcv'), svg=host.querySelector('svg'),
+      tb=host.querySelector('tbody'), reads=host.querySelector('.reads'),
+      io=document.getElementById(hostId+'-io'), msg=document.getElementById(hostId+'-msg'),
+      inp=document.getElementById(hostId+'-in');
+
+  for(var i=0;i<SIZE;i++){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td class="ix">'+i+'</td><td></td><td></td><td></td>';
+    tb.appendChild(tr);
+  }
+  var rows=tb.querySelectorAll('tr');
+
+  function killTimers(){ timers.forEach(clearTimeout); timers=[]; busy=false; }
+  function later(fn,ms){ timers.push(setTimeout(fn,ms)); }
+  function say(t,c){ msg.innerHTML=t||'&nbsp;'; msg.className='tmsg'+(c?' '+c:''); }
+
+  function reset(){
+    killTimers();
+    A=[]; for(var i=0;i<SIZE;i++) A.push([-1,-1,-1]);
+    Root=-1; Free=0; say(''); draw();
+  }
+
+  function inorder(n, out){                    /* indices, in order */
+    if(n===-1) return;
+    inorder(A[n][0], out); out.push(n); inorder(A[n][2], out);
+  }
+  function depth(n, d, map){
+    if(n===-1) return;
+    map[n]=d; depth(A[n][0], d+1, map); depth(A[n][2], d+1, map);
+  }
+  function draw(hot, isNew){
+    for(var i=0;i<SIZE;i++){
+      var r=rows[i];
+      r.children[1].textContent = A[i][0]===-1?'−1':A[i][0];
+      r.children[2].textContent = A[i][1]===-1?'−1':A[i][1];
+      r.children[3].textContent = A[i][2]===-1?'−1':A[i][2];
+      r.className = (A[i][1]===-1 && i>=Free) ? 'free' : (i<Free ? 'used' : 'free');
+    }
+    /* layout: x from in-order position, y from depth */
+    var seq=[]; inorder(Root, seq);
+    var dm={}; depth(Root, 0, dm);
+    var maxd=0; seq.forEach(function(n){ if(dm[n]>maxd) maxd=dm[n]; });
+    var pos={};
+    seq.forEach(function(n,k){
+      pos[n]={ x: seq.length===1?50: 8+84*k/(seq.length-1),
+               y: 12+(maxd? 76*dm[n]/Math.max(maxd,1) : 0) };
+    });
+    /* edges first (SVG), then node chips (HTML) */
+    var lines='';
+    seq.forEach(function(n){
+      [A[n][0],A[n][2]].forEach(function(c){
+        if(c!==-1 && pos[c]) lines+='<line x1="'+pos[n].x+'" y1="'+pos[n].y+'" x2="'+pos[c].x+'" y2="'+pos[c].y
+          +'" stroke="#8a92b2" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+      });
+    });
+    svg.innerHTML=lines;
+    cv.querySelectorAll('.tnode').forEach(function(e){ e.remove(); });
+    seq.forEach(function(n){
+      var d=document.createElement('div');
+      d.className='tnode'+(n===hot?(isNew?' new':' hot'):'');
+      d.style.left=pos[n].x+'%'; d.style.top=pos[n].y+'%';
+      d.innerHTML=A[n][1]+'<span class="ix">'+n+'</span>';
+      cv.appendChild(d);
+    });
+    reads.innerHTML='RootPointer = <b>'+Root+'</b> &nbsp; FreeNode = <b>'+Free+'</b>';
+    var vals=seq.map(function(n){ return A[n][1]; });
+    io.textContent = vals.length ? 'in-order: '+vals.join('  ') : '';
+  }
+
+  function insertAnimated(v, done){
+    if(Free>SIZE-1){ say('FULL — FreeNode has reached the end of the array. In the exam: refuse, or say "Tree is full".','bad'); if(done) done(); return; }
+    busy=true;
+    A[Free]=[ -1, v, -1 ];
+    if(Root===-1){
+      Root=0; Free++;
+      say('The tree was empty — <b>'+v+'</b> becomes the root, at index 0.','ok');
+      draw(0,true); busy=false; if(done) done(); return;
+    }
+    var cur=Root, steps=[];
+    while(true){
+      if(v < A[cur][1]){
+        if(A[cur][0]===-1){ steps.push({at:cur, side:0}); break; }
+        steps.push({at:cur, go:0}); cur=A[cur][0];
+      } else {
+        if(A[cur][2]===-1){ steps.push({at:cur, side:2}); break; }
+        steps.push({at:cur, go:2}); cur=A[cur][2];
+      }
+    }
+    var k=0;
+    (function step(){
+      if(k>=steps.length){ busy=false; if(done) done(); return; }
+      var s=steps[k];
+      if(s.go!==undefined){
+        say(v+' '+(s.go===0?'&lt;':'≥')+' '+A[s.at][1]+' — go '+(s.go===0?'<b>left</b>':'<b>right</b>')+' and keep walking.','nt');
+        draw(s.at,false);
+      } else {
+        var side=(s.side===0?'left':'right');
+        say(v+' '+(s.side===0?'&lt;':'≥')+' '+A[s.at][1]+' and the '+side+' pointer is −1 — <b>attach here</b>: write '
+           +Free+' into node '+s.at+'\u2019s '+side+' column.','ok');
+        A[s.at][s.side]=Free; Free++;
+        draw(Free-1,true);
+      }
+      k++; later(step, 950);
+    })();
+  }
+
+  host.querySelectorAll('.vzb').forEach(function(b){
+    b.addEventListener('click', function(){
+      var act=b.getAttribute('data-act');
+      if(act==='reset'){ reset(); return; }
+      if(busy) return;
+      if(act==='ins'){
+        var v=parseInt(inp.value,10);
+        if(isNaN(v)){ say('Type an integer first.','bad'); return; }
+        insertAnimated(v);
+        inp.value = String(Math.floor(Math.random()*30)+1);
+      }
+      if(act==='demo'){
+        reset();
+        var vals=[15,8,19,3,10], i=0;
+        (function next(){ if(i>=vals.length) return; insertAnimated(vals[i++], function(){ later(next,350); }); })();
+      }
+      if(act==='sorted'){
+        reset();
+        var vals2=[1,2,3,4,5,6,7], j=0;
+        (function next2(){
+          if(j>=vals2.length){ say('Every node hangs <b>right</b>. Height 7, for 7 nodes — remember this shape.','bad'); return; }
+          insertAnimated(vals2[j++], function(){ later(next2,300); });
+        })();
+      }
+    });
+  });
+  reset();
+}
+
+/* ===== boss behaviour: build a tree with the STUDENT'S code, then walk it ===== */
+function bossBehaviour(studentCode, cb){
+  if(document.body.getAttribute('data-lang') !== 'py'){ cb(null, 'java'); return; }
+  if(/\bclass\s+\w+/.test(studentCode)){ cb(null, 'crash: this answer is a class — but the paper declares ArrayNodes, RootPointer and FreeNode global and asks for a module-level function. Match the paper: global RootPointer, FreeNode inside AddNode().'); return; }
+  if(pyBusy){ cb(null, 'busy'); return; }
+  pyBusy = true; setRunButtons(false, '… judging');
+  var harness =
+    "SIZE = 20\n" +
+    "ArrayNodes = [[-1,-1,-1] for _ in range(SIZE)]\n" +
+    "RootPointer = -1\n" +
+    "FreeNode = 0\n" +
+    studentCode + "\n" +
+    "__r = []\n" +
+    "__err = ['']\n" +
+    "def __chk(name, f):\n" +
+    "    try: __r.append((name, bool(f())))\n" +
+    "    except Exception as e:\n" +
+    "        if not __err[0]: __err[0] = type(e).__name__ + ': ' + str(e)\n" +
+    "        __r.append((name, False))\n" +
+    "def __inorder(n, out):\n" +
+    "    if n == -1 or len(out) > SIZE: return\n" +
+    "    __inorder(ArrayNodes[n][0], out)\n" +
+    "    out.append(ArrayNodes[n][1])\n" +
+    "    __inorder(ArrayNodes[n][2], out)\n" +
+    "def __walk():\n" +
+    "    out = []\n" +
+    "    __inorder(RootPointer, out)\n" +
+    "    return out\n" +
+    "__chk('the first value becomes the root (RootPointer = 0)', lambda: (AddNode(15) is not False) and RootPointer == 0 and ArrayNodes[0][1] == 15)\n" +
+    "__chk('8 attaches as the LEFT child of 15', lambda: (AddNode(8), ArrayNodes[0][0] == 1)[-1])\n" +
+    "__chk('19 attaches as the RIGHT child of 15', lambda: (AddNode(19), ArrayNodes[0][2] == 2)[-1])\n" +
+    "__chk('five inserts walk back IN ORDER: 3 8 10 15 19', lambda: (AddNode(3), AddNode(10), __walk() == [3, 8, 10, 15, 19])[-1])\n" +
+    "__chk('a full tree refuses the 21st insert', lambda: all(AddNode(50 + i) is not False for i in range(15)) and AddNode(99) is False)\n" +
+    "'|'.join(('1' if v else '0') + ':' + k for k, v in __r) + ('||' + __err[0] if __err[0] else '')";
+  bootPython().then(function(py){
+    var ns = py.toPy({});
+    return py.runPythonAsync(harness, {globals: ns})
+      .then(function(res){ ns.destroy(); pyBusy=false; setRunButtons(true); cb(String(res), null); })
+      .catch(function(e){
+        ns.destroy(); pyBusy=false; setRunButtons(true);
+        var m = String(e.message||e).trim().split('\n');
+        cb(null, 'crash:' + (m[m.length-1] || 'error'));
+      });
+  });
+}
+</script>
+<script>
+/* ===== 🎮 Grow a Tree ===== */
+var G = {i:0, score:0, locked:false, earned:{}};
+
+/* The teacher walks backwards and forwards through the stages, so a stage must
+   be answerable twice without being paid for twice. Record what each stage
+   earned and REPLACE it, rather than adding to a running total. */
+function gAwardAt(idx, n){
+  G.earned[idx] = n;
+  /* the total is DERIVED from the ledger, never accumulated -- so a stage can be
+     answered any number of times, and nothing can leave the two disagreeing */
+  var t = 0;
+  for(var k in G.earned) if(G.earned.hasOwnProperty(k)) t += G.earned[k];
+  G.score = t;
+  var sc = document.getElementById('g-score');
+  if(sc) sc.textContent = G.score > 0 ? ('score ' + G.score) : '';
+}
+function gAward(n){ gAwardAt(G.i, n); }
+/* the stage-2 tree, drawn in HTML boxes (values 30 / 14 41 / 22) built by
+   inserting 30, 41, 14, 22 — verified against the reference implementation */
+var QTREE =
+  '<div style="float:right; width:250px; text-align:center; font-family:\'Courier New\',monospace; font-weight:bold; font-size:.9em;">'
++ '<div style="margin-bottom:2px;"><span style="border:2px solid #222B5A; border-radius:50%; padding:5px 10px;">30</span></div>'
++ '<div style="color:#8a92b2;">↙ &nbsp;&nbsp;&nbsp;&nbsp; ↘</div>'
++ '<div style="display:flex; justify-content:space-around; margin-bottom:2px;">'
++ '<span style="border:2px solid #222B5A; border-radius:50%; padding:5px 10px;">14</span>'
++ '<span style="border:2px solid #222B5A; border-radius:50%; padding:5px 10px;">41</span></div>'
++ '<div style="color:#8a92b2; text-align:left; padding-left:74px;">↘</div>'
++ '<div style="text-align:left; padding-left:84px;"><span style="border:2px solid #222B5A; border-radius:50%; padding:5px 10px;">22</span></div>'
++ '</div>';
+/* the paper's own table form: Index column PRINTED, rows numbered from 0.
+   Shaded ? cells are the ones the stage asks for. */
+var QCELL='padding:2px 12px; border:1px solid #b9c1dd; text-align:center;';
+var QASK ='padding:2px 12px; border:1px solid #b9c1dd; text-align:center; background:rgba(242,181,60,.3);';
+var QTAB =
+  '<table style="border-collapse:collapse; font-size:.62em; font-family:\'Courier New\',monospace; font-weight:bold; margin:6px 0 4px;">'
++ '<tr><th style="'+QCELL+' background:#e8eef9;">Index</th><th style="'+QCELL+' background:#e8eef9;">LeftPtr</th>'
++ '<th style="'+QCELL+' background:#e8eef9;">Data</th><th style="'+QCELL+' background:#e8eef9;">RightPtr</th></tr>'
++ '<tr><td style="'+QCELL+'">0</td><td style="'+QCELL+'">2</td><td style="'+QCELL+'">30</td><td style="'+QCELL+'">1</td></tr>'
++ '<tr><td style="'+QCELL+'">1</td><td style="'+QCELL+'">−1</td><td style="'+QCELL+'">41</td><td style="'+QCELL+'">−1</td></tr>'
++ '<tr><td style="'+QCELL+'">2</td><td style="'+QCELL+'">−1</td><td style="'+QCELL+'">14</td><td style="'+QASK+'">?</td></tr>'
++ '<tr><td style="'+QCELL+'">3</td><td style="'+QASK+'">?</td><td style="'+QASK+'">?</td><td style="'+QASK+'">?</td></tr>'
++ '</table>'
++ '<span style="font-size:.85em; font-family:\'Courier New\',monospace; font-weight:bold;">RootPtr = '
++ '<span style="'+QASK+' display:inline-block; min-width:26px;">?</span> &nbsp; FreePtr = '
++ '<span style="'+QASK+' display:inline-block; min-width:26px;">?</span></span>';
+
+var STAGES = [
+ { name:'Stage 1 · where does it land',
+   q:'A tree was built by inserting <b>15, 8, 19, 3, 10</b> in that order. Now <b>12</b> is inserted.<br>Where does it attach?',
+   opts:[
+     {t:'right child of 10', ok:true,  why:'12 < 15 → left. 12 ≥ 8 → right. 12 ≥ 10, and 10’s right pointer is −1 — attach there. Three comparisons, three halvings.'},
+     {t:'left child of 19',  ok:false, why:'To reach 19 you must first go RIGHT at the root — but 12 < 15 sends you left. Every step obeys the comparison at that node.'},
+     {t:'right child of 8',  ok:false, why:'Correct direction — but 10 already lives there. When the pointer is taken, you keep walking; you never replace.'},
+     {t:'left child of 15',  ok:false, why:'8 already lives there. The walk continues DOWN through 8; it does not stop at the first full slot.'}
+   ]},
+ { name:'Stage 2 · the paper’s table', paper:'P3',
+   q:QTREE + '<b>Nov 2024 P31 Q11(b), made playable.</b> This tree was built by inserting '
+    +'<b>30, 41, 14, 22</b> in that order — each value stored at the next free row. '
+    +'The paper prints the table with its <b>Index column already numbered — rows count from 0</b>. '
+    +'Complete the six shaded cells:'
+    + QTAB
+    +'<span style="font-size:.85em; color:#5b6488;">(the array keeps ARRIVAL order; only the pointers know the tree)</span>',
+   table:true, total:6,
+   fields:[
+     {lbl:'row 2 · RightPtr', want:'3',  why:'22 ≥ 14, so 22 hangs to 14’s right — and the ONLY place that fact is recorded is the parent’s pointer cell. This is the attach.'},
+     {lbl:'row 3 · LeftPtr',  want:'-1', why:'22 is a leaf: nothing hangs below it.'},
+     {lbl:'row 3 · Data',     want:'22', why:'the fourth value inserted lives at row 3 — arrival order, not size order.'},
+     {lbl:'row 3 · RightPtr', want:'-1', why:'a leaf again.'},
+     {lbl:'RootPtr',          want:'0',  why:'the first value inserted (30) became the root, and it lives at row 0.'},
+     {lbl:'FreePtr',          want:'4',  why:'four values stored, rows 0–3 used — the next empty row is 4. The paper asks for this box too.'}
+   ],
+   afterOk:'The drawing and the table are the same object — the pointers ARE the arrows. Notice where 22 lives: in its own row, and in its parent’s pointer cell. Nowhere else.'},
+ { name:'Stage 3 · read it off',
+   q:'Same tree — <b>30</b> at the root, <b>14</b> and <b>41</b> below it, <b>22</b> to the right of 14.<br>'
+    +'Type its <b>in-order traversal</b> (left · node · right), numbers separated by spaces.',
+   ta:'', rows:2, total:2, seq:'14 22 30 41',
+   mps:[],
+   model:'14 22 30 41' },
+ { name:'Stage 4 · the order that ruins it',
+   q:'Four insertion orders for the same seven values. <b>One of them builds a tree whose search is no better than a linked list’s.</b> Which?',
+   opts:[
+     {t:'1, 2, 3, 4, 5, 6, 7', ok:true,  why:'Each value is larger than everything before it, so every node hangs right: height 7, search O(n). Sorted input is the tree’s worst case — the same shape insertion sort’s best case wears.'},
+     {t:'4, 2, 6, 1, 3, 5, 7', ok:false, why:'This is the DREAM order — it builds a perfectly balanced tree of height 3.'},
+     {t:'4, 6, 2, 7, 1, 5, 3', ok:false, why:'Also balanced — the root arrives first and each level fills before the next. Order matters, but many orders are fine.'},
+     {t:'a tree cannot degrade — the rule prevents it', ok:false, why:'The rule guarantees ORDER, never SHAPE. It obediently builds a seven-deep stick if the data arrives sorted.'}
+   ]},
+ { name:'Stage 5 · BOSS · write the insert', paper:'P4',
+   boss:true, total:6, cap:6,
+   q:'<b>Adapted from Nov 2021 Paper 41 Q3(b)</b> (8 marks there; marked on six bullets here). An ordered binary tree stores <b>integer</b> data in a global 2D array '
+    +'<span class="mono">ArrayNodes</span> of <b>20 nodes</b>: column <span class="mono">0</span> the left pointer, column '
+    +'<span class="mono">1</span> the data, column <span class="mono">2</span> the right pointer; <span class="mono">−1</span> is the null pointer.<br>'
+    +'<b>Given</b> — the paper’s part (a) is already done for you: <span class="mono">ArrayNodes</span>, '
+    +'<span class="mono">RootPointer = −1</span> and <span class="mono">FreeNode = 0</span> exist as globals. '
+    +'A value equal to a node’s data follows “otherwise” — it goes <b>right</b>. And <b>nothing in this question ever deletes a node</b>, '
+    +'so <span class="mono">FreeNode</span> only counts up.<br>'
+    +'Write <span class="mono">AddNode(NodeData)</span> — store the value at row <span class="mono">FreeNode</span>, attach it by the walk '
+    +'(smaller left, otherwise right), and return <b>FALSE</b> when the tree is full, <b>TRUE</b> otherwise. '
+    +'<span style="font-size:.85em; color:#5b6488;">(The paper’s procedure reads the value with INPUT and takes the array BYREF; '
+    +'here <span class="mono">NodeData</span> arrives as a parameter — use the globals.)</span><br>'
+    +'<span style="font-size:.88em; color:#c0392b;"><b>Paper 4 is answered in Java, Python or VB.</b> The front page of the paper says '
+    +'<i>“a mark of zero will be awarded if a programming language other than those listed here is used”</i> — and pseudocode is not one of them.</span>',
+   parts:[
+     {lbl:'Write the whole subroutine &nbsp;<span class="accent2">[6]</span>', rows:13,
+      mps:[
+        {re:/(AddNode|Add\w*|Insert\w*)\s*\(\s*\w+/i, pts:1, label:'header taking the value as a parameter'},
+        {re:/FreeNode\s*(>|>=|<|<=|==|=)\s*(19|20|SIZE)/i, pts:1, label:'checks whether the tree is <b>full</b> against the array bound'},
+        {re:/ArrayNodes\s*\[\s*FreeNode\s*\]\s*(\[\s*1\s*\]|\[1\])\s*=|ArrayNodes\s*\[\s*FreeNode\s*\]\s*=\s*\[/i, pts:1, label:'stores the data in row <code>FreeNode</code> (both pointers −1)'},
+        {re:/RootPointer\s*(==|=)\s*-\s*1[\s\S]{0,80}?RootPointer\s*=\s*0|RootPointer\s*=\s*0[\s\S]{0,40}?if/i, pts:1, label:'the <b>empty-tree</b> case: sets <code>RootPointer</code> to 0'},
+        {re:/<\s*ArrayNodes\s*\[[^\]]+\]\s*(\[\s*1\s*\]|\[1\])/i, pts:1, label:'compares the new value with the current node’s <b>data</b> to choose left or right'},
+        {re:/ArrayNodes\s*\[[^\]]+\]\s*(\[\s*0\s*\]|\[\s*2\s*\]|\[0\]|\[2\])\s*=\s*FreeNode/i, pts:1, label:'attaches by writing <code>FreeNode</code> into the <b>parent’s</b> pointer column'},
+        {re:/FreeNode\s*(\+=\s*1|=\s*FreeNode\s*\+\s*1|\+\+)/i, pts:1, label:'counts <code>FreeNode</code> up by one'}
+      ],
+      model:'def AddNode(NodeData):\n    global RootPointer, FreeNode\n    if FreeNode > SIZE - 1:\n        return False\n    ArrayNodes[FreeNode][0] = -1\n    ArrayNodes[FreeNode][1] = NodeData\n    ArrayNodes[FreeNode][2] = -1\n    if RootPointer == -1:\n        RootPointer = 0\n    else:\n        Current = RootPointer\n        Placed = False\n        while not Placed:\n            if NodeData < ArrayNodes[Current][1]:\n                if ArrayNodes[Current][0] == -1:\n                    ArrayNodes[Current][0] = FreeNode\n                    Placed = True\n                else:\n                    Current = ArrayNodes[Current][0]\n            else:\n                if ArrayNodes[Current][2] == -1:\n                    ArrayNodes[Current][2] = FreeNode\n                    Placed = True\n                else:\n                    Current = ArrayNodes[Current][2]\n    FreeNode = FreeNode + 1\n    return True'}
+   ]}
+];
+function gEl(id){ return document.getElementById(id); }
+</script>
+<script>
+function behaviourHtml(raw, err){
+  if(err === 'java')
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li style="color:#8890b5;">'
+         + 'This deck cannot run Java, so the ticks on the left are a <b>checklist</b>, not a test. '
+         + 'Switch the language to <b>Python</b> and press mark again — then the machine actually runs your code.</li></ul>';
+  if(err === 'pseudo')
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li style="color:#8890b5;">'
+         + 'There is pseudocode mixed into this, so it will not run — and on Paper 4 it would not score either. '
+         + 'Write it as <b>Python</b> throughout.</li></ul>';
+  if(err && err.indexOf('crash:') === 0)
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li><span class="n">✗</span> '
+         + 'it did not run — <span class="mono">' + err.slice(6) + '</span></li>'
+         + '<li style="color:#8890b5;">Mark points can be ticked by text that never executes. This is why both columns exist.</li></ul>';
+  if(!raw) return '';
+  var parts = raw.split('||');
+  var rows = parts[0].split('|').map(function(t){
+    var ok = t.charAt(0) === '1', label = t.slice(2);
+    return '<li><span class="' + (ok?'y':'n') + '">' + (ok?'✓':'✗') + '</span> ' + label + '</li>';
+  }).join('');
+  if(parts[1])
+    rows += '<li style="color:#8890b5;">first error raised: <span class="mono">' + parts[1] + '</span>'
+         +  (parts[1].indexOf('UnboundLocal') > -1
+             ? ' — Python needs <span class="mono">global RootPointer, FreeNode</span> inside the function.' : '')
+         +  '</li>';
+  return '<p class="g-lbl">what the machine says — <b>your code was actually run</b></p><ul class="g-mp">' + rows + '</ul>';
+}
+
+function bossCodePane(code){
+  var esc = String(code).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<div><p class="g-lbl">your answer</p><pre class="g-ans">' + esc + '</pre></div>';
+}
+function gProg(){
+  var p=gEl('g-prog'); p.innerHTML='';
+  STAGES.forEach(function(_,k){
+    var i=document.createElement('i');
+    i.className = k<G.i ? 'done' : (k===G.i ? 'cur' : '');
+    p.appendChild(i);
+  });
+}
+function gSay(html, cls){ var s=gEl('g-say'); s.innerHTML=html||'&nbsp;'; s.className='g-say'+(cls?' '+cls:''); if(G.llmBusy) gWaiting(true); }
+
+/* The mark scheme's own wording is "FirstEmpty = LinkedList[FirstEmpty, 1] BEFORE any
+   update to FirstEmpty's pointer". Presence is not enough — the same line in the wrong
+   place is the bug this whole lesson is about. So compare positions. */
+function savedBeforeOverwrite(ans){
+  var read  = /(\w+)\s*(=|←|<-)\s*LinkedList\s*\[[^\]]*FirstEmpty[^\]]*?(\]\s*\[\s*1\s*\]|,\s*1\s*\])/i.exec(ans);
+  if(!read) return false;
+  var write = /LinkedList\s*\[[^\]]*?(\]\s*\[\s*1\s*\]|,\s*1\s*\])\s*(=|←|<-)\s*FirstNode/i.exec(ans);
+  if(!write) return true;                 /* nothing overwrote it, so nothing was lost */
+  return read.index < write.index;        /* the save has to come first */
+}
+
+function markOne(ans, mps, cap, quiet){
+  var got=0, rows=[], listed=0;
+  mps.forEach(function(m){
+    var ok = m.fn ? m.fn(ans) : (m.re.test(ans) && (!m.also || m.also.test(ans)));
+    if(ok) got += m.pts;
+    listed += m.pts;
+    rows.push('<li><span class="'+(ok?'y':'n')+'">'+(ok?'✓':'✗')+'</span> '+m.label+' <b>['+m.pts+']</b></li>');
+  });
+  var raw = got, missed = listed - got;
+  if(cap && got > cap) got = cap;
+  /* the cap footnotes are irrelevant when the answer was refused on form, and they are
+     the two longest rows in the column — dropping them keeps the panel on the stage */
+  if(cap && listed > cap && !quiet){
+    rows.push('<li style="color:#8890b5;">the published scheme lists <b>'+listed+'</b> bullets for a maximum of <b>'+cap
+            + '</b> marks — mark schemes are generous on purpose, so you do not have to hit every one</li>');
+    if(missed > 0 && got === cap)
+      rows.push('<li style="color:#8890b5;">…which is why you have <b>'+cap+'/'+cap+'</b> with <b>'+missed
+              + '</b> bullet'+(missed>1?'s':'')+' missing. <b>The cap did that, not your answer</b> — and the '
+              + 'bullet you dropped is still a bug in your program.</li>');
+  }
+  return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
+}
+function gDraw(){
+  var s=STAGES[G.i];
+  /* which paper this stage is, because the ANSWER FORM changes with it and the
+     form is worth all of the marks */
+  gEl('g-stage').innerHTML = s.name
+    + (s.paper ? ' <span class="pbadge ' + (s.paper==='P4'?'p4':'p3') + '">' + s.paper + '</span>' : '');
+  gEl('g-score').textContent = G.score>0 ? ('score ' + G.score) : '';
+  gNavState();
+  gEl('g-q').innerHTML = s.q;
+  var b=gEl('g-body'); b.innerHTML=''; G.locked=false; gSay('');
+  gProg();
+
+  if(s.opts){
+    var wrap=document.createElement('div'); wrap.className='g-opts';
+    s.opts.forEach(function(o){
+      var btn=document.createElement('button'); btn.className='g-b'; btn.style.flex='1 1 44%';
+      btn.innerHTML=o.t;
+      btn.addEventListener('click', function(){
+        if(G.locked) return;
+        if(o.ok){
+          G.locked=true; btn.className='g-b yes'; gAward(1);
+          gSay('✓ ' + o.why + ' <span style="opacity:.6">— press next → when you are ready</span>', 'ok'); /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */
+        } else {
+          btn.className='g-b no';
+          gSay('✗ ' + o.why, 'bad');
+        }
+      });
+      wrap.appendChild(btn);
+    });
+    b.appendChild(wrap);
+  } else if(s.boss){
+    var grid=document.createElement('div'); grid.className='g-grid';
+    s.parts.forEach(function(p, idx){
+      var col=document.createElement('div');
+      var lab=document.createElement('p'); lab.className='g-lbl'; lab.innerHTML=p.lbl;
+      var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=p.rows; ta.spellcheck=false;
+      ta.id='boss'+idx;
+      col.appendChild(lab); col.appendChild(ta); grid.appendChild(col);
+    });
+    b.appendChild(grid);
+    var sub=document.createElement('button'); sub.className='g-sub'; sub.textContent='mark it, out of '+s.total;
+    sub.addEventListener('click', function(){
+      var code = gEl('boss0').value;
+      /* Paper 4 refuses pseudocode by rubric, so this marker refuses it too — but it
+         still shows what the logic would have earned, because the logic is not the
+         thing that was wrong. */
+      var wrongForm = looksLikePseudocode(code) && !looksLikeProgramCode(code);
+      var total=0, cells='';
+      s.parts.forEach(function(p, idx){
+        var r=markOne(gEl('boss'+idx).value, p.mps, s.cap, wrongForm);
+        total+=r.got;
+        if(wrongForm) return;      /* the ticks match against CODE, so a pseudocode
+                                     answer fails some of them on notation alone --
+                                     showing them next to a refusal reads as a second fault */
+        cells += '<div><p class="g-lbl">'
+              +  (p.lbl)
+              +  ' &mdash; <b class="'+(r.got>=s.total?'accent1':'accent2')+'">'+r.got+'</b></p>'+r.html+'</div>';
+      });
+      if(wrongForm){
+        b.innerHTML = '<div class="g-res"><div class="g-tot" style="color:var(--accent2);">0 / '+s.total+'</div>'
+                    + '<div class="g-grid">' + bossCodePane(code)
+                    + '<div>'
+                    + '<div class="formwarn"><b>That is pseudocode, and this is Paper 4.</b><br>'
+                    + 'The front page of every Paper 4 says: <i>"a mark of zero will be awarded if a programming '
+                    + 'language other than those listed here is used"</i> — Java, Python or Visual Basic, console mode. '
+                    + 'Pseudocode is not one of them.<br><br>'
+                    + 'Nothing here has been marked, because the mark points attach to <b>code</b>. '
+                    + 'Write the same answer in <b>'
+                    + (document.body.getAttribute('data-lang')==='py' ? 'Python' : 'Java')
+                    + '</b> and press mark again — then you find out what it is actually worth.</div></div>'
+                    + '</div></div>';
+        gSay('<b>Zero — and not for anything that was wrong with your answer.</b> '
+           + 'On this paper the form is worth all of the marks. Press next → to finish.', 'bad');
+        if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+        return;
+      }
+      gAward(total);
+      /* the results REPLACE the inputs rather than stacking below them */
+      b.innerHTML = '<div class="g-res"><div class="g-tot">'+total+' / '+s.total+'</div>'
+                  + '<div class="g-grid">' + bossCodePane(code)
+                  + '<div>' + cells + '</div>'
+                  + '<div><div id="g-beh"><p class="g-lbl">what the machine says</p>'
+                  +   '<ul class="g-mp"><li style="color:#8890b5;">running your code…</li></ul></div>'
+                  +   '<div id="g-llm" class="g-llm"></div>'
+                  + '</div>'
+                  + '</div></div>';
+      /* the verdict must read BOTH columns — "Strong" printed over a program the
+         machine could not even run is the exact dishonesty this panel exists to kill */
+      bossBehaviour(code, function(raw, err){
+        var el = document.getElementById('g-beh');
+        if(el) el.innerHTML = behaviourHtml(raw, err);
+        llmMark(code, document.body.getAttribute('data-lang') === 'py' ? 'py' : 'java',
+                total, s.total, raw, document.getElementById('g-llm'), 'A02c', 'AddNode');
+        if(err && err.indexOf('crash:') === 0){
+          gSay('<b>' + total + ' on the mark points — and it did not run at all.</b> '
+             + 'Fix the error on the right first; marks awarded to code that cannot execute '
+             + 'are marks you will not get twice. Press next → to finish.', 'bad');
+          return;
+        }
+        if(raw && raw.split('||')[0].indexOf('0:') !== -1){
+          if(total === s.total){
+            gSay('<b>Full marks on the mark points — and it still does not work.</b> '
+               + 'An examiner would give you ' + total + '. The machine would not. '
+               + 'Look for the chain check: that one fails silently in an exam and costs you every later part.', 'bad');
+          } else {
+            gSay('Marks missing on the left, behaviour failing on the right — '
+               + 'fix the right-hand column first. Press next → to finish.', 'bad');
+          }
+        }
+      });
+      gSay(total >= s.total-1 ? 'Strong. Press next → to finish.' : 'Read the ✗ lines — press next → to finish.',
+           total >= s.total-1 ? 'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub);
+  } else if(s.table){
+    var wrap=document.createElement('div');
+    s.fields.forEach(function(f, idx){
+      var lab=document.createElement('label');
+      lab.style.cssText='display:inline-flex; align-items:center; gap:6px; margin:0 18px 8px 0; font-size:.54em; font-weight:bold; color:var(--navy);';
+      lab.innerHTML=f.lbl+' ';
+      var inp=document.createElement('input'); inp.className='tin'; inp.id='tf'+idx;
+      inp.setAttribute('autocomplete','off'); inp.spellcheck=false;
+      lab.appendChild(inp); wrap.appendChild(lab);
+    });
+    b.appendChild(wrap);
+    var subT=document.createElement('button'); subT.className='g-sub'; subT.textContent='mark it, out of '+s.total;
+    subT.addEventListener('click', function(){
+      var got=0, rows='';
+      s.fields.forEach(function(f, idx){
+        var v=gEl('tf'+idx).value.trim().replace(/\u2212/g,'-');
+        var ok=(v===f.want);
+        if(ok) got++;
+        rows+='<li><span class="'+(ok?'y':'n')+'">'+(ok?'\u2713':'\u2717')+'</span> '+f.lbl+' \u2014 <b>'+f.want+'</b>. '+f.why+'</li>';
+      });
+      gAward(got);
+      gSay('<b>'+got+' / '+s.total+'</b><ul class="g-mp">'+rows+'</ul>'
+         + (got===s.total && s.afterOk ? '<div style="margin-top:4px; font-size:.92em;">'+s.afterOk+'</div>' : '')
+         + '<div style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           got===s.total?'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(subT);
+  } else {
+    var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=s.rows||2; ta.spellcheck=false;
+    b.appendChild(ta);
+    var sub2=document.createElement('button'); sub2.className='g-sub'; sub2.textContent='mark it';
+    sub2.addEventListener('click', function(){
+      var r;
+      if(s.seq){
+        var got=(ta.value.match(/-?\d+/g)||[]).join(' ');
+        if(got===s.seq) r={got:s.total, html:'<ul class="g-mp"><li><span class="y">\u2713</span> '+s.seq+' \u2014 left subtree, node, right subtree, at every node.</li></ul>'};
+        else if(got.split(' ').slice().sort().join(' ')===s.seq.split(' ').slice().sort().join(' '))
+          r={got:1, html:'<ul class="g-mp"><li><span class="n">\u2717</span> right numbers, wrong order \u2014 you have listed the VALUES, not the traversal. In-order means everything left of a node comes out before it.</li></ul>'};
+        else r={got:0, html:'<ul class="g-mp"><li><span class="n">\u2717</span> expected <b>'+s.seq+'</b> \u2014 start at the leftmost node and let the rule do the walking.</li></ul>'};
+      } else {
+        r=markOne(ta.value, s.mps, s.cap);
+      }
+      gAward(r.got);
+      /* the mirror of the boss: a Paper 3 answer written as program code. Not a
+         zero — P3 has no rubric saying so — but no mark scheme in five years
+         offers program code as an alternative, so say that plainly. */
+      var wrongForm = s.wantsPseudocode && looksLikeProgramCode(ta.value) && !looksLikePseudocode(ta.value);
+      gSay((wrongForm
+             ? '<div class="formwarn"><b>That is program code, and this is Paper 3.</b> '
+             + 'Not an automatic zero the way the wrong language is on Paper 4 — but across every 9618 Paper 3 '
+             + 'mark scheme from 2021 to 2025, <b>not one</b> offers program code as an alternative to pseudocode. '
+             + 'The marks below are what your logic earns; write it in pseudocode to be sure of collecting them.</div>'
+             : '') +
+           '<b>'+r.got+' / '+s.total+'</b>'+r.html+
+           '<div style="margin-top:5px; font-size:.92em;">model answer:<pre class="ps" style="font-size:.9em; margin:4px 0 0;">'+s.model+'</pre></div>'+
+           '<div style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           r.got===s.total && !wrongForm ? 'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub2);
+  }
+}
+function gBack(){
+  if(G.i <= 0) return;
+  G.locked = true;
+  G.i--;
+  gDraw();
+}
+function gNavState(){
+  var b = document.getElementById('g-back');
+  if(b) b.style.visibility = (G.i > 0) ? '' : 'hidden';
+}
+function gSkip(){
+  G.locked = true;
+  G.i++;
+  if(G.i >= STAGES.length){ gFinish(); } else { gDraw(); }
+}
+/* Bind immediately. In the A2-era decks this whole block lives inside the
+   Reveal.initialize().then() closure, which resolves AFTER DOMContentLoaded has
+   already fired -- so a DOMContentLoaded listener registered here never runs and
+   the button silently does nothing. */
+/* Reachable from the inline onclick no matter what scope this block is in.
+   (An inline handler resolves names GLOBALLY, so a function declared inside the
+   Reveal.initialize().then() closure would never be found from the attribute.) */
+window.gReplay = function(){
+  G.i = 0; G.score = 0; G.earned = {};
+  var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
+  var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
+  gDraw();
+};
+function gSkipBind(){
+  var b = document.getElementById('g-skip'), k = document.getElementById('g-back');
+  if(!b){ document.addEventListener('DOMContentLoaded', gSkipBind); return; }
+  if(!b.__bound){ b.__bound = true;
+    b.addEventListener('click', function(ev){ ev.stopPropagation(); gSkip(); }); }
+  if(k && !k.__bound){ k.__bound = true;
+    k.addEventListener('click', function(ev){ ev.stopPropagation(); gBack(); }); }
+  gNavState();
+}
+gSkipBind();
+function gNextOnce(){
+  G.i++;
+  if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
+}
+function gFinish(){
+  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
+  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
+  gEl('g-stage').textContent='done';
+  gEl('g-q').innerHTML='';
+  gEl('g-prog').innerHTML='';
+  gEl('g-score').textContent='';
+  gEl('g-body').innerHTML=
+    '<div class="g-fin"><div class="big">'+G.score+'</div>'+
+    '<p style="margin:6px 0 0;">Every mark on that boss came from a real paper\u2019s question.</p>'+
+    '<p style="margin:6px 0 0; font-size:.9em; color:#5b6488;">The two that cost the most are the two the exam expects you to miss: '+
+    '<b>the empty-tree case</b> (the first value must become the root), and '+
+    '<b>attaching by writing the PARENT\u2019s pointer</b> \u2014 a node stored but never pointed at is not in the tree.</p>'+
+    '<button class="g-sub" onclick="gReplay()">play again</button></div>';
+  gSay('');
+}
+
+/* ═══ LIVE LLM MARKING — ported 2026-08-24. The key is never in this file:
+   grade-server.py holds it in .env on the teacher's Mac and marks on request;
+   the absence of the process is the off-switch. ═══ */
+var LLM = { url:'http://127.0.0.1:8788', available:false, on:true };
+function llmChip(){
+  var c = document.getElementById('llmchip'); if(!c) return;
+  if(!LLM.available){ c.className='off'; c.textContent='⚡ no LLM — click for help'; return; }
+  c.className = LLM.on ? 'on' : 'off';
+  c.textContent = LLM.on ? '⚡ LLM marking on' : '⚡ LLM marking off';
+}
+function llmHelp(show){ var h = document.getElementById('llmhelp'); if(h) h.style.display = show ? 'block' : 'none'; }
+function llmDetect(cb){
+  var ctl = new AbortController(); var tm = setTimeout(function(){ ctl.abort(); }, 1200);
+  fetch(LLM.url + '/ping', {signal: ctl.signal, cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ clearTimeout(tm); LLM.available = !!(j && j.ok && j.key); llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
+    .catch(function(){ clearTimeout(tm); LLM.available = false; llmChip(); if(cb) cb(); });
+}
+function llmWatch(){ setInterval(function(){ if(LLM.available || document.hidden) return; llmDetect(); }, 5000); }
+function llmBind(){
+  var c = document.getElementById('llmchip'); if(!c || c.__bound) return; c.__bound = true;
+  c.addEventListener('click', function(){
+    if(!LLM.available){ c.textContent='⚡ looking for the server…'; llmHelp(true); llmDetect(); return; }
+    LLM.on = !LLM.on; llmChip();
+  });
+  var x = document.getElementById('llmhelp-x'); if(x) x.addEventListener('click', function(){ llmHelp(false); });
+  llmDetect(); llmWatch();
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
+else llmBind();
+
+function gPick(idx, n, btn){
+  var s = STAGES[idx]; n = Math.min(n, s.total);
+  gAwardAt(idx, n);
+  if(idx === G.i){ var tot = document.querySelector('#g-body .g-tot'); if(tot) tot.textContent = n + ' / ' + s.total; }
+  if(btn){
+    Array.prototype.forEach.call(btn.parentNode.querySelectorAll('.g-pick'), function(x){ x.classList.remove('on'); });
+    btn.classList.add('on');
+  }
+}
+function pickButtons(r, l){
+  var idx = G.i, s = STAGES[idx]; r = Math.min(r, s.total); l = Math.min(l, s.total);
+  if(r === l) return '';
+  return '<div class="g-pickrow">Which mark stands? '
+       + '<button class="g-pick" onclick="gPick(' + idx + ', ' + r + ', this)">keep the pattern\u2019s ' + r + '</button>'
+       + '<button class="g-pick" onclick="gPick(' + idx + ', ' + l + ', this)">take the reader\u2019s ' + l + '</button>'
+       + '<span style="font-size:.85em; color:#8890b5;">\u2014 the total moves with your choice.</span></div>';
+}
+function consensusHtml(regexRaw, llmAwarded, ofPoints, behaviour){
+  var gap = Math.abs(regexRaw - llmAwarded);
+  var beh = null;
+  if(behaviour && behaviour.indexOf('|') > -1){
+    var parts = behaviour.split('||')[0].split('|');
+    var ok = parts.filter(function(p){ return p.charAt(0) === '1'; }).length;
+    beh = {ok: ok, of: parts.length};
+  }
+  var rows = '<b>pattern ' + regexRaw + '/' + ofPoints + '</b> &nbsp;\u00b7&nbsp; <b>reader ' + llmAwarded + '/' + ofPoints + '</b>'
+           + (beh ? ' &nbsp;\u00b7&nbsp; <b>ran ' + beh.ok + '/' + beh.of + '</b>' : '');
+  if(gap > 1)
+    return '<div class="g-cons split">' + rows + ' \u2014 <b>the two markers disagree by ' + gap + '.</b> '
+         + 'The pattern-matcher looks for shapes and the reader looks for meaning, so a gap this big '
+         + 'usually means one of them is being fooled. <b>Worth a human eye</b>.' + pickButtons(regexRaw, llmAwarded) + '</div>';
+  if(!beh)
+    return '<div class="g-cons agree">' + rows + ' \u2014 the two markers agree.</div>';
+  var markFrac = (regexRaw + llmAwarded) / (2 * Math.max(1, ofPoints));
+  var behFrac  = beh.ok / Math.max(1, beh.of);
+  if(behFrac - markFrac >= 0.3)
+    return '<div class="g-cons split">' + rows + ' \u2014 <b>it works, and it still scores ' + regexRaw + '.</b> '
+         + 'The machine is satisfied; both markers refused it anyway, because the question asked for a particular '
+         + '<b>method</b>. On this paper that is most of the marks.</div>';
+  if(behFrac >= 1 && markFrac >= 0.6)
+    return '<div class="g-cons agree">' + rows + ' \u2014 <b>all three agree.</b> Two markers read your code the same way '
+         + 'and it does the right thing when run. As certain as marking gets.</div>';
+  if(markFrac >= 0.6)
+    return '<div class="g-cons split">' + rows + ' \u2014 <b>the two markers agree, the machine does not.</b> '
+         + 'The method is visibly there, so an examiner would pay for it \u2014 but it does not work yet. '
+         + 'You would score here and still have a bug to find.</div>';
+  return '<div class="g-cons split">' + rows + ' \u2014 <b>all three agree, and none of them are happy.</b> '
+       + 'Start from the first \u2717 on the left.</div>';
+}
+function gWaiting(on){
+  G.llmBusy = !!on;
+  var say = gEl('g-say'); if(!say) return;
+  var h = document.getElementById('g-nexthint');
+  if(!h){ h = document.createElement('div'); h.id = 'g-nexthint'; h.style.marginTop = '5px'; say.appendChild(h); }
+  if(on){
+    h.style.opacity = '1';
+    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> give it a few seconds \u2014 clicking now moves on without it.</span>';
+  } else { h.style.opacity = '.65'; h.textContent = ''; }
+}
+function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host, task, fn){
+  if(!LLM.available || !LLM.on || !host) return;
+  var grid = host.closest ? host.closest('.g-grid') : null;
+  if(grid) grid.classList.add('three');
+  host.innerHTML = '<p class="g-lbl">a second marker is reading it\u2026 <span class="conf">(this one reads for meaning, not for patterns)</span></p>';
+  var ctl = new AbortController();
+  var timedOut = false, t0 = Date.now();
+  var tm = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
+  gWaiting(true);
+  fetch(LLM.url + '/mark', {
+    method:'POST', signal: ctl.signal, headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task: task, fn: fn, lang: lang, code: code})
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      clearTimeout(tm); gWaiting(false);
+      if(!j || j.error){ host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">(' + ((j && j.error) || 'no reply') + ')</span></p>'; return; }
+      var rows = j.marks.map(function(m){
+        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'\u2713':'\u2717') + '</span> '
+             + m.point + (m.why ? ' <span class="conf">\u2014 ' + m.why + '</span>' : '') + '</li>';
+      }).join('');
+      host.innerHTML = '<p class="g-lbl">what a second marker says \u2014 <b>it read your code, it did not run it</b></p>'
+                     + '<ul class="g-mp">' + rows + '</ul>'
+                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
+                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
+    })
+    .catch(function(){
+      clearTimeout(tm); gWaiting(false);
+      var secs = Math.round((Date.now() - t0) / 1000);
+      host.innerHTML = timedOut
+        ? '<p class="g-lbl">the reader gave up after ' + secs + ' s <span class="conf">(the model is busy, not broken \u2014 the other columns stand. Press mark again to retry.)</span></p>'
+        : '<p class="g-lbl">could not reach the reader <span class="conf">(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
+    });
+}
+
+Reveal.initialize({
+  hash:true, slideNumber:'c/t', width:1280, height:720, margin:.06,
+  plugins:[RevealNotes],
+  transition:'slide', backgroundTransition:'fade'
+}).then(function(){
+  initPyCells();
+  makeTree('treeviz');
+  gDraw();
+  try{ var L=localStorage.getItem('a2lang'); if(L) setLang(L); }catch(e){}
+  var ob=document.getElementById('obj-btn');
+  if(ob) ob.addEventListener('click', function(){
+    var o=document.getElementById('obj');
+    o.style.display = (o.style.display==='none') ? 'block' : 'none';
+  });
+});
+Reveal.on('ready', function(e){ autoSizePyTextareas(e.currentSlide); });
+Reveal.on('slidechanged', function(e){ autoSizePyTextareas(e.currentSlide); });
+</script>
+</body>
+</html>
