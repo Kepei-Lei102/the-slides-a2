@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Function That Calls Itself — Recursion</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<style>
+:root{
+  --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
+  --accent3:#F2B53C; --navy:#222B5A; --ice:#E8EEF9; --white:#fff;
+}
+.reveal{font-family:'Calibri','Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif; font-size:26px;}
+.reveal h1,.reveal h2,.reveal h3{font-family:'Georgia','Times New Roman','PingFang SC','Microsoft YaHei',serif; text-transform:none; letter-spacing:-.02em;}
+.reveal section{text-align:left;}
+.dk{color:var(--ice);} .dk h1,.dk h2,.dk h3{color:var(--white);}
+.lt{color:var(--navy);} .lt h2,.lt h3{color:var(--navy);}
+.bar{position:absolute; top:0; left:0; right:0; height:5px;}
+.card{background:var(--white); border-radius:10px; padding:16px 20px; box-shadow:0 4px 12px rgba(0,0,0,.07); text-align:left;}
+.rule{background:var(--white); border-radius:8px; padding:11px 16px; box-shadow:0 3px 10px rgba(0,0,0,.05); border-left:5px solid var(--accent1); margin:10px 0; text-align:left; font-size:.74em;}
+.rule.accent2{border-left-color:var(--accent2);} .rule.accent3{border-left-color:var(--accent3);} .rule.navy{border-left-color:var(--navy);}
+.dk .rule{background:rgba(255,255,255,.06); color:var(--ice);}
+.two-col{display:flex; gap:26px; align-items:flex-start;} .two-col>*{flex:1; min-width:0;}
+.three-col{display:flex; gap:16px;} .three-col>*{flex:1; min-width:0;}
+.smaller{font-size:.7em;} .center{text-align:center;}
+.accent1{color:var(--accent1);} .accent2{color:var(--accent2);} .accent3{color:var(--accent3);}
+.mono{font-family:'Courier New',monospace; font-weight:bold;}
+
+.badges{position:absolute; top:-14px; right:0; display:flex; gap:6px; z-index:5;}
+.bg{font-size:.44em; font-weight:bold; letter-spacing:.03em; padding:3px 12px; border-radius:20px; font-family:'Calibri','Segoe UI',sans-serif;}
+.bg-p3{background:rgba(240,101,91,.14); color:#c0392b; border:1.5px solid var(--accent2);}
+.bg-p34{background:rgba(23,179,163,.15); color:#0d7a6e; border:1.5px solid var(--accent1);}
+.bg-p4{background:rgba(242,181,60,.18); color:#8a5c00; border:1.5px solid var(--accent3);}
+.dk .bg-p3{color:#ff9d95;} .dk .bg-p34{color:#5FD6C9;} .dk .bg-p4{color:#F2B53C;}
+
+.dig{position:absolute; bottom:-34px; left:50%; transform:translateX(-50%); font-size:.5em; color:#98a0c0; animation:bob 2s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(5px);}}
+#obj-btn{background:rgba(255,255,255,.08); color:var(--ice); border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:5px 14px; cursor:pointer; font-size:.42em; opacity:.55;}
+#obj-btn:hover{opacity:1;}
+
+/* ===== py-cell: live Python ===== */
+.pycell{background:var(--navy); border-radius:12px; padding:10px 12px 12px; box-shadow:0 4px 14px rgba(0,0,0,.14); text-align:left;}
+.pycell .pybar{display:flex; gap:8px; align-items:center; margin-bottom:6px;}
+.pycell .pydots{display:flex; gap:5px;}
+.pycell .pydots i{width:9px; height:9px; border-radius:50%; display:block;}
+.pyta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.45; padding:10px 12px; resize:none; outline:none; display:block;}
+.pyta[readonly]{color:#aeb8dd;}
+.pyta:focus{box-shadow:0 0 0 2px var(--accent1);}
+.pyrun{background:var(--accent1); color:#fff; border:none; border-radius:7px; padding:4px 16px; font-size:.5em; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.pyrun:hover{background:#12907f;} .pyrun:disabled{background:#5a6394; cursor:wait;}
+.pylock{background:transparent; color:#98a0c0; border:1.5px solid #454e82; border-radius:7px; padding:3px 9px; font-size:.5em; font-weight:bold; cursor:pointer;}
+.pylock:hover{color:var(--accent3); border-color:var(--accent3);}
+.pyout{background:#0d1230; color:#5FD6C9; border-radius:8px; font-family:'Courier New',monospace; font-weight:bold;
+  font-size:.54em; line-height:1.45; padding:9px 12px; margin:8px 0 0; min-height:1.4em; white-space:pre-wrap; text-align:left;}
+.pyout .crash{color:var(--accent2);}
+.pyin-lbl{color:#5FD6C9;}
+.pyin{background:#1b234d; border:2px solid var(--accent1); border-radius:6px; color:var(--ice);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:1em; padding:1px 8px; width:130px; outline:none;}
+.pystate{font-size:.44em; color:#98a0c0; margin-left:auto;}
+.pycell.tight .pyta{font-size:.485em; line-height:1.34;}
+.pycell.tight .pyout{font-size:.485em; line-height:1.34;}
+.pycell.xtight .pyta{font-size:.43em; line-height:1.3;}
+.pycell.xtight .pyout{font-size:.43em; line-height:1.3;}
+.pycell.side .pyrow{display:flex; gap:10px; align-items:stretch;}
+.pycell.side .pyrow .pyta{flex:1; min-width:0;}
+.pycell.side .pyrow .pyout{margin:0; flex:0 0 auto; min-width:190px;}
+#py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
+#py-chip.ready{color:#5FD6C9;}
+
+/* ===== the Java lane: captured, not live ===== */
+.pycell.java .pyrun{background:#8a6100;} .pycell.java .pyrun:hover{background:#a87700;}
+.pystate.cap{color:#e0b050;}
+.pyout.cap{color:#e8c98a;}
+.pyout.err{color:#ff9d95;}
+
+/* ===== the language switch ===== */
+#langsel{position:fixed; top:14px; right:16px; z-index:99; display:flex; border:2px solid #6b74a8;
+  border-radius:9px; overflow:hidden; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+#langsel div{padding:5px 15px; background:rgba(20,26,60,.72); color:#98a0c0; transition:.12s;}
+#langsel div.on{background:var(--accent1); color:#fff;}
+#fsbtn{position:fixed; top:14px; right:calc(16px + 152px); z-index:99; background:rgba(20,26,60,.72);
+  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
+  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
+#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
+body[data-lang="java"] .lane[data-lang="py"]{display:none;}
+body[data-lang="py"] .lane[data-lang="java"]{display:none;}
+
+/* ===== 🧾 outside the exam hall ===== */
+.toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
+.toll .th{display:inline-block; font-weight:bold; font-size:.86em; letter-spacing:.05em; color:#8a6100; margin-bottom:3px;}
+.toll .yes{color:#0d7a6e; font-weight:bold;} .toll .no{color:#c0392b; font-weight:bold;}
+
+/* ===== 📐 the divergence box ===== */
+.diverge{background:#f7f5ff; border:2px dashed #b3a6e8; border-radius:10px; padding:10px 15px; text-align:left; font-size:.55em; line-height:1.5; color:var(--navy); margin:9px 0;}
+.diverge .dh{display:inline-block; font-weight:bold; font-size:.85em; letter-spacing:.04em; color:#6d4fd0; margin-bottom:3px;}
+
+/* ===== pseudocode block ===== */
+.ps{background:#f4f6fb; border:1px solid #d9deed; border-left:4px solid var(--accent3); border-radius:8px;
+  padding:10px 14px; font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.5;
+  color:var(--navy); white-space:pre; margin:8px 0; overflow-x:auto;}
+.dk .ps{background:rgba(255,255,255,.07); color:var(--ice); border-color:rgba(255,255,255,.16); border-left-color:var(--accent3);}
+.ps .k{color:#6d4fd0;} .dk .ps .k{color:#c0aef5;}
+.ps .v{color:#c0392b;} .dk .ps .v{color:#ff9d95;}
+.ps .c{color:#8890b5; font-weight:normal;}
+
+/* ===== marks table ===== */
+.mk{border-collapse:collapse; font-size:.5em; width:100%;}
+.mk td,.mk th{border:1px solid #ccd3e8; padding:4px 9px; text-align:left; vertical-align:top;}
+.mk th{background:#eef2fb; font-weight:bold; color:var(--navy);}
+.mk td.m{text-align:center; font-weight:bold; color:var(--accent2); white-space:nowrap;}
+.mk code{font-family:'Courier New',monospace; font-weight:bold; color:#6d4fd0;}
+
+/* ===== 🎮 game ===== */
+.g-wrap{background:var(--white); border-radius:12px; padding:14px 18px; box-shadow:0 5px 18px rgba(0,0,0,.09); color:var(--navy);}
+.g-top,.g-head{display:flex; align-items:center; gap:14px; margin-bottom:9px;}
+/* a teacher must be able to move on without answering */
+.g-skip{margin-left:8px; background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;
+  border-radius:7px; padding:2px 11px; font-size:.44em; font-weight:bold; cursor:pointer;
+  font-family:'Calibri','Segoe UI',sans-serif;}
+.g-skip:hover{color:var(--accent1); border-color:var(--accent1);}
+.g-opts .g-b{min-width:0;}
+.g-stage{font-size:.56em; font-weight:bold; color:var(--navy); background:rgba(242,181,60,.18); border:2px solid var(--accent3); border-radius:22px; padding:3px 20px;}
+.pbadge{display:inline-block; font-size:.82em; letter-spacing:.04em; padding:1px 9px; border-radius:14px; margin-left:5px; border:1.5px solid;}
+.pbadge.p3{background:rgba(240,101,91,.13); color:#c0392b; border-color:var(--accent2);}
+.pbadge.p4{background:rgba(23,179,163,.15); color:#0d7a6e; border-color:var(--accent1);}
+.formwarn{background:#fdeeec; border:2px solid var(--accent2); border-radius:9px; padding:8px 13px; margin:7px 0 0;
+  font-size:.92em; line-height:1.5; color:var(--navy);}
+.formwarn b{color:#c0392b;}
+.g-prog{display:flex; gap:6px; margin-left:auto;}
+.g-prog i{width:9px; height:9px; border-radius:50%; background:#d3d9ec; display:block; transition:.2s;}
+.g-prog i.done{background:var(--accent1);} .g-prog i.cur{background:var(--accent3); transform:scale(1.35);}
+.g-score{font-size:.52em; font-weight:bold; color:var(--accent2); font-family:'Courier New',monospace;}
+.g-q{font-size:.58em; line-height:1.5; margin-bottom:8px;}
+.g-q b{color:var(--accent2);}
+.g-opts{display:flex; flex-wrap:wrap; gap:8px;}
+.g-b{background:#f4f6fb; border:2px solid #ccd3e8; border-radius:9px; padding:7px 14px; font-size:.54em;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; color:var(--navy); text-align:left; line-height:1.4;}
+.g-b:hover{border-color:var(--accent1);}
+.g-b.no{border-color:var(--accent2); background:#fdeeec; animation:shake .35s;}
+.g-b.yes{border-color:var(--accent1); background:#e6f7f4;}
+.g-b .mono{display:block; font-size:.92em;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.g-ta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.54em; line-height:1.5; padding:9px 12px; resize:none; outline:none;}
+.g-ta:focus{box-shadow:0 0 0 2px var(--accent3);}
+.g-sub{background:var(--accent3); color:#4a3500; border:none; border-radius:8px; padding:5px 20px; font-size:.52em;
+  font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; margin-top:7px;}
+.g-sub:hover{background:#e0a52c;}
+.g-say{font-size:.54em; min-height:1.5em; margin-top:7px; line-height:1.5;}
+.g-say.ok{color:#0d7a6e; font-weight:bold;} .g-say.bad{color:var(--accent2); font-weight:bold;}
+/* .g-mp nested inside .g-say compounds two em reductions down to ~7px — reset it */
+.g-say .g-mp{font-size:.92em; font-weight:normal; color:var(--navy);}
+.g-say .g-mp .y{color:#0d7a6e;} .g-say .g-mp .n{color:var(--accent2);}
+/* the game panel is white even on a dark slide, so .dk .ps must not win inside it */
+.dk .g-wrap .ps{background:#f4f6fb; color:var(--navy); border-color:#d9deed; border-left-color:var(--accent3);}
+.dk .g-wrap .ps .k{color:#6d4fd0;} .dk .g-wrap .ps .v{color:#c0392b;}
+.g-say .ps{font-weight:bold;}
+.g-mp{list-style:none; padding:0; margin:6px 0 0; font-size:.48em; line-height:1.55;}
+.g-mp li{padding-left:2px;} .g-mp .y{color:#0d7a6e; font-weight:bold;} .g-mp .n{color:var(--accent2); font-weight:bold;}
+.g-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 20px;}
+.g-lbl{font-size:.5em; color:#5b6488; margin:5px 0 3px;}
+.g-res .g-tot{font-size:1.1em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace; text-align:center; margin:2px 0 4px;}
+.g-fin{text-align:center; font-size:.62em; line-height:1.6;}
+.g-fin .big{font-size:1.5em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace;}
+/* a small node table inside a game question */
+.qt{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.86em; margin:5px 0 0;}
+.qt td,.qt th{border:1px solid #ccd3e8; padding:1px 11px; text-align:center;}
+.qt th{background:#eef2fb; font-size:.85em; color:#5b6488;}
+.qt td.f{color:#b3bad2;}
+
+/* ===== the step-through trace — one line runs, one cell lights up ===== */
+.tr2{display:flex; gap:20px; align-items:flex-start;}
+.tr2 .tcode{flex:1.15; min-width:0;} .tr2 .tstate{flex:1; min-width:0;}
+.tline{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; line-height:1.5;
+  padding:3px 11px; border-radius:6px; color:#8f98c2; white-space:pre; transition:.15s;}
+.tline.cur{background:rgba(242,181,60,.24); color:#fff3d6;}
+.tline.done{color:#5FD6C9; opacity:.72;}
+.tnote{font-size:.5em; min-height:3.6em; margin-top:8px; line-height:1.55; color:#c3cae6;}
+.tnote b{color:var(--accent3);} .tnote .warn{color:#ff9d95; font-weight:bold;}
+.tbtns{display:flex; gap:8px; margin-top:6px; align-items:center;}
+.treads{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; margin-top:6px; color:#8ff0e4; min-height:1.4em;}
+.treads .lp{color:#ff9d95;}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+
+/* ===== the node table widget ===== */
+.lt-wrap{background:var(--white); border-radius:12px; padding:12px 16px; box-shadow:0 4px 14px rgba(0,0,0,.08); color:var(--navy);}
+.dk .lt-wrap{background:rgba(255,255,255,.07); color:var(--ice);}
+.ltab{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.62em; width:100%;}
+.ltab th{background:#eef2fb; color:#5b6488; padding:3px 8px; font-size:.88em; border:1px solid #ccd3e8;}
+.dk .ltab th{background:rgba(255,255,255,.08); color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.ltab td{border:1px solid #ccd3e8; padding:3px 8px; text-align:center; transition:.15s;}
+.dk .ltab td{border-color:rgba(255,255,255,.18);}
+.ltab tr.free td{color:#b3bad2; background:#fbfcff;}
+.dk .ltab tr.free td{color:#6d7699; background:rgba(255,255,255,.02);}
+.ltab tr.used td{color:var(--navy); background:rgba(23,179,163,.10);}
+.dk .ltab tr.used td{color:#d8f5f1; background:rgba(23,179,163,.16);}
+.ltab tr.hit td{background:rgba(242,181,60,.42); color:#4a3500;}
+.dk .ltab tr.hit td{background:rgba(242,181,60,.38); color:#fff3d6;}
+.ltab tr.fhit td{background:rgba(109,79,208,.28);}
+.ltab td.ix{color:#98a0c0; background:transparent;}
+.dk .ltab td.ix{color:#7b85ab;}
+.ptrchip{display:inline-block; font-family:'Courier New',monospace; font-weight:bold; font-size:.58em;
+  border-radius:16px; padding:3px 14px; margin:0 7px 7px 0; border:2px solid;}
+.ptrchip.fn{border-color:var(--accent2); color:#c0392b; background:rgba(240,101,91,.10);}
+.ptrchip.fe{border-color:#6d4fd0; color:#6d4fd0; background:rgba(109,79,208,.09);}
+.dk .ptrchip.fn{color:#ff9d95;} .dk .ptrchip.fe{color:#c0aef5;}
+.vzc{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;}
+.vzb{background:var(--navy); color:#fff; border:none; border-radius:8px; padding:6px 15px; font-size:.52em; font-weight:bold;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.vzb:hover{background:var(--accent1);} .vzb:disabled{background:#c6cde4; cursor:default;}
+.vzb.alt{background:#6d4fd0;} .vzb.alt:hover{background:#8467e0;}
+.vzb.gh{background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;}
+.dk .vzb.gh{border-color:rgba(255,255,255,.25);}
+/* ===== the trace stepper: source | call stack | the exam's table ===== */
+.trw{display:flex; gap:12px; align-items:stretch;}
+.trsrc{flex:0 0 30%; min-width:0;}
+.trstack{flex:0 0 22%; min-width:0; display:flex; flex-direction:column-reverse; justify-content:flex-start; gap:3px;
+  border-left:2px dashed #ccd3e8; padding-left:9px; min-height:150px;}
+.dk .trstack{border-left-color:rgba(255,255,255,.2);}
+.trtab{flex:1; min-width:0; max-height:196px; overflow-y:auto;}
+.trcode{font-family:'Courier New',monospace; font-weight:bold; font-size:.44em; line-height:1.5; white-space:pre;
+  background:#f4f6fb; border:1px solid #d9deed; border-radius:8px; padding:7px 9px;}
+.dk .trcode{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.16);}
+.trcode span.ln{display:block; padding:0 4px; border-radius:3px;}
+.trcode span.ln.on{background:rgba(242,181,60,.38);}
+.frm{font-family:'Courier New',monospace; font-weight:bold; font-size:.42em; border-radius:6px; padding:3px 7px;
+  border:2px solid var(--accent1); background:rgba(23,179,163,.12); color:var(--navy); transition:.15s;}
+.dk .frm{color:var(--ice);}
+.frm.top{border-color:var(--accent3); background:rgba(242,181,60,.26);}
+.frm.popping{border-color:var(--accent2); background:rgba(240,101,91,.2);}
+.frm small{display:block; font-size:.8em; font-weight:normal; color:#8890b5;}
+.trt{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.42em; width:100%;}
+.trt th{background:#eef2fb; color:#5b6488; padding:2px 6px; border:1px solid #ccd3e8; position:sticky; top:0;}
+.dk .trt th{background:#2b3566; color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.trt td{border:1px solid #ccd3e8; padding:2px 6px; text-align:center;}
+.dk .trt td{border-color:rgba(255,255,255,.18);}
+.trt tr.wind td{background:rgba(23,179,163,.13);}
+.trt tr.unwind td{background:rgba(242,181,60,.20);}
+.trt tr.new td{outline:2px solid var(--accent2); outline-offset:-2px;}
+/* ===== live LLM marking (teacher's machine only; see grade-server.py) ===== */
+#llmchip{position:fixed; top:52px; right:16px; z-index:99; font-size:13px; font-weight:bold;
+  padding:4px 12px; border-radius:20px; cursor:pointer; border:2px solid #6b74a8;
+  background:rgba(20,26,60,.72); color:#98a0c0; font-family:'Calibri','Segoe UI',sans-serif;}
+#llmchip.on{border-color:var(--accent1); color:#5FD6C9;}
+#llmchip.off{opacity:.5;}
+#llmchip.absent{display:none;}
+#llmhelp{position:fixed; top:84px; right:16px; z-index:100; display:none; width:342px;
+  background:rgba(20,26,60,.97); border:2px solid var(--accent3); border-radius:10px;
+  padding:14px 16px; font-size:13px; line-height:1.45; color:#c9cee6; text-align:left;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);}
+#llmhelp b{color:#F2B53C;}
+#llmhelp p{margin:6px 0;}
+#llmhelp ol{margin:6px 0 6px 18px; padding:0;}
+#llmhelp li{margin:7px 0;}
+#llmhelp code{background:rgba(0,0,0,.35); padding:1px 5px; border-radius:4px;
+  color:#5FD6C9; font-size:12px;}
+#llmhelp .tiny{font-size:11.5px; opacity:.78; margin-top:9px;}
+#llmhelp button{margin-top:9px; background:var(--accent1); color:#0d1230; border:0;
+  border-radius:6px; padding:5px 14px; font-weight:bold; cursor:pointer;}
+.g-llm{margin-top:6px;}
+/* The reader's column only exists on the teacher's machine, so a two-column
+   panel that fits in review can be 168px off the stage in the classroom. It
+   gets its own column the moment it has anything in it. */
+.g-llm:empty{display:none;}
+/* minmax(0,…) or a long line in the student's own code widens column 1 past its
+   share and squeezes the other two taller — 724px on a 720 stage in A3a. */
+.g-grid.three{grid-template-columns:minmax(0,.86fr) minmax(0,1.07fr) minmax(0,1.07fr); gap:6px 14px;}
+.g-grid.three .g-ans{max-height:250px; overflow:auto;}
+/* the reader's own column was the one nobody capped, and it is the tallest thing
+   on the panel: five mark points, each with its evidence and its reasoning. */
+.g-grid.three .g-llm{max-height:228px; overflow:auto;}
+.g-llm .conf{font-size:.82em; opacity:.7; font-style:italic;}
+.g-cons{margin-top:7px; border-radius:9px; padding:7px 12px; font-size:.5em; line-height:1.5;
+  border:2px solid; text-align:left;}
+.g-cons.agree{border-color:var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e;}
+.g-cons.split{border-color:var(--accent3); background:rgba(242,181,60,.14); color:#8a5c00;}
+.g-cons b{font-family:'Courier New',monospace;}
+.trlegend{display:flex; gap:14px; font-size:.42em; align-items:center; margin-top:5px; color:#8890b5;}
+.trlegend i{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:4px; vertical-align:-1px;}
+.trcount{font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; margin-left:auto; color:var(--accent2);}
+.vzmsg{font-size:.54em; min-height:3.2em; margin-top:8px; font-weight:bold; line-height:1.5;}
+.vzmsg.ok{color:#0d7a6e;} .vzmsg.bad{color:var(--accent2);} .vzmsg.nt{color:#6d4fd0;}
+.dk .vzmsg.ok{color:#5FD6C9;} .dk .vzmsg.bad{color:#ff9d95;} .dk .vzmsg.nt{color:#c0aef5;}
+.reads{font-family:'Courier New',monospace; font-weight:bold; font-size:.64em; margin-top:9px;}
+.reads b{color:var(--accent1);}
+
+/* THE GAME SLIDE GROWS AFTER REVEAL HAS LAID IT OUT, and Reveal centres a slide
+   only ONCE, at slide-change time. Stage 1 is short, so Reveal pinned top:232px
+   — and the boss then grew downward off the bottom of the 720 stage (measured
+   at 799px, i.e. 79px of the panel below the visible area). scrollHeight said
+   "fits" the whole time, because scrollHeight is not where the slide SITS.
+   min-height cannot fix it: Reveal's own stylesheet sets
+   `.reveal.center .slides section { min-height: 0 !important }`.
+   So anchor the top instead — a stylesheet !important beats Reveal's inline
+   top. The panel now sits high, does not jump between stages, and has ~50px of
+   headroom below its tallest state. Any slide whose content expands WITHOUT a
+   slide change needs this class. */
+.reveal .slides section.growslide{top:40px !important;}
+
+/* the student's own code stays on screen beside the feedback, so a tick and the
+   line that earned it can be read on the same screen */
+.g-ans{background:#1b234d; color:var(--ice); border-radius:8px; font-family:'Courier New',monospace;
+  font-weight:bold; font-size:.5em; line-height:1.45; padding:9px 12px; margin:0; white-space:pre;
+  overflow:auto; max-height:300px; text-align:left;}
+.g-ans:empty::before{content:'(you did not write anything)'; color:#7b85ab; font-weight:normal;}
+
+/* ===== the tree canvas — geometry in SVG, every label in HTML ===== */
+.tcv{position:relative; width:100%; height:270px;}
+.tcv svg{position:absolute; inset:0; width:100%; height:100%;}
+.tnode{position:absolute; transform:translate(-50%,-50%); background:var(--white); border:2.5px solid var(--accent1);
+  border-radius:50%; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.6em; color:var(--navy); transition:.2s;}
+.dk .tnode{background:#1b234d; color:var(--ice);}
+.tnode.hot{border-color:var(--accent3); background:rgba(242,181,60,.3); transform:translate(-50%,-50%) scale(1.18);}
+.tnode.new{border-color:var(--accent2);}
+.tnode .ix{position:absolute; top:-15px; right:-9px; font-size:.72em; color:#98a0c0; font-family:'Courier New',monospace;}
+.tmsg{font-size:.52em; min-height:2.9em; font-weight:bold; line-height:1.45; margin-top:4px;}
+.tmsg.ok{color:#0d7a6e;} .dk .tmsg.ok{color:#5FD6C9;}
+.tmsg.bad{color:var(--accent2);} .dk .tmsg.bad{color:#ff9d95;}
+.tmsg.nt{color:#6d4fd0;} .dk .tmsg.nt{color:#c0aef5;}
+.tio{font-family:'Courier New',monospace; font-weight:bold; font-size:.52em; margin-top:3px; color:#0d7a6e; min-height:1.4em;}
+.dk .tio{color:#8ff0e4;}
+.tin{background:#fff; border:2px solid var(--accent1); border-radius:6px; color:var(--navy);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; padding:3px 8px; width:64px; outline:none;}
+.dk .tin{background:#1b234d; color:var(--ice);}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+</style></head>
+<body data-lang="java">
+<div class="reveal"><div class="slides">
+
+<!-- H1 -->
+<section>
+<section data-background-color="#151B3C" class="dk center">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 5 · 9618 §19.2</p>
+  <h1 style="font-size:1.5em; margin:0 0 6px;">The Function<br>That Calls Itself</h1>
+  <p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">recursion 递归 · winding and unwinding · the trace table</p>
+  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+
+</section>
+  <section data-background-color="#151B3C" class="dk">
+    <div class="bar" style="background:var(--accent3);"></div>
+    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> State the <b class="accent1">essential features of recursion</b> in the words that earn marks</div>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">2.</strong> <b class="accent1">Complete a trace table</b> through both its halves — winding down, unwinding back</div>
+    <div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">3.</strong> <b class="accent1">Write a recursive routine</b> on the tree you built last lesson</div>
+    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">4.</strong> Say, in one sentence, <b class="accent3">when recursion is worth it</b></div>
+
+</section>
+</section>
+
+<!-- H2 HOOK -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.88em; margin:0 0 6px;">You already wrote one. <span class="accent2">For five marks.</span></h2>
+  <p style="font-size:.5em; color:#98a0c0; margin:0 0 8px;">Last lesson's homework, question 9. It worked. It was marked. Nobody said <b>why it is allowed</b>.</p>
+  <div class="two-col">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.6em;"><span class="k">def</span> InOrder(Node):
+    <span class="k">if</span> ArrayNodes[Node][0] != -1:
+        InOrder(ArrayNodes[Node][0])
+    <span class="k">print</span>(ArrayNodes[Node][1])
+    <span class="k">if</span> ArrayNodes[Node][2] != -1:
+        InOrder(ArrayNodes[Node][2])</div>
+    </div>
+    <div>
+      <div class="rule accent2" style="margin-top:0; font-size:.6em;">
+        Line 3 calls <b>InOrder</b>. You are <b>inside InOrder</b> when it runs.
+        <b class="accent3">A function that has not finished starts itself again.</b>
+      </div>
+      <div class="rule accent1 fragment" style="font-size:.6em;">
+        Every instinct says this should be a trap — like a dog chasing its own tail, or two mirrors
+        facing each other. <b>It is not.</b> It walked the whole tree and stopped.
+      </div>
+    </div>
+  </div>
+  <p class="center fragment" style="font-size:.76em; margin-top:10px;"><b>Today is the receipt.</b><br>
+  <span style="font-size:.66em; color:#98a0c0;">Why it stops, how the machine keeps track, and how to trace it for marks.</span></p>
+
+</section>
+
+<!-- H3 the monks -->
+<section data-background-color="#151B3C" class="dk">
+  <h2 style="font-size:.86em; margin:0 0 6px;">The other one that calls itself — <span class="accent3">从前有座山</span></h2>
+  <div class="two-col" style="gap:20px;">
+    <div style="flex:1.15;">
+      <img src="recursion-monks.jpg" alt="the old monk telling the story" style="width:100%; border-radius:10px; display:block;">
+    </div>
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.54em; line-height:1.6;">从前有座山，
+山里有座庙，
+庙里有个老和尚，
+老和尚在给小和尚讲故事，
+故事是这样的：<span class="v">从前有座山……</span></div>
+      <div class="rule accent2" style="font-size:.56em;">
+        Every one of you has heard this, and every one of you knows how it ends: <b>it does not.</b>
+        The <b>story the monk tells is the story you are in</b> — so each retelling adds another
+        mountain, temple, monk.
+      </div>
+      <div class="rule accent3 fragment" style="font-size:.56em;">
+        This is a <b>function that calls itself</b>, told by parents a thousand years before anyone
+        wrote one. Chinese folk culture got there first — and it got the <b>bug</b> first too.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- H4 the difference + the four features -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.84em; margin:0 0 4px;">So what is the difference?</h2>
+  <p style="font-size:.46em; color:#8890b5; margin:0 0 6px;">Both call themselves. One finished and got marked; one has been running since your grandmother told it.</p>
+  <div class="two-col">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.52em;"><span class="c"># the monk</span>
+<span class="k">def</span> tell_story():
+    print(<span class="v">"从前有座山……"</span>)
+    tell_story()          <span class="c"># always</span></div>
+      <div class="ps" style="font-size:.52em;"><span class="c"># the homework</span>
+<span class="k">def</span> InOrder(Node):
+    <span class="k">if</span> ArrayNodes[Node][0] != -1:   <span class="c"># SOMETIMES</span>
+        InOrder(...)</div>
+    </div>
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.58em;">
+        The monk's story calls itself <b>every time, unconditionally</b>. Yours calls itself
+        <b class="accent2">only when there is a child to visit</b> — and a tree runs out of children.
+        <b>There is a case where the calling stops.</b>
+      </div>
+      <div class="rule accent3 fragment" style="font-size:.58em;">
+        That case has a name, and the name is worth <b>three marks</b> on Paper 3:
+        the <b class="accent2">base case</b>.
+      </div>
+    </div>
+  </div>
+  <div class="rule navy fragment" style="font-size:.55em;">
+    <b>"State three essential features of recursion" [3]</b> — Nov 2021 Paper 31. The published answer, in its own words:
+    <b>① a base case / stopping condition</b> &nbsp;·&nbsp; <b>② a general case</b> &nbsp;·&nbsp;
+    <b>③ … which calls itself</b> (defined in terms of itself) &nbsp;·&nbsp;
+    <b>④ … which changes its state and moves towards the base case</b>.
+  </div>
+  <div class="dig">📐 having a base case is not the same as reaching it ↓</div>
+
+</section>
+
+<!-- H4 vertical: the divergence -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h3 style="font-size:.72em; margin:0 0 4px;">📐 Having a base case is not the same as <span class="accent2">reaching</span> it</h3>
+  <div class="two-col">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">def</span> countdown(n):
+    <span class="k">if</span> n == 0:       <span class="c"># base case ✓</span>
+        <span class="k">return</span> 0
+    <span class="k">return</span> countdown(n - <span class="v">1</span>)</div>
+      <p style="font-size:.46em; color:#0d7a6e; margin:2px 0 0;"><b>countdown(5)</b> → 5, 4, 3, 2, 1, 0. <b>Stops.</b></p>
+    </div>
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">def</span> countup(n):
+    <span class="k">if</span> n == 0:       <span class="c"># base case ✓ (identical!)</span>
+        <span class="k">return</span> 0
+    <span class="k">return</span> countup(n + <span class="v">1</span>)</div>
+      <p style="font-size:.46em; color:#c0392b; margin:2px 0 0;"><b>countup(5)</b> → 6, 7, 8, 9 … <b>never.</b></p>
+    </div>
+  </div>
+  <div class="diverge" style="font-size:.55em;">
+    <span class="dh">📐 SAME BASE CASE, OPPOSITE FATES</span><br>
+    Both functions have a base case, and it is <b>the same base case</b>. One walks toward it; the other
+    walks away and the condition is never true again. That is why the published mark point is not
+    "has a base case" but <b>"changes its state and <span class="accent2">moves towards</span> the base
+    case"</b> — four extra words, one whole mark, and the difference between a program and a crash.
+  </div>
+  <div class="rule accent3" style="font-size:.55em;">
+    🧾 <b>What happens when you run <span class="mono">countup(5)</span>:</b> not a hang — a
+    <b>RecursionError</b> in Python, a <b>StackOverflowError</b> in Java. There is a limit on how many
+    unfinished calls the machine will hold, and <b>next lesson is about where it holds them.</b>
+    <span style="color:#8890b5;">(The website is named after this error.)</span>
+  </div>
+
+</section>
+
+</section>
+
+<!-- H5 factorial both lanes -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">The canonical one — <span class="accent3">and it has no loop in it</span></h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">4! = 4 × 3 × 2 × 1 = 24. Look for the <b>for</b> or the <b>while</b>. There is not one.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java side tight" data-out="factorial(4) = 24
+factorial(0) = 1"><script type="text/plain" class="pysrc">static int factorial(int n) {
+    if (n == 0) return 1;            // BASE CASE: answered outright, no recursive call
+    return n * factorial(n - 1);     // GENERAL CASE: smaller, and moving toward 0
+}
+
+System.out.println("factorial(4) = " + factorial(4));
+System.out.println("factorial(0) = " + factorial(0));</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell side tight"><script type="text/plain" class="pysrc">def factorial(n):
+    if n == 0:                    # BASE CASE: answered outright, no recursive call
+        return 1
+    return n * factorial(n - 1)   # GENERAL CASE: smaller, and moving toward 0
+
+print("factorial(4) =", factorial(4))
+print("factorial(0) =", factorial(0))</script></div>
+  </div>
+  <div class="rule accent1" style="font-size:.58em;">
+    <b>The repetition is real, and it is hidden inside the call.</b> Four multiplications happen and
+    the word "repeat" never appears — because <span class="mono">factorial(3)</span> generates its own
+    next call, and that one generates the next. <b class="accent2">You wrote the rule; the machine wrote the loop.</b>
+  </div>
+
+</section>
+
+<!-- H6 the trace stepper -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 2px;">Trace it — <span class="accent2">down to the base case, then all the way back</span></h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 4px;">Press <b>step</b>. Watch the stack grow, then watch it pay out in reverse. The table on the right is the exam's.</p>
+  <div class="lt-wrap" id="traceviz"></div>
+
+</section>
+
+<!-- H7q the question, on its OWN slide — the answer must not be one click away -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 2px;">Your turn — <span class="accent2">complete the trace</span></h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">June 2023 Paper 31, as it is printed. <b>[5]</b> &nbsp;© UCLES</p>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="k">FUNCTION</span> Fib(Number : <span class="k">INTEGER</span>) <span class="k">RETURNS INTEGER</span>
+   <span class="k">IF</span> Number &lt;= 1 <span class="k">THEN</span>
+      Result <span class="v">←</span> Number
+   <span class="k">ELSE</span>
+      Result <span class="v">←</span> Fib(Number - 1) + Fib(Number - 2)
+   <span class="k">ENDIF</span>
+   <span class="k">RETURN</span> Result
+<span class="k">ENDFUNCTION</span></div>
+      <div class="rule accent3" style="font-size:.54em;">
+        Complete the trace table for <b class="mono">Fib(5)</b>.<br>
+        <span style="font-size:.9em; color:#5b6488;">Two things to decide before you start: how many rows you will need, and what happens to the table <b>after</b> you reach the base case.</span>
+      </div>
+    </div>
+    <div>
+      <table class="mk" style="font-size:.46em;">
+        <tr><th>Call number</th><th>Function call</th><th>Number</th><th>Result</th><th>Return value</th></tr>
+        <tr><td style="height:14px;"></td><td></td><td><b>5</b></td><td></td><td></td></tr>
+        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+      </table>
+      <p style="font-size:.44em; color:#8890b5; margin:4px 0 0;">The paper gives you the <b>5</b> and nothing else.</p>
+    </div>
+  </div>
+  <p class="center" style="font-size:.5em; color:#8890b5; margin-top:6px; font-style:italic;">→ Try it. The marked version is on the next slide.</p>
+
+</section>
+
+<!-- H8 the marked table + the hole -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 2px;">The same table, <span class="accent3">and where its five marks live</span></h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 4px;">Mark yours against it before you read the breakdown. &nbsp;© UCLES</p>
+  <div class="two-col" style="gap:16px;">
+    <div style="flex:1.2;">
+      <table class="mk" style="font-size:.42em;">
+        <tr><th>Call</th><th>Function call</th><th>Number</th><th>Result</th><th>Return</th></tr>
+        <tr><td>1</td><td class="mono">Fib(5)</td><td>5</td><td class="mono">Fib(4) + Fib(3)</td><td></td></tr>
+        <tr><td>2</td><td class="mono">Fib(4)</td><td>4</td><td class="mono">Fib(3) + Fib(2)</td><td></td></tr>
+        <tr><td>3</td><td class="mono">Fib(3)</td><td>3</td><td class="mono">Fib(2) + Fib(1)</td><td></td></tr>
+        <tr><td>4</td><td class="mono">Fib(2)</td><td>2</td><td class="mono">Fib(1) + Fib(0)</td><td></td></tr>
+        <tr style="background:rgba(23,179,163,.12);"><td>5</td><td class="mono">Fib(1)</td><td>1</td><td>1</td><td>1</td></tr>
+        <tr style="background:rgba(23,179,163,.12);"><td>6</td><td class="mono">Fib(0)</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr style="background:rgba(242,181,60,.16);"><td class="mono">(4)</td><td class="mono">Fib(2)</td><td>2</td><td>1 + 0</td><td>1</td></tr>
+        <tr style="background:rgba(242,181,60,.16);"><td class="mono">(3)</td><td class="mono">Fib(3)</td><td>3</td><td>1 + 1</td><td>2</td></tr>
+        <tr style="background:rgba(242,181,60,.16);"><td class="mono">(2)</td><td class="mono">Fib(4)</td><td>4</td><td>2 + 1</td><td>3</td></tr>
+        <tr style="background:rgba(242,181,60,.16);"><td class="mono">(1)</td><td class="mono">Fib(5)</td><td>5</td><td>3 + 2</td><td><b>5</b></td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.5em;">
+        <b>Five marks, and the scheme names them:</b><br>
+        ① the <b>Call number</b> column &nbsp; ② <b>Function call</b> + <b>Number</b> &nbsp;
+        ③ Result <b class="accent1">down to the base case — "Winding"</b> &nbsp;
+        ④ Result <b class="accent3">back up from it — "Unwinding"</b> &nbsp; ⑤ the <b>Return value</b> column.
+      </div>
+      <div class="rule accent2" style="font-size:.5em;">
+        <b>Two of the five marks are in the bottom half.</b> Winding and unwinding are marked
+        <b>separately</b> — a table that stops at the base case has done half the work and scores
+        three. The <b class="mono">(4)</b> in brackets means <i>back inside call 4</i>.
+      </div>
+    </div>
+  </div>
+  <div class="dig">🕳 this table is a polite lie ↓</div>
+
+</section>
+
+<!-- H7 vertical: the hole -->
+<section data-background-color="#151B3C" class="dk">
+  <h3 style="font-size:.72em; margin:0 0 4px;">🕳 That table is a <span class="accent2">polite lie</span></h3>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="rule accent2" style="margin-top:0; font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+        The published table has <b>10 rows</b>. Run <span class="mono">Fib(5)</span> honestly and the
+        machine makes <b class="accent3">15 calls</b> — the widget counted them. Cambridge's table walks
+        <b>one path</b> down and back up, and quietly reuses answers it never shows being computed.
+      </div>
+      <div class="rule accent3" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Nothing is remembered between branches.</b> <span class="mono">Fib(2)</span> is worked out
+        <b>three separate times</b> from scratch; <span class="mono">Fib(1)</span> <b>five times</b>.
+        Each branch re-derives what the branch beside it already knew.
+      </div>
+    </div>
+    <div>
+      <table class="mk" style="font-size:.5em; color:var(--ice);">
+        <tr><th style="background:rgba(255,255,255,.08); color:#fff;">to compute</th>
+            <th style="background:rgba(255,255,255,.08); color:#fff;">calls made</th></tr>
+        <tr><td class="mono">Fib(5)</td><td><b>15</b></td></tr>
+        <tr><td class="mono">Fib(10)</td><td><b>177</b></td></tr>
+        <tr><td class="mono">Fib(20)</td><td><b>21 891</b></td></tr>
+        <tr><td class="mono">Fib(30)</td><td><b>2 692 537</b></td></tr>
+        <tr><td class="mono">Fib(40)</td><td><b class="accent2">331 160 281</b></td></tr>
+      </table>
+      <p style="font-size:.46em; color:#98a0c0; margin:4px 0 0;">Ten more terms costs a hundred times the work. The 40th Fibonacci number is a <b>10-digit</b> answer that a laptop can compute instantly — and this way of computing it takes a third of a <b>billion</b> calls.</p>
+    </div>
+  </div>
+  <div class="rule accent1 fragment" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+    <b>The fix is one line and it has a name: <span class="accent3">memoisation</span></b> — write each
+    answer down the first time, look it up ever after. <span class="mono">Fib(30)</span> falls from
+    2.7 million calls to <b>31 pieces of real work</b>. Recursion was never the problem;
+    <b>forgetting</b> was.
+  </div>
+
+</section>
+
+</section>
+
+<!-- H8 recursion on the tree + verticals -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">Now the structure you built — <span class="accent2">searched recursively</span></h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Named fields first, because the shape is the lesson. The exam's columns are on the right, and they are the same thing.</p>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.52em;"><span class="k">def</span> search(node, target):
+    <span class="k">if</span> node <span class="k">is</span> <span class="v">None</span>:            <span class="c"># base case ①: not there</span>
+        <span class="k">return</span> <span class="v">None</span>
+    <span class="k">if</span> node.data == target:      <span class="c"># base case ②: found it</span>
+        <span class="k">return</span> node
+    <span class="k">if</span> target &lt; node.data:
+        <span class="k">return</span> search(node.left,  target)
+    <span class="k">return</span> search(node.right, target)</div>
+      <div class="rule accent1" style="font-size:.54em;">
+        <b>Two base cases and two general cases</b> — the features in the plural.
+        And notice: every branch says <b class="accent2">return</b> <i>search(…)</i>, never just
+        <i>search(…)</i>. <b>The answer has to be handed back up.</b>
+      </div>
+    </div>
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.52em;"><span class="c"># the exam's form — same walk, columns for names</span>
+<span class="k">def</span> SearchValue(Root, ValueToFind):
+    <span class="k">if</span> Root == -1:
+        <span class="k">return</span> -1
+    <span class="k">if</span> ArrayNodes[Root][1] == ValueToFind:
+        <span class="k">return</span> Root
+    <span class="k">if</span> ArrayNodes[Root][1] &gt; ValueToFind:
+        <span class="k">return</span> SearchValue(ArrayNodes[Root][0], ValueToFind)
+    <span class="k">return</span> SearchValue(ArrayNodes[Root][2], ValueToFind)</div>
+      <div class="rule accent2" style="font-size:.54em;">
+        <b>Nov 2022 Paper 41 hands you this one half-finished</b> and asks for the code — recursion on a
+        real paper, one lesson before it was taught. <b class="accent3">It returns the index</b>, and
+        <span class="mono">−1</span> means not there.
+      </div>
+    </div>
+  </div>
+  <div class="dig">📐 the same tree, two signatures &nbsp;·&nbsp; 🕳 the oldest algorithm still running ↓</div>
+
+</section>
+
+<!-- H8 vertical 1: two signatures -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p4">P4</span></div>
+  <h3 style="font-size:.7em; margin:0 0 4px;">📐 The same tree, <span class="accent2">two different signatures</span></h3>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="c"># Nov 2021 P41 — takes the INDEX</span>
+<span class="k">def</span> InOrder(Node):
+    <span class="k">if</span> ArrayNodes[Node][0] != -1:
+        InOrder(ArrayNodes[Node][0])
+    print(ArrayNodes[Node][1])</div>
+      <p style="font-size:.44em; color:#8890b5; margin:2px 0 0;">Called as <span class="mono">InOrder(RootPointer)</span>.</p>
+    </div>
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="c"># Nov 2022 P41 — takes the ROW ITSELF</span>
+<span class="k">def</span> PostOrder(RootNode):
+    <span class="k">if</span> RootNode[0] != -1:
+        PostOrder(ArrayNodes[RootNode[0]])
+    ...
+    print(RootNode[1])</div>
+      <p style="font-size:.44em; color:#8890b5; margin:2px 0 0;">Called as <span class="mono">PostOrder(ArrayNodes[RootPointer])</span>.</p>
+    </div>
+  </div>
+  <div class="diverge" style="font-size:.54em;">
+    <span class="dh">📐 ONE YEAR APART, SAME TREE, SAME BOARD</span><br>
+    One passes <b>a number</b>; the other passes <b>a row</b>. Both are published; the Nov 2022 mark
+    point accepts either — <i>"one parameter (root node <b>or</b> index of root node)"</i>. A candidate
+    who memorised a signature meets the other one and freezes.
+    <b class="accent2">Learn the shape: go left if there is a left, deal with me, go right if there is a right.</b>
+    The parameter is a detail you read off the question.
+  </div>
+  <div class="rule accent3" style="font-size:.53em;">
+    Traversal order is just <b>where the print sits</b> among the two calls.
+    Left · <b>me</b> · right = <b>in-order</b> → sorted. Left · right · <b>me</b> = <b>post-order</b>.
+    <b>Me</b> · left · right = <b>pre-order</b>. Three orders, one shape, one line moved.
+  </div>
+
+</section>
+
+<!-- H8 vertical 2: gcd -->
+<section data-background-color="#151B3C" class="dk">
+  <h3 style="font-size:.7em; margin:0 0 4px;">🕳 The oldest algorithm still running — <span class="accent3">and it is recursive</span></h3>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">def</span> gcd(a, b):
+    <span class="k">if</span> b == 0:
+        <span class="k">return</span> a
+    <span class="k">return</span> gcd(b, a % b)</div>
+      <div class="rule accent3" style="font-size:.54em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Euclid, <i>Elements</i> Book 7, around 300 BCE.</b> Written as geometry — <i>keep taking the
+        smaller from the larger</i> — about 2 300 years before anything existed to run it on.
+        Recursion as a way of thinking is older than the machine by two millennia.
+      </div>
+    </div>
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.52em;">gcd(48, 18)
+ → gcd(18, 12)      <span class="c"># 48 mod 18</span>
+ → gcd(12,  6)      <span class="c"># 18 mod 12</span>
+ → gcd( 6,  0)      <span class="c"># 12 mod 6</span>
+ → <span class="v">6</span>                <span class="c"># base case</span></div>
+      <div class="rule accent2" style="font-size:.54em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Four frames.</b> <span class="mono">Fib(5)</span> needed fifteen calls for a smaller answer.
+        The difference is how fast the argument shrinks: <span class="mono">−1</span> each time is slow,
+        <b class="accent3">MOD is brutal</b> — and depth falls from <i>n</i> to about <i>log n</i>.
+      </div>
+    </div>
+  </div>
+  <p class="center" style="font-size:.5em; color:#98a0c0; margin-top:6px;">Press <b>gcd(48, 18)</b> on the tracer two slides back and watch a stack that barely gets off the ground.</p>
+
+</section>
+
+</section>
+
+<!-- H9 when is it worth it -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.8em; margin:0 0 6px;">When is recursion <span class="accent2">worth it</span>?</h2>
+  <table class="mk" style="font-size:.52em;">
+    <tr><th style="width:34%;">the job</th><th>use recursion?</th></tr>
+    <tr><td><b>walk a tree</b> · search it, print it in order</td><td style="color:#0d7a6e;"><b>yes</b> — the structure is defined in terms of itself, so the code that walks it should be too. A loop needs you to build a stack by hand.</td></tr>
+    <tr><td><b>divide and conquer</b> · binary search, merge sort</td><td style="color:#0d7a6e;"><b>yes</b> — "solve half, then the other half" <i>is</i> a recursive sentence.</td></tr>
+    <tr><td><b>count to ten</b> · total an array · anything linear</td><td style="color:#c0392b;"><b>no</b> — a loop is shorter, faster, and cannot run out of stack. Recursion here is showing off.</td></tr>
+    <tr><td><b>Fibonacci, naively</b></td><td style="color:#c0392b;"><b>no</b> — you saw the number. 331 million calls for a 10-digit answer.</td></tr>
+  </table>
+  <div class="rule accent3" style="font-size:.58em;">
+    <b>The rule of thumb worth writing down:</b> reach for recursion when <b>the data itself branches</b>
+    — a tree, a folder inside a folder, a problem that splits in two. Reach for a loop when the data is
+    <b>a straight line</b>.
+  </div>
+  <div class="rule accent2 fragment" style="font-size:.56em;">
+    <b>And it is never free.</b> Every unfinished call is being held somewhere, in full — its
+    parameters, its variables, the line it must come back to. <b class="accent3">Fifteen of them were
+    alive at once on this slide's last example.</b> Held where?
+  </div>
+
+</section>
+
+<!-- H10 game -->
+<section data-background-color="#F4F6FB" class="lt growslide">
+  <h2 style="font-size:.76em; margin:0 0 8px;">🎮 Winding and Unwinding</h2>
+  <div class="g-wrap">
+    <div class="g-head"><span id="g-stage" class="g-stage"></span><span id="g-prog" class="g-prog"></span><span id="g-score" class="g-score"></span><button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button></div>
+    <div id="g-q" class="g-q"></div>
+    <div id="g-body"></div>
+    <div id="g-say" class="g-say">&nbsp;</div>
+  </div>
+
+</section>
+
+<!-- H11 the real thing -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p4">P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 3px;">The real thing</h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 6px;">Nov 2022 Paper 41 Question 3 — the tree you built last lesson, then walked recursively this one. &nbsp;© UCLES</p>
+  <table class="mk" style="font-size:.5em;">
+    <tr><th>part</th><th>what it asks</th><th class="m">marks</th></tr>
+    <tr><td><b>3(a)</b></td><td>declare the 2D array and the two pointers</td><td class="m">4</td></tr>
+    <tr><td><b>3(b)</b></td><td>write <span class="mono">AddNode()</span> from the given pseudocode</td><td class="m">8</td></tr>
+    <tr><td><b>3(c)</b></td><td><b>complete and write the recursive <span class="mono">SearchValue()</span></b></td><td class="m">5</td></tr>
+    <tr><td><b>3(d)</b></td><td>write <span class="mono">PostOrder()</span> — recursive, from an outline in words</td><td class="m">7</td></tr>
+    <tr><td><b>3(e)</b></td><td>call them both from the main program and screenshot the output</td><td class="m">3+1</td></tr>
+  </table>
+  <div class="rule accent1" style="font-size:.56em;">
+    <b>Twenty-eight marks on one question</b>, and you can now write every line of it.
+    Last lesson bought you (a) and (b); this lesson buys (c) and (d).
+    <b class="accent2">(d) is your homework.</b>
+  </div>
+
+</section>
+
+<!-- H12 summary -->
+<section data-background-color="#151B3C" class="dk">
+  <h2 style="font-size:.82em; margin:0 0 8px;">What you can do now</h2>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Say it for marks.</b> Base case · general case · calls itself · <b>moves toward</b> the base case.
+        Four phrases, three marks, asked in seven of the last papers.
+      </div>
+      <div class="rule accent3" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Trace it for marks.</b> Five columns, and <b>two halves</b> — wind down to the base case,
+        unwind back up with the call number in brackets.
+      </div>
+      <div class="rule accent2" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Write it.</b> On a tree, on a search, on anything whose shape contains a smaller copy of itself.
+      </div>
+    </div>
+    <div>
+      <div class="rule navy" style="margin-top:0; font-size:.58em; background:rgba(255,255,255,.06); color:var(--ice); border-left-color:var(--accent3);">
+        <b>One thing was never explained.</b> While <span class="mono">Fib(5)</span> was running, fifteen
+        calls were made and <b>five were unfinished at once</b> — each holding its own <span class="mono">n</span>,
+        its own half-done sum, and the line it had to come back to.
+      </div>
+      <p class="center fragment" style="font-size:.62em; margin:12px 0 0; color:var(--ice);">
+        <b>Something has to hold all that.</b><br>
+        <span style="font-size:.8em; color:#98a0c0;">You built it in A2a. It has two operations.<br>You have known its name for three lessons.</span></p>
+      <p class="center fragment" style="font-size:.8em; margin:10px 0 0;"><b class="accent3">Next lesson: the stack, and what the compiler does with your recursion.</b></p>
+    </div>
+  </div>
+  <p class="center" style="font-size:.46em; color:#98a0c0; margin-top:10px;">🍦 <span class="mono">challenge_A03a_Recursion</span> — four functions, and a judge that reads your source to check you did not sneak a loop in.</p>
+
+</section>
+
+<!-- vocabulary -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.74em; margin:0 0 8px;">词汇 Vocabulary</h3>
+  <table class="mk" style="font-size:.52em; color:var(--ice);">
+    <tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
+    <tr><td>recursion</td><td>递归</td><td>a subroutine that calls itself on a <b>smaller</b> version of the same problem</td></tr>
+    <tr><td>base case</td><td>基础情况 / 基线条件</td><td>the input answered <b>outright</b>, with no recursive call — the stopping condition</td></tr>
+    <tr><td>general case</td><td>一般情况</td><td>the rule that calls itself, and <b>moves the state toward</b> the base case</td></tr>
+    <tr><td>winding</td><td>递推 (下行)</td><td>the calls going <b>down</b>, each one unfinished, waiting</td></tr>
+    <tr><td>unwinding</td><td>回溯 (回代)</td><td>the returns coming <b>back up</b> — the mark scheme's own word</td></tr>
+    <tr><td>stack overflow</td><td>栈溢出</td><td>what a missing or unreachable base case gets you</td></tr>
+    <tr><td>memoisation</td><td>记忆化</td><td>write each answer down once — turns 2.7 million calls into 31</td></tr>
+  </table>
+
+</section>
+
+</div></div>
+
+<div id="py-chip">🐍 waking Python…</div>
+<div id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</div>
+<div id="llmhelp">
+  <b>Live LLM marking is off.</b>
+  <p>The reader runs on this Mac, not inside the slides &mdash; which is why the API key never goes near a deck.</p>
+  <ol>
+    <li>In the <b>CS_Materials</b> folder, double-click<br><code>Start-LLM-Marking.command</code></li>
+    <li>A Terminal window opens and stays open. Come back here &mdash; the chip lights up on its own within five seconds. No reload.</li>
+  </ol>
+  <p class="tiny">Double-clicking <code>grade-server.py</code> does nothing: macOS opens <code>.py</code> files in an editor rather than running them. That is what the <code>.command</code> file is for.</p>
+  <button id="llmhelp-x">got it</button>
+</div>
+<div id="langsel"><div id="l-java" class="on">Java</div><div id="l-py">Python</div></div>
+<button id="fsbtn" title="fullscreen (or press F)">⛶</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+/* ===== Python runtime (Pyodide) — the audited house harness ===== */
+var pyPromise = null, pyBusy = false, currentOut = null, activeInput = null;
+
+function setRunButtons(enabled, label){
+  document.querySelectorAll('.pycell:not(.java) .pyrun').forEach(function(b){
+    b.disabled = !enabled;
+    b.textContent = enabled ? '▶ Run' : (label || '… running');
+  });
+}
+window.__pyInput = function(promptText){
+  return new Promise(function(resolve, reject){
+    var out = currentOut;
+    if(!out){ resolve(''); return; }
+    var row = document.createElement('span');
+    var lbl = document.createElement('span'); lbl.className='pyin-lbl'; lbl.textContent = promptText;
+    var inp = document.createElement('input'); inp.className='pyin';
+    inp.setAttribute('autocomplete','off'); inp.spellcheck = false;
+    row.appendChild(lbl); row.appendChild(inp); out.appendChild(row);
+    activeInput = {row: row, reject: reject};
+    setTimeout(function(){ inp.focus(); }, 60);
+    inp.addEventListener('keydown', function(ev){
+      if(ev.key === 'Enter'){ ev.stopPropagation(); var v=inp.value; row.remove(); activeInput=null; resolve(v); }
+    });
+  });
+};
+function stopPy(){
+  if(activeInput){ var r=activeInput.reject; activeInput.row.remove(); activeInput=null; r(new Error('__pyStop__')); }
+}
+function bootPython(){
+  if(pyPromise) return pyPromise;
+  pyPromise = loadPyodide().then(function(py){
+    py.runPython(
+      "import builtins, js\n" +
+      "async def __ainput(prompt=''):\n" +
+      "    v = await js.window.__pyInput(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "def _input_fallback(prompt=''):\n" +
+      "    v = js.window.prompt(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "builtins.input = _input_fallback\n" +
+      "builtins.__ainput = __ainput\n");
+    var chip=document.getElementById('py-chip');
+    chip.textContent='🐍 Python ready'; chip.className='ready';
+    if(!pyBusy) setRunButtons(true);
+    return py;
+  });
+  return pyPromise;
+}
+function runPy(code, outEl, doneCb){
+  if(pyBusy) return;
+  pyBusy = true; setRunButtons(false); currentOut = outEl;
+  outEl.style.display='block'; outEl.className='pyout'; outEl.textContent='';
+  var crashed=false, errLine='', sawOutput=false;
+  bootPython().then(function(py){
+    function emit(s){ sawOutput = true; outEl.appendChild(document.createTextNode(s + '\n')); }
+    py.setStdout({batched: emit});
+    py.setStderr({batched: emit});
+    var src = code.replace(/\binput\s*\(/g, 'await __ainput(');
+    var ns = py.toPy({});
+    return py.runPythonAsync(src, {globals: ns})
+      .catch(function(e){
+        crashed = true;
+        var lines = String(e.message||e).trim().split('\n').filter(function(l){ return l.trim(); });
+        errLine = lines[lines.length-1] || 'Error';
+        if(String(e.message||e).indexOf('__pyStop__') !== -1) errLine = '__stopped__';
+      })
+      .finally(function(){ ns.destroy(); });
+  }).then(function(){
+    if(activeInput){ activeInput.row.remove(); activeInput = null; }
+    if(!sawOutput && !crashed) outEl.textContent = '(no output)';
+    if(crashed){
+      var sp=document.createElement('span'); sp.className='crash';
+      sp.textContent = (errLine==='__stopped__') ? '⏹ stopped' : '💥 ' + errLine;
+      outEl.appendChild(sp);
+    }
+    pyBusy=false; setRunButtons(true); currentOut=null;
+    if(doneCb) doneCb(crashed, outEl.textContent, errLine);
+  });
+}
+
+/* ===== cells: Python runs live, Java replays a real build-time run ===== */
+function initPyCells(){
+  document.querySelectorAll('.pycell').forEach(function(cell){
+    var isJava = cell.classList.contains('java');
+    var srcEl  = cell.querySelector('.pysrc');
+    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
+    var capOut = cell.getAttribute('data-out') || '';
+    var isErr  = cell.getAttribute('data-err') === '1';
+    cell.innerHTML='';
+
+    var bar=document.createElement('div'); bar.className='pybar';
+    var dots=document.createElement('div'); dots.className='pydots';
+    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
+    bar.appendChild(dots);
+
+    var run=document.createElement('button'); run.className='pyrun';
+    run.textContent = isJava ? '▶ Run' : '⏳ waking…';
+    run.disabled = !isJava;
+    bar.appendChild(run);
+
+    if(!isJava){
+      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
+      stp.title='stop a program waiting for input';
+      stp.addEventListener('click', stopPy);
+      bar.appendChild(stp);
+    }
+    var st=document.createElement('span'); st.className='pystate' + (isJava?' cap':'');
+    st.textContent = isJava ? '☕ captured from a real run' : '🐍 editable · runs here';
+    bar.appendChild(st);
+
+    var ta=document.createElement('textarea'); ta.className='pyta';
+    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
+    if(isJava) ta.readOnly = true;
+    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
+
+    cell.appendChild(bar);
+    if(cell.classList.contains('side')){
+      var row=document.createElement('div'); row.className='pyrow';
+      row.appendChild(ta); row.appendChild(out);
+      out.style.display='block'; out.textContent='press ▶ Run';
+      cell.appendChild(row);
+    } else {
+      cell.appendChild(ta); cell.appendChild(out);
+    }
+
+    if(isJava){
+      run.addEventListener('click', function(){
+        out.style.display='block';
+        out.className='pyout cap' + (isErr?' err':'');
+        out.textContent = capOut;
+      });
+    } else {
+      run.addEventListener('click', function(){ runPy(ta.value, out); });
+    }
+  });
+  bootPython();
+}
+function autoSizePyTextareas(scope){
+  (scope||document).querySelectorAll('.pyta').forEach(function(ta){
+    if(ta.offsetParent === null) return;         /* hidden lane: scrollHeight is 0 */
+    ta.style.height='auto';
+    ta.style.height=(ta.scrollHeight+4)+'px';
+  });
+}
+
+/* ===== the language switch ===== */
+function setLang(l){
+  document.body.setAttribute('data-lang', l);
+  document.getElementById('l-java').className = (l==='java') ? 'on' : '';
+  document.getElementById('l-py').className   = (l==='py')   ? 'on' : '';
+  try{ localStorage.setItem('a2lang', l); }catch(e){}
+  setTimeout(function(){ autoSizePyTextareas(document); }, 20);
+}
+document.getElementById('l-java').addEventListener('click', function(){ setLang('java'); });
+document.getElementById('l-py').addEventListener('click', function(){ setLang('py'); });
+document.getElementById('fsbtn').addEventListener('click', function(){
+  var d=document.documentElement;
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else if(d.requestFullscreen){ d.requestFullscreen(); }
+});
+/* Tab must INDENT, not move focus — Python answers are whitespace-sensitive and
+   the browser's default steals the key. Shift-Tab dedents the current line. */
+document.addEventListener('keydown', function(e){
+  var t = e.target;
+  if(e.key !== 'Tab' || !t || !t.matches || !t.matches('textarea.pyta, textarea.g-ta')) return;
+  if(t.readOnly) return;
+  e.preventDefault(); e.stopPropagation();
+  if(e.shiftKey){
+    var ls = t.value.lastIndexOf('\n', t.selectionStart - 1) + 1, n = 0;
+    while(n < 4 && t.value.charAt(ls + n) === ' ') n++;
+    if(n) t.setRangeText('', ls, ls + n, 'preserve');
+  } else {
+    t.setRangeText('    ', t.selectionStart, t.selectionEnd, 'end');
+  }
+}, true);
+
+
+/* THE ANSWER FORM IS WORTH ALL OF THE MARKS, and it flips between the two papers:
+     Paper 3 — pseudocode. No 9618 P3 mark scheme 2021-2025 offers program code.
+     Paper 4 — Java, Python or VB, and the front page of all 23 papers in the
+               archive says "a mark of zero will be awarded if a programming
+               language other than those listed here is used."
+   So a boss adapted from a Paper 4 question must REFUSE pseudocode outright.
+   Accepting it teaches a habit that scores nothing in the exam it prepares for. */
+function looksLikePseudocode(src){
+  return /←|<-|\bENDPROCEDURE\b|\bENDFUNCTION\b|\bENDWHILE\b|\bENDIF\b|\bDECLARE\b|\bTHEN\b|\bRETURNS\b/i.test(src);
+}
+function looksLikeProgramCode(src){
+  return /\bdef\s+\w+|\bpublic\s+static\b|System\.out|\bprintln\b|\bprint\s*\(|;\s*$|\{[\s\S]*\}/m.test(src);
+}
+</script>
+<script>
+/* ===== the trace stepper =====
+   Runs the recursion for real, records every call and every return, then
+   replays it one event at a time: source line, call stack, and the exam's
+   own five-column table. The table is FAITHFUL — which is the point of the
+   hole slide, because Cambridge's published table is not. */
+
+var TRACE_PRESETS = {
+  fact: {
+    label: 'factorial(4)',
+    src: ['def factorial(n):',
+          '    if n == 0:',
+          '        return 1',
+          '    return n * factorial(n - 1)'],
+    run: function(rec){
+      function f(n){
+        var id = rec.call('factorial(' + n + ')', n, 1);
+        if(n === 0){ rec.base(id, '1', 1); return 1; }
+        rec.pending(id, n + ' \u00d7 factorial(' + (n-1) + ')', 3);
+        var v = f(n - 1);
+        var r = n * v;
+        rec.ret(id, 'factorial(' + n + ')', n, n + ' \u00d7 ' + v, r, 3);
+        return r;
+      }
+      f(4);
+    }
+  },
+  fib: {
+    label: 'Fib(5)',
+    src: ['def Fib(Number):',
+          '    if Number <= 1:',
+          '        Result = Number',
+          '    else:',
+          '        Result = Fib(Number-1) + Fib(Number-2)',
+          '    return Result'],
+    run: function(rec){
+      function f(n){
+        var id = rec.call('Fib(' + n + ')', n, 1);
+        if(n <= 1){ rec.base(id, String(n), 2); return n; }
+        rec.pending(id, 'Fib(' + (n-1) + ') + Fib(' + (n-2) + ')', 4);
+        var a = f(n - 1), b = f(n - 2), r = a + b;
+        rec.ret(id, 'Fib(' + n + ')', n, a + ' + ' + b, r, 4);
+        return r;
+      }
+      f(5);
+    }
+  },
+  gcd: {
+    label: 'gcd(48, 18)',
+    src: ['def gcd(a, b):',
+          '    if b == 0:',
+          '        return a',
+          '    return gcd(b, a % b)'],
+    run: function(rec){
+      function f(a, b){
+        var id = rec.call('gcd(' + a + ', ' + b + ')', a + ', ' + b, 1);
+        if(b === 0){ rec.base(id, String(a), 2); return a; }
+        rec.pending(id, 'gcd(' + b + ', ' + (a % b) + ')', 3);
+        var v = f(b, a % b);
+        rec.ret(id, 'gcd(' + a + ', ' + b + ')', a + ', ' + b, String(v), v, 3);
+        return v;
+      }
+      f(48, 18);
+    }
+  }
+};
+
+function buildTrace(preset){
+  /* events: {type:'call'|'base'|'pending'|'ret', ...} in execution order */
+  var ev = [], n = 0;
+  var rec = {
+    call: function(fn, num, line){ n++; ev.push({t:'call', id:n, fn:fn, num:num, line:line}); return n; },
+    pending: function(id, result, line){ ev.push({t:'pending', id:id, result:result, line:line}); },
+    base: function(id, val, line){ ev.push({t:'base', id:id, val:val, line:line}); },
+    ret: function(id, fn, num, result, val, line){ ev.push({t:'ret', id:id, fn:fn, num:num, result:result, val:val, line:line}); }
+  };
+  preset.run(rec);
+  return {events: ev, calls: n};
+}
+
+function makeTrace(hostId, presets, startKey){
+  var host = document.getElementById(hostId); if(!host) return;
+  var keys = presets || ['fact','fib'], cur = startKey || keys[0];
+  var data = null, step = 0, timer = null;
+
+  var btns = keys.map(function(k){
+    return '<button class="vzb alt" data-pre="' + k + '">' + TRACE_PRESETS[k].label + '</button>';
+  }).join(' ');
+
+  host.innerHTML =
+    '<div class="trw">'
+  + '  <div class="trsrc"><div class="trcode" id="' + hostId + '-src"></div>'
+  + '    <div class="trlegend"><span><i style="background:rgba(23,179,163,.5);"></i>winding</span>'
+  + '    <span><i style="background:rgba(242,181,60,.6);"></i>unwinding</span></div></div>'
+  + '  <div class="trstack" id="' + hostId + '-stk"></div>'
+  + '  <div class="trtab"><table class="trt"><thead><tr><th>Call</th><th>Function call</th>'
+  + '    <th>Number</th><th>Result</th><th>Return</th></tr></thead>'
+  + '    <tbody id="' + hostId + '-tb"></tbody></table></div>'
+  + '</div>'
+  + '<div class="vzc">' + btns
+  + '  <button class="vzb" data-act="step">step ▸</button>'
+  + '  <button class="vzb" data-act="play">play ▶</button>'
+  + '  <button class="vzb gh" data-act="reset">reset</button>'
+  + '  <span class="trcount" id="' + hostId + '-cnt"></span></div>'
+  + '<div class="vzmsg" id="' + hostId + '-msg">&nbsp;</div>';
+
+  var srcEl = document.getElementById(hostId + '-src'),
+      stkEl = document.getElementById(hostId + '-stk'),
+      tbEl  = document.getElementById(hostId + '-tb'),
+      cntEl = document.getElementById(hostId + '-cnt'),
+      msgEl = document.getElementById(hostId + '-msg');
+
+  function say(t, c){ msgEl.innerHTML = t || '&nbsp;'; msgEl.className = 'vzmsg' + (c ? ' ' + c : ''); }
+
+  function drawSrc(line){
+    srcEl.innerHTML = TRACE_PRESETS[cur].src.map(function(l, i){
+      return '<span class="ln' + (i + 1 === line ? ' on' : '') + '">' + l.replace(/</g,'&lt;') + '</span>';
+    }).join('');
+  }
+
+  function reset(keepMsg){
+    if(timer){ clearInterval(timer); timer = null; }
+    data = buildTrace(TRACE_PRESETS[cur]);
+    step = 0;
+    tbEl.innerHTML = '';
+    stkEl.innerHTML = '';
+    drawSrc(0);
+    cntEl.textContent = '';
+    if(!keepMsg) say('Press <b>step</b>. Each call goes on the stack unfinished — nothing is answered until the base case.');
+  }
+
+  function frames(){ return Array.prototype.slice.call(stkEl.children); }
+
+  function render(e){
+    var rows = tbEl.children;
+    if(e.t === 'call'){
+      var tr = document.createElement('tr');
+      tr.className = 'wind new';
+      tr.setAttribute('data-id', e.id);
+      tr.innerHTML = '<td>' + e.id + '</td><td>' + e.fn + '</td><td>' + e.num + '</td><td></td><td></td>';
+      tbEl.appendChild(tr);
+      var f = document.createElement('div');
+      f.className = 'frm';
+      f.setAttribute('data-id', e.id);
+      f.innerHTML = e.fn + '<small>waiting</small>';
+      stkEl.appendChild(f);
+      say('Call ' + e.id + ': <b>' + e.fn + '</b> starts. It goes on the stack <b>unfinished</b> \u2014 '
+        + frames().length + ' now waiting.', 'nt');
+    }
+    if(e.t === 'pending'){
+      var r = tbEl.querySelector('tr[data-id="' + e.id + '"]');
+      if(r) r.children[3].textContent = e.result;
+      say('It cannot answer yet \u2014 it needs <b>' + e.result + '</b> first. So it calls again, on something <b>smaller</b>.', 'nt');
+    }
+    if(e.t === 'base'){
+      var rb = tbEl.querySelector('tr[data-id="' + e.id + '"]');
+      if(rb){ rb.children[3].textContent = e.val; rb.children[4].textContent = e.val; }
+      var fb = stkEl.querySelector('.frm[data-id="' + e.id + '"]');
+      if(fb){ fb.className = 'frm popping'; fb.innerHTML = fb.innerHTML.replace('<small>waiting</small>', '<small>= ' + e.val + '</small>'); }
+      say('<b>BASE CASE.</b> No recursive call \u2014 the answer is just <b>' + e.val + '</b>. '
+        + 'This is where the descent stops and the <b>unwinding</b> begins.', 'ok');
+    }
+    if(e.t === 'ret'){
+      var tr2 = document.createElement('tr');
+      tr2.className = 'unwind new';
+      tr2.innerHTML = '<td>(' + e.id + ')</td><td>' + e.fn + '</td><td>' + e.num + '</td>'
+                    + '<td>' + e.result + '</td><td><b>' + e.val + '</b></td>';
+      tbEl.appendChild(tr2);
+      var fr = stkEl.querySelector('.frm[data-id="' + e.id + '"]');
+      if(fr) fr.parentNode.removeChild(fr);
+      var done = stkEl.querySelectorAll('.frm.popping');
+      Array.prototype.forEach.call(done, function(d){ d.parentNode.removeChild(d); });
+      say('Back inside call <b>' + e.id + '</b> \u2014 that is what the brackets mean. It finishes '
+        + e.result + ' and <b>returns ' + e.val + '</b>. Its frame leaves the stack.', 'ok');
+    }
+    /* only the newest row keeps the outline */
+    Array.prototype.forEach.call(rows, function(r){ if(r !== tbEl.lastChild) r.classList.remove('new'); });
+    var fs = frames();
+    fs.forEach(function(f, i){ f.classList.toggle('top', i === fs.length - 1); });
+    drawSrc(e.line);
+    var made = 0;
+    for(var i = 0; i < step; i++) if(data.events[i].t === 'call') made++;
+    cntEl.textContent = 'calls made: ' + made;
+    tbEl.parentNode.parentNode.scrollTop = tbEl.parentNode.parentNode.scrollHeight;
+  }
+
+  function one(){
+    if(step >= data.events.length){
+      if(timer){ clearInterval(timer); timer = null; }
+      say('Done \u2014 <b>' + data.calls + ' calls</b>, and the table has <b>' + tbEl.children.length
+        + ' rows</b>: ' + tbEl.querySelectorAll('tr.wind').length + ' winding, '
+        + tbEl.querySelectorAll('tr.unwind').length + ' unwinding.', 'ok');
+      return false;
+    }
+    var e = data.events[step];
+    step++;                       /* count the event we are about to show */
+    render(e);
+    return true;
+  }
+
+  host.querySelectorAll('.vzb').forEach(function(b){
+    b.addEventListener('click', function(){
+      var pre = b.getAttribute('data-pre'), act = b.getAttribute('data-act');
+      if(pre){ cur = pre; reset(); return; }
+      if(act === 'reset'){ reset(); return; }
+      if(act === 'step'){ if(timer){ clearInterval(timer); timer = null; } one(); return; }
+      if(act === 'play'){
+        if(timer){ clearInterval(timer); timer = null; return; }
+        timer = setInterval(function(){ if(!one()){ clearInterval(timer); timer = null; } }, 850);
+      }
+    });
+  });
+  reset();
+}
+
+/* ===== boss behaviour: run the STUDENT'S SearchValue against last lesson's tree ===== */
+function bossBehaviour(studentCode, cb){
+  if(document.body.getAttribute('data-lang') !== 'py'){ cb(null, 'java'); return; }
+  if(pyBusy){ cb(null, 'busy'); return; }
+  pyBusy = true; setRunButtons(false, '… judging');
+  var harness =
+    "SIZE = 20\n" +
+    "ArrayNodes = [[-1,-1,-1] for _ in range(SIZE)]\n" +
+    "RootPointer = -1\n" +
+    "FreeNode = 0\n" +
+    "def __add(v):\n" +
+    "    global RootPointer, FreeNode\n" +
+    "    ArrayNodes[FreeNode] = [-1, v, -1]\n" +
+    "    if RootPointer == -1:\n" +
+    "        RootPointer = 0\n" +
+    "    else:\n" +
+    "        c = RootPointer\n" +
+    "        while True:\n" +
+    "            if v < ArrayNodes[c][1]:\n" +
+    "                if ArrayNodes[c][0] == -1:\n" +
+    "                    ArrayNodes[c][0] = FreeNode; break\n" +
+    "                c = ArrayNodes[c][0]\n" +
+    "            else:\n" +
+    "                if ArrayNodes[c][2] == -1:\n" +
+    "                    ArrayNodes[c][2] = FreeNode; break\n" +
+    "                c = ArrayNodes[c][2]\n" +
+    "    FreeNode += 1\n" +
+    "for __v in (15, 8, 19, 3, 10):\n" +
+    "    __add(__v)\n" +
+    studentCode + "\n" +
+    "__r = []\n" +
+    "__err = ['']\n" +
+    "__depth = [0]\n" +
+    "def __chk(name, f):\n" +
+    "    try: __r.append((name, bool(f())))\n" +
+    "    except Exception as e:\n" +
+    "        if not __err[0]: __err[0] = type(e).__name__ + ': ' + str(e)\n" +
+    "        __r.append((name, False))\n" +
+    "__chk('finds 10 and returns its INDEX, 4', lambda: SearchValue(RootPointer, 10) == 4)\n" +
+    "__chk('finds the ROOT: SearchValue(0, 15) is 0', lambda: SearchValue(RootPointer, 15) == 0)\n" +
+    "__chk('finds a leaf on the left: 3 is at index 3', lambda: SearchValue(RootPointer, 3) == 3)\n" +
+    "__chk('returns -1 for a value that is not there (99)', lambda: SearchValue(RootPointer, 99) == -1)\n" +
+    "__chk('returns -1 below the smallest value (1) -- the walk runs off the tree', lambda: SearchValue(RootPointer, 1) == -1)\n" +
+    "import sys\n" +
+    "def __counting(fn):\n" +
+    "    def w(*a, **k):\n" +
+    "        __depth[0] += 1\n" +
+    "        return fn(*a, **k)\n" +
+    "    return w\n" +
+    "try:\n" +
+    "    SearchValue = __counting(SearchValue)\n" +
+    "    SearchValue(RootPointer, 10)\n" +
+    "    __r.append(('it RECURSES rather than scanning the array (3 calls to reach 10)', __depth[0] <= 4 and __depth[0] >= 2))\n" +
+    "except Exception:\n" +
+    "    __r.append(('it RECURSES rather than scanning the array', False))\n" +
+    "'|'.join(('1' if v else '0') + ':' + k for k, v in __r) + ('||' + __err[0] if __err[0] else '')";
+  bootPython().then(function(py){
+    var ns = py.toPy({});
+    return py.runPythonAsync(harness, {globals: ns})
+      .then(function(res){ ns.destroy(); pyBusy=false; setRunButtons(true); cb(String(res), null); })
+      .catch(function(e){
+        ns.destroy(); pyBusy=false; setRunButtons(true);
+        var m = String(e.message||e).trim().split('\n');
+        cb(null, 'crash:' + (m[m.length-1] || 'error'));
+      });
+  });
+}
+</script>
+<script>
+/* ===== 🎮 Winding and Unwinding ===== */
+var G = {i:0, score:0, locked:false, earned:{}};
+
+/* The teacher walks backwards and forwards through the stages, so a stage must
+   be answerable twice without being paid for twice. Record what each stage
+   earned and REPLACE it, rather than adding to a running total. */
+function gAwardAt(idx, n){
+  G.earned[idx] = n;
+  /* the total is DERIVED from the ledger, never accumulated -- so a stage can be
+     answered any number of times, and nothing can leave the two disagreeing */
+  var t = 0;
+  for(var k in G.earned) if(G.earned.hasOwnProperty(k)) t += G.earned[k];
+  G.score = t;
+  var sc = document.getElementById('g-score');
+  if(sc) sc.textContent = G.score > 0 ? ('score ' + G.score) : '';
+}
+function gAward(n){ gAwardAt(G.i, n); }
+
+/* the exam's Fib(5) table with the four asked cells shaded — June 2023 P31, © UCLES */
+var TC  = 'padding:1px 8px; border:1px solid #b9c1dd; text-align:center;';
+var TCW = TC + ' background:rgba(23,179,163,.13);';
+var TCU = TC + ' background:rgba(242,181,60,.18);';
+var TCQ = TC + ' background:rgba(240,101,91,.22); font-weight:bold;';
+function trow(cells, style){
+  return '<tr>' + cells.map(function(c){
+    return '<td style="' + (c === '?' ? TCQ : style) + '">' + c + '</td>';
+  }).join('') + '</tr>';
+}
+var FIBTAB =
+  '<table style="border-collapse:collapse; font-size:.66em; font-family:\'Courier New\',monospace; font-weight:bold; margin:5px 0 3px;">'
++ '<tr><th style="' + TC + ' background:#e8eef9;">Call</th><th style="' + TC + ' background:#e8eef9;">Function call</th>'
++ '<th style="' + TC + ' background:#e8eef9;">Number</th><th style="' + TC + ' background:#e8eef9;">Result</th>'
++ '<th style="' + TC + ' background:#e8eef9;">Return</th></tr>'
++ trow(['1','Fib(5)','5','Fib(4) + Fib(3)',''], TCW)
++ trow(['2','Fib(4)','4','Fib(3) + Fib(2)',''], TCW)
++ trow(['3','Fib(3)','3','Fib(2) + Fib(1)',''], TCW)
++ trow(['4','Fib(2)','2','Fib(1) + Fib(0)',''], TCW)
++ trow(['5','Fib(1)','1','1','1'], TCW)
++ trow(['6','Fib(0)','0','0','0'], TCW)
++ trow(['(4)','Fib(2)','2','?','1'], TCU)
++ trow(['(3)','Fib(3)','3','?','2'], TCU)
++ trow(['(2)','Fib(4)','4','2 + 1','?'], TCU)
++ trow(['(1)','Fib(5)','5','3 + 2','?'], TCU)
++ '</table>';
+
+var STAGES = [
+ { name:'Stage 1 · the one that never stops', paper:'P3',
+   q:'All four of these have a base case. <b>One of them never reaches it.</b> Which?',
+   opts:[
+     {t:'f(n) = f(n + 1), base case n == 0, called with f(5)', ok:true,
+      why:'The base case is fine — the walk is wrong. 5, 6, 7, 8 … the condition n == 0 is never true again. This is why the mark point says "changes its state and MOVES TOWARDS the base case", not just "has a base case".'},
+     {t:'f(n) = n × f(n − 1), base case n == 0, called with f(5)', ok:false,
+      why:'Counts down 5, 4, 3, 2, 1, 0 and stops. This is factorial.'},
+     {t:'f(a, b) = f(b, a MOD b), base case b == 0, called with f(48, 18)', ok:false,
+      why:'Euclid. The second argument shrinks fast — 18, 12, 6, 0 — and it lands exactly on the base case.'},
+     {t:'InOrder(node), which calls itself only when a child pointer is not −1', ok:false,
+      why:'Your own homework. A tree runs out of children, so the calls stop by themselves — the "if" IS the base case.'}
+   ]},
+
+ { name:'Stage 2 · the half that carries two marks', paper:'P3',
+   q:'<b>June 2023 P31, made playable.</b> The winding half is done. Complete the <b>unwinding</b> rows — '
+    +'the four shaded cells. Remember what each call was <i>waiting for</i>.'
+    + FIBTAB,
+   table:true, total:4,
+   fields:[
+     {lbl:'(4) Result',  want:'1 + 0', why:'call 4 was Fib(2), waiting on Fib(1) and Fib(0). They came back 1 and 0.'},
+     {lbl:'(3) Result',  want:'1 + 1', why:'call 3 was Fib(3), waiting on Fib(2) — which just returned 1 — and Fib(1), which is 1.'},
+     {lbl:'(2) Return',  want:'3',     why:'Fib(4) = 2 + 1 = 3.'},
+     {lbl:'(1) Return',  want:'5',     why:'Fib(5) = 3 + 2 = 5 — the answer, and it only exists once every frame below it has paid out.'}
+   ],
+   afterOk:'That bottom half is <b>two of the five marks</b>, and it is the half most scripts leave blank. A table that stops at the base case has stopped at half-time.'},
+
+ { name:'Stage 3 · say it for marks', paper:'P3',
+   q:'<b>"State three essential features of recursion." [3]</b> — Nov 2021 Paper 31.<br>'
+    +'Write them in your own words, one per line.',
+   ta:'', rows:4, total:3, cap:3,
+   llmTask:'A03a-p3-features', llmFn:'RecursionFeatures',
+   mps:[
+     {re:/base\s*case|stopping\s*condition|terminat\w*\s*condition|end\s*condition|stop\w*\s*case/i, pts:1,
+      label:'a <b>base case</b> / stopping condition — an input answered with no recursive call'},
+     {re:/general\s*case|recursive\s*case|non[- ]?base/i, pts:1,
+      label:'a <b>general case</b>'},
+     {re:/calls?\s*(it)?\s*self|call\s+itself|defined\s+in\s+terms\s+of\s+itself|invok\w*\s+itself|uses?\s+itself/i, pts:1,
+      label:'… which <b>calls itself</b> / is defined in terms of itself'},
+     {re:/mov\w*\s+(towards?|closer|nearer)|towards?\s+the\s+base|approach\w*\s+the\s+base|chang\w*\s+(its\s+)?state|gets?\s+smaller|smaller\s+(each|every|input)|reduc\w*\s+(each|every|the|towards)/i, pts:1,
+      label:'… which <b>changes its state and moves towards the base case</b>'}
+   ],
+   model:'① It must have a base case — a stopping condition whose answer needs no further call.\n② It must have a general case, which calls itself.\n③ Each call must change the state and move towards the base case.' },
+
+ { name:'Stage 4 · read the order off the tree', paper:'P3',
+   q:'The tree from last lesson: <b>15</b> at the root, <b>8</b> left and <b>19</b> right, with <b>3</b> and <b>10</b> under the 8.<br>'
+    +'A <b>post-order</b> traversal visits <b>left, then right, then outputs the node</b>. Type its output, numbers separated by spaces.',
+   ta:'', rows:2, total:2, seq:'3 10 8 19 15',
+   mps:[],
+   model:'3 10 8 19 15' },
+
+ { name:'Stage 5 · BOSS · write the recursion', paper:'P4',
+   boss:true, total:5, cap:5,
+   q:'<b>Nov 2022 Paper 41 Q3(c) — 5 marks.</b> The ordered binary tree from last lesson is in the global 2D array '
+    +'<span class="mono">ArrayNodes</span>: column <span class="mono">0</span> left pointer, '
+    +'<span class="mono">1</span> data, <span class="mono">2</span> right pointer; <span class="mono">−1</span> is null. '
+    +'<span class="mono">RootPointer</span> holds the index of the root.<br>'
+    +'<b>Given</b> — the tree is already built and holds <span class="mono">15, 8, 19, 3, 10</span>; nothing here deletes.<br>'
+    +'Write the <b>recursive</b> function <span class="mono">SearchValue(Root, ValueToFind)</span>: it returns the '
+    +'<b>index</b> of the node holding the value, or <span class="mono">−1</span> if the value is not in the tree.<br>'
+    +'<span style="font-size:.88em; color:#c0392b;"><b>Paper 4 is answered in Java, Python or VB.</b> The front page says '
+    +'<i>“a mark of zero will be awarded if a programming language other than those listed here is used”</i> — pseudocode is not one of them.</span>',
+   parts:[
+     {lbl:'Write the whole function &nbsp;<span class="accent2">[5]</span>', rows:11,
+      mps:[
+        {re:/(Search\w*|Find\w*)\s*\(\s*\w+\s*,\s*\w+/i, pts:1,
+         label:'header taking <b>two</b> parameters — the node to look at, and the value'},
+        {re:/(==|=)\s*-\s*1[\s\S]{0,70}?return\s*\(?\s*-\s*1|return\s*\(?\s*-\s*1[\s\S]{0,50}?(==|=)\s*-\s*1/i, pts:1,
+         label:'base case ①: the pointer is <code>−1</code>, so <b>return −1</b> — the value is not there'},
+        {re:/ArrayNodes\s*\[[^\]]*\]\s*\[\s*1\s*\]\s*==\s*\w+[\s\S]{0,80}?return\s+(?!-)\w+/i, pts:1,
+         label:'base case ②: the data matches, so <b>return the INDEX</b> (not TRUE, not the data)'},
+        {re:/ArrayNodes\s*\[[^\]]*\]\s*\[\s*1\s*\]\s*[<>]|[<>]\s*ArrayNodes\s*\[[^\]]*\]\s*\[\s*1\s*\]/i, pts:1,
+         label:'compares the node’s <b>data</b> with the value to choose a side'},
+        {re:/return\s+\w+\s*\(\s*ArrayNodes\s*\[[^\]]*\]\s*\[\s*0\s*\]/i, pts:1,
+         label:'<b>returns</b> a recursive call on the <b>LEFT</b> pointer, column <code>0</code>'},
+        {re:/return\s+\w+\s*\(\s*ArrayNodes\s*\[[^\]]*\]\s*\[\s*2\s*\]/i, pts:1,
+         label:'<b>returns</b> a recursive call on the <b>RIGHT</b> pointer, column <code>2</code>'}
+      ],
+      model:'def SearchValue(Root, ValueToFind):\n    if Root == -1:                              # not in the tree\n        return -1\n    if ArrayNodes[Root][1] == ValueToFind:      # found it: hand back the INDEX\n        return Root\n    if ArrayNodes[Root][1] > ValueToFind:       # target is smaller -> left\n        return SearchValue(ArrayNodes[Root][0], ValueToFind)\n    return SearchValue(ArrayNodes[Root][2], ValueToFind)   # otherwise -> right'}
+   ]}
+];
+function gEl(id){ return document.getElementById(id); }
+</script>
+<script>
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LIVE LLM MARKING — the third mechanic, and the consensus across all three.
+
+   The key is NOT in this file and never will be: a deck gets emailed and
+   copied, so a key written here would be a published key. Instead a small
+   server runs on the teacher's machine (grade-server.py), holds the key in
+   .env, and marks on request. If it is not there — a student's laptop, or
+   the teacher simply hasn't started it — the fetch fails and the deck keeps
+   its two deterministic mechanics. The off-switch is the absence of the
+   process; there is nothing to remember to turn off.
+   ═══════════════════════════════════════════════════════════════════════ */
+var LLM = { url:'http://127.0.0.1:8788', available:false, on:true, task:'A03a-boss' };
+
+function llmChip(){
+  var c = document.getElementById('llmchip');
+  if(!c) return;
+  if(!LLM.available){
+    /* it used to hide itself, which looks identical to "not wired up" -- and that
+       is exactly the wrong thing for the one person who can start the server */
+    c.className = 'off';
+    c.textContent = '\u26a1 no LLM \u2014 click for help';
+    c.title = 'Live marking is off. Click for the two steps that turn it on.';
+    return;
+  }
+  c.className = LLM.on ? 'on' : 'off';
+  c.textContent = LLM.on ? '\u26a1 LLM marking on' : '\u26a1 LLM marking off';
+  c.title = 'click to turn the second marker off';
+}
+/* A tooltip used to be the ONLY place the deck said how to start the server,
+   which is no help at all to someone who has already clicked and seen nothing
+   happen. Say it on the screen, in the two steps that actually do it. */
+function llmHelp(show){
+  var h = document.getElementById('llmhelp');
+  if(h) h.style.display = show ? 'block' : 'none';
+}
+function llmDetect(cb){
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, 1200);
+  fetch(LLM.url + '/ping', {signal: ctl.signal, cache: 'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ clearTimeout(t); LLM.available = !!(j && j.ok && j.key);
+                       llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
+    .catch(function(){ clearTimeout(t); LLM.available = false; llmChip(); if(cb) cb(); });
+}
+/* Detecting once, at load, was the real defect: the natural order is to open the
+   deck, SEE that marking is off, and only then go and start the server -- by
+   which time the one probe has long since failed. So keep looking. A refused
+   connection to localhost costs nothing, and it stops as soon as it connects. */
+function llmWatch(){
+  setInterval(function(){
+    if(LLM.available || document.hidden) return;
+    llmDetect();
+  }, 5000);
+}
+function llmBind(){
+  var c = document.getElementById('llmchip');
+  if(!c || c.__bound) return;
+  c.__bound = true;
+  c.addEventListener('click', function(){
+    if(!LLM.available){
+      c.textContent = '\u26a1 looking for the server\u2026';
+      llmHelp(true);
+      llmDetect(function(){ if(!LLM.available) llmChip(); });
+      return;
+    }
+    LLM.on = !LLM.on; llmChip();
+  });
+  var x = document.getElementById('llmhelp-x');
+  if(x) x.addEventListener('click', function(){ llmHelp(false); });
+  /* start looking here, NOT inside Reveal's .then() -- anything that throws in
+     there (a CDN that did not answer, say) used to take the LLM down with it */
+  llmDetect();
+  llmWatch();
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
+else llmBind();
+/* the consensus: two mechanics mark the SAME mark points, so they are directly
+   comparable; the third asks a different question (does it actually work?).
+   Agreement across all three is the strong signal Kepei is after. */
+function consensusHtml(regexRaw, llmAwarded, ofPoints, behaviour){
+  var gap = Math.abs(regexRaw - llmAwarded);
+  var beh = null;
+  if(behaviour && behaviour.indexOf('|') > -1){
+    var parts = behaviour.split('||')[0].split('|');
+    var ok = parts.filter(function(p){ return p.charAt(0) === '1'; }).length;
+    beh = {ok: ok, of: parts.length};
+  }
+  var rows = '<b>pattern ' + regexRaw + '/' + ofPoints + '</b> &nbsp;·&nbsp; '
+           + '<b>reader ' + llmAwarded + '/' + ofPoints + '</b>'
+           + (beh ? ' &nbsp;·&nbsp; <b>ran ' + beh.ok + '/' + beh.of + '</b>' : '');
+  if(gap > 1)
+    return '<div class="g-cons split">' + rows + ' — <b>the two markers disagree by ' + gap + '.</b> '
+         + 'The pattern-matcher looks for shapes and the reader looks for meaning, so a gap this big '
+         + 'usually means one of them is being fooled. <b>Worth a human eye</b> — show this to your teacher.</div>';
+  if(!beh)
+    return '<div class="g-cons agree">' + rows + ' — the two markers agree.</div>';
+  var markFrac = (regexRaw + llmAwarded) / (2 * Math.max(1, ofPoints));
+  var behFrac  = beh.ok / Math.max(1, beh.of);
+  /* THE CASE THAT LOOKS LIKE SUCCESS. The program is right and both markers
+     refuse it, because the question asked for a METHOD and got an answer. The
+     old wording here assumed the opposite arrangement and told a student with a
+     working loop that "the method is visibly there", which is exactly backwards. */
+  if(behFrac - markFrac >= 0.3)
+    return '<div class="g-cons split">' + rows + ' — <b>it works, and it still scores ' + regexRaw + '.</b> '
+         + 'The machine is satisfied: your answers are right. Both markers refused it anyway, because the '
+         + 'question did not ask for the answer — it asked for a particular <b>method</b>. On this paper that '
+         + 'is not a style note, it is most of the marks.</div>';
+  if(behFrac >= 1 && markFrac >= 0.6)
+    return '<div class="g-cons agree">' + rows + ' — <b>all three agree.</b> Two markers read your '
+         + 'code the same way and it does the right thing when run. This mark is about as certain '
+         + 'as marking gets.</div>';
+  if(markFrac >= 0.6)
+    return '<div class="g-cons split">' + rows + ' — <b>the two markers agree, the machine does not.</b> '
+         + 'The method is visibly there, so an examiner would pay for it — but it does not work yet. '
+         + 'You would score here and still have a bug to find.</div>';
+  return '<div class="g-cons split">' + rows + ' — <b>all three agree, and none of them are happy.</b> '
+       + 'This is not a marking dispute: the answer is not there yet. Start from the first ✗ on the left.</div>';
+}
+
+/* A written Paper 3 answer is where the pattern-matcher is at its worst: it cannot
+   forgive "pused" for "pushed", and it cannot see a mark point made in the student's
+   own words. Cambridge marks the NOTION. So the reader runs on these stages too --
+   and on prose its verdict is the one to trust. */
+function proseConsensus(regexRaw, llmAwarded, cap){
+  var r = Math.min(regexRaw, cap), l = Math.min(llmAwarded, cap);
+  if(l > r)
+    return '<div class="g-cons split"><b>pattern ' + r + '/' + cap + '</b> &nbsp;·&nbsp; <b>reader ' + l + '/' + cap + '</b>'
+         + ' — <b>take the reader\'s mark: ' + l + '.</b> The pattern-matcher looks for particular words, so it '
+         + 'misses a mark point made in your own words and it cannot forgive a typo. On a written question '
+         + 'an examiner marks the <b>idea</b>, which is what the reader just did.</div>';
+  if(l < r)
+    return '<div class="g-cons split"><b>pattern ' + r + '/' + cap + '</b> &nbsp;·&nbsp; <b>reader ' + l + '/' + cap + '</b>'
+         + ' — <b>the reader is stricter here.</b> The words are present but it did not think the idea was. '
+         + '<b>Worth a human eye</b> — this is the case a teacher should settle.</div>';
+  return '<div class="g-cons agree"><b>pattern ' + r + '/' + cap + '</b> &nbsp;·&nbsp; <b>reader ' + l + '/' + cap + '</b>'
+       + ' — <b>both markers agree.</b> On a written answer that is about as certain as it gets.</div>';
+}
+/* The click-prompt under a marked answer doubles as the reader's status line.
+   Without this the deck says "press next → when you are ready" while the reader
+   is still working, which is an invitation to throw its answer away — and that is
+   exactly what happened the first time this was taught. */
+function gWaiting(on){
+  G.llmBusy = !!on;
+  var h = document.getElementById('g-nexthint');
+  if(!h){
+    /* the code boss's prompt is a plain sentence with no element of its own, so give
+       it one rather than letting the notice silently do nothing */
+    var say = document.getElementById('g-say');
+    if(!say) return;
+    h = document.createElement('div');
+    h.id = 'g-nexthint'; h.style.marginTop = '5px';
+    say.appendChild(h);
+  }
+  if(on){
+    if(h.getAttribute('data-orig') === null) h.setAttribute('data-orig', h.innerHTML);
+    h.style.opacity = '1';
+    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> '
+                + 'give it a few seconds \u2014 clicking now moves on without it.</span>';
+  } else {
+    var orig = h.getAttribute('data-orig');
+    h.style.opacity = '.65';
+    if(orig !== null){ h.innerHTML = orig; h.removeAttribute('data-orig'); }
+    else h.textContent = '';
+  }
+}
+function llmMarkProse(task, fn, answer, regexRaw, cap, host){
+  if(!LLM.available || !LLM.on || !host) return;
+  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
+                 + '(this one marks the idea, not the words)</span></p>';
+  var ctl = new AbortController();
+  /* a six-mark class is a big prompt and DeepSeek is sometimes busy; 45 s was
+     not enough rope, and giving up looked identical to the server being down */
+  var timedOut = false, t0 = Date.now();
+  var t = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
+  gWaiting(true);
+  fetch(LLM.url + '/mark', {
+    method:'POST', signal: ctl.signal,
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task: task, fn: fn, lang:'py', code: answer})
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      clearTimeout(t); gWaiting(false);
+      if(!j || j.error){
+        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">('
+                       + ((j && j.error) || 'no reply') + ')</span></p>';
+        return;
+      }
+      var rows = j.marks.map(function(m){
+        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
+             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
+      }).join('');
+      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it marked the idea, not the words</b></p>'
+                     + '<ul class="g-mp">' + rows + '</ul>'
+                     + proseConsensus(regexRaw, j.awarded, cap)
+                     + (j.missed ? '<p style="font-size:.48em; margin:4px 0 0;">' + j.missed + '</p>' : '');
+      /* the reader is the better marker on prose, so the running total follows it */
+      var better = Math.min(j.awarded, cap) - Math.min(regexRaw, cap);
+      if(better > 0){ gAward(better); var sc = document.getElementById('g-score');
+                      if(sc) sc.textContent = 'score ' + G.score; }
+    })
+    .catch(function(){
+      clearTimeout(t); gWaiting(false);
+      var __s = Math.round((Date.now() - t0) / 1000);
+      host.innerHTML = timedOut
+        ? '<p class="g-lbl">the reader gave up after ' + __s + ' s <span class="conf">'
+        + '(the model is busy, not broken \u2014 the markers on the left still stand. Press mark again to retry.)</span></p>'
+        : '<p class="g-lbl">could not reach the reader <span class="conf">'
+        + '(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
+    });
+}
+function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host){
+  if(!LLM.available || !LLM.on || !host) return;
+  var grid = host.closest ? host.closest('.g-grid') : null;
+  if(grid) grid.classList.add('three');
+  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
+                 + '(this one reads for meaning, not for patterns)</span></p>';
+  var ctl = new AbortController();
+  /* a six-mark class is a big prompt and DeepSeek is sometimes busy; 45 s was
+     not enough rope, and giving up looked identical to the server being down */
+  var timedOut = false, t0 = Date.now();
+  var t = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
+  gWaiting(true);
+  fetch(LLM.url + '/mark', {
+    method:'POST', signal: ctl.signal,
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task: LLM.task, fn:'SearchValue', lang: lang, code: code})
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      clearTimeout(t); gWaiting(false);
+      if(!j || j.error){
+        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">'
+                       + '(' + ((j && j.error) || 'no reply') + ')</span></p>';
+        return;
+      }
+      var rows = j.marks.map(function(m){
+        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
+             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
+      }).join('');
+      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it read your code, it did not run it</b></p>'
+                     + '<ul class="g-mp">' + rows + '</ul>'
+                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
+                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
+    })
+    .catch(function(){
+      clearTimeout(t); gWaiting(false);
+      var __s = Math.round((Date.now() - t0) / 1000);
+      host.innerHTML = timedOut
+        ? '<p class="g-lbl">the reader gave up after ' + __s + ' s <span class="conf">'
+        + '(the model is busy, not broken \u2014 the markers on the left still stand. Press mark again to retry.)</span></p>'
+        : '<p class="g-lbl">could not reach the reader <span class="conf">'
+        + '(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
+    });
+}
+
+function behaviourHtml(raw, err){
+  if(err === 'java')
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li style="color:#8890b5;">'
+         + 'This deck cannot run Java, so the ticks on the left are a <b>checklist</b>, not a test. '
+         + 'Switch the language to <b>Python</b> and press mark again — then the machine actually runs your code.</li></ul>';
+  if(err === 'pseudo')
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li style="color:#8890b5;">'
+         + 'There is pseudocode mixed into this, so it will not run — and on Paper 4 it would not score either. '
+         + 'Write it as <b>Python</b> throughout.</li></ul>';
+  if(err && err.indexOf('crash:') === 0)
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li><span class="n">✗</span> '
+         + 'it did not run — <span class="mono">' + err.slice(6) + '</span></li>'
+         + '<li style="color:#8890b5;">Mark points can be ticked by text that never executes. This is why both columns exist.</li></ul>';
+  if(!raw) return '';
+  var parts = raw.split('||');
+  var rows = parts[0].split('|').map(function(t){
+    var ok = t.charAt(0) === '1', label = t.slice(2);
+    return '<li><span class="' + (ok?'y':'n') + '">' + (ok?'✓':'✗') + '</span> ' + label + '</li>';
+  }).join('');
+  if(parts[1])
+    rows += '<li style="color:#8890b5;">first error raised: <span class="mono">' + parts[1] + '</span>'
+         +  (parts[1].indexOf('RecursionError') > -1
+             ? ' — that is the base case never being reached: the walk is not moving towards it.'
+             : parts[1].indexOf('NameError') > -1
+             ? ' — the judge calls it <span class="mono">SearchValue</span>; check the name.' : '')
+         +  '</li>';
+  return '<p class="g-lbl">what the machine says — <b>your code was actually run</b></p><ul class="g-mp">' + rows + '</ul>';
+}
+
+function bossCodePane(code){
+  var esc = String(code).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<div><p class="g-lbl">your answer</p><pre class="g-ans">' + esc + '</pre></div>';
+}
+function gProg(){
+  var p=gEl('g-prog'); p.innerHTML='';
+  STAGES.forEach(function(_,k){
+    var i=document.createElement('i');
+    i.className = k<G.i ? 'done' : (k===G.i ? 'cur' : '');
+    p.appendChild(i);
+  });
+}
+function gSay(html, cls){
+  var s=gEl('g-say'); s.innerHTML=html||'&nbsp;'; s.className='g-say'+(cls?' '+cls:'');
+  /* On the code boss, gSay runs AFTER the answer has gone to the reader, so a notice
+     written before this call would be wiped. Re-assert it from the flag instead. */
+  if(G.llmBusy) gWaiting(true);
+}
+
+/* The mark scheme's own wording is "FirstEmpty = LinkedList[FirstEmpty, 1] BEFORE any
+   update to FirstEmpty's pointer". Presence is not enough — the same line in the wrong
+   place is the bug this whole lesson is about. So compare positions. */
+function savedBeforeOverwrite(ans){
+  var read  = /(\w+)\s*(=|←|<-)\s*LinkedList\s*\[[^\]]*FirstEmpty[^\]]*?(\]\s*\[\s*1\s*\]|,\s*1\s*\])/i.exec(ans);
+  if(!read) return false;
+  var write = /LinkedList\s*\[[^\]]*?(\]\s*\[\s*1\s*\]|,\s*1\s*\])\s*(=|←|<-)\s*FirstNode/i.exec(ans);
+  if(!write) return true;                 /* nothing overwrote it, so nothing was lost */
+  return read.index < write.index;        /* the save has to come first */
+}
+
+function markOne(ans, mps, cap, quiet){
+  var got=0, rows=[], listed=0;
+  mps.forEach(function(m){
+    var ok = m.fn ? m.fn(ans) : (m.re.test(ans) && (!m.also || m.also.test(ans)));
+    if(ok) got += m.pts;
+    listed += m.pts;
+    rows.push('<li><span class="'+(ok?'y':'n')+'">'+(ok?'✓':'✗')+'</span> '+m.label+' <b>['+m.pts+']</b></li>');
+  });
+  var raw = got, missed = listed - got;
+  if(cap && got > cap) got = cap;
+  /* the cap footnotes are irrelevant when the answer was refused on form, and they are
+     the two longest rows in the column — dropping them keeps the panel on the stage */
+  if(cap && listed > cap && !quiet){
+    rows.push('<li style="color:#8890b5;">the published scheme lists <b>'+listed+'</b> bullets for a maximum of <b>'+cap
+            + '</b> marks — mark schemes are generous on purpose, so you do not have to hit every one</li>');
+    if(missed > 0 && got === cap)
+      rows.push('<li style="color:#8890b5;">…which is why you have <b>'+cap+'/'+cap+'</b> with <b>'+missed
+              + '</b> bullet'+(missed>1?'s':'')+' missing. <b>The cap did that, not your answer</b> — and the '
+              + 'bullet you dropped is still a bug in your program.</li>');
+  }
+  return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
+}
+function gDraw(){
+  var s=STAGES[G.i];
+  /* which paper this stage is, because the ANSWER FORM changes with it and the
+     form is worth all of the marks */
+  gEl('g-stage').innerHTML = s.name
+    + (s.paper ? ' <span class="pbadge ' + (s.paper==='P4'?'p4':'p3') + '">' + s.paper + '</span>' : '');
+  gEl('g-score').textContent = G.score>0 ? ('score ' + G.score) : '';
+  gNavState();
+  gEl('g-q').innerHTML = s.q;
+  var b=gEl('g-body'); b.innerHTML=''; G.locked=false; gSay('');
+  gProg();
+
+  if(s.opts){
+    var wrap=document.createElement('div'); wrap.className='g-opts';
+    s.opts.forEach(function(o){
+      var btn=document.createElement('button'); btn.className='g-b'; btn.style.flex='1 1 44%';
+      btn.innerHTML=o.t;
+      btn.addEventListener('click', function(){
+        if(G.locked) return;
+        if(o.ok){
+          G.locked=true; btn.className='g-b yes'; gAward(1);
+          gSay('✓ ' + o.why + ' <span style="opacity:.6">— press next → when you are ready</span>', 'ok'); /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */
+        } else {
+          btn.className='g-b no';
+          gSay('✗ ' + o.why, 'bad');
+        }
+      });
+      wrap.appendChild(btn);
+    });
+    b.appendChild(wrap);
+  } else if(s.boss){
+    var grid=document.createElement('div'); grid.className='g-grid';
+    s.parts.forEach(function(p, idx){
+      var col=document.createElement('div');
+      var lab=document.createElement('p'); lab.className='g-lbl'; lab.innerHTML=p.lbl;
+      var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=p.rows; ta.spellcheck=false;
+      ta.id='boss'+idx;
+      col.appendChild(lab); col.appendChild(ta); grid.appendChild(col);
+    });
+    b.appendChild(grid);
+    var sub=document.createElement('button'); sub.className='g-sub'; sub.textContent='mark it, out of '+s.total;
+    sub.addEventListener('click', function(){
+      var code = gEl('boss0').value;
+      /* Paper 4 refuses pseudocode by rubric, so this marker refuses it too — but it
+         still shows what the logic would have earned, because the logic is not the
+         thing that was wrong. */
+      var wrongForm = looksLikePseudocode(code) && !looksLikeProgramCode(code);
+      var total=0, cells='', rawHits=0, ofPoints=0;
+      s.parts.forEach(function(p, idx){
+        var r=markOne(gEl('boss'+idx).value, p.mps, s.cap, wrongForm);
+        total+=r.got;
+        /* the LLM marks the same bullets uncapped, so compare uncapped counts */
+        p.mps.forEach(function(m){
+          ofPoints += m.pts;
+          var hit = m.fn ? m.fn(gEl('boss'+idx).value) : (m.re.test(gEl('boss'+idx).value) && (!m.also || m.also.test(gEl('boss'+idx).value)));
+          if(hit) rawHits += m.pts;
+        });
+        if(wrongForm) return;      /* the ticks match against CODE, so a pseudocode
+                                     answer fails some of them on notation alone --
+                                     showing them next to a refusal reads as a second fault */
+        cells += '<div><p class="g-lbl">'
+              +  (p.lbl)
+              +  ' &mdash; <b class="'+(r.got>=s.total?'accent1':'accent2')+'">'+r.got+'</b></p>'+r.html+'</div>';
+      });
+      if(wrongForm){
+        b.innerHTML = '<div class="g-res"><div class="g-tot" style="color:var(--accent2);">0 / '+s.total+'</div>'
+                    + '<div class="g-grid">' + bossCodePane(code)
+                    + '<div>'
+                    + '<div class="formwarn"><b>That is pseudocode, and this is Paper 4.</b><br>'
+                    + 'The front page of every Paper 4 says: <i>"a mark of zero will be awarded if a programming '
+                    + 'language other than those listed here is used"</i> — Java, Python or Visual Basic, console mode. '
+                    + 'Pseudocode is not one of them.<br><br>'
+                    + 'Nothing here has been marked, because the mark points attach to <b>code</b>. '
+                    + 'Write the same answer in <b>'
+                    + (document.body.getAttribute('data-lang')==='py' ? 'Python' : 'Java')
+                    + '</b> and press mark again — then you find out what it is actually worth.</div></div>'
+                    + '</div></div>';
+        gSay('<b>Zero — and not for anything that was wrong with your answer.</b> '
+           + 'On this paper the form is worth all of the marks. Press next → to finish.', 'bad');
+        if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+        return;
+      }
+      gAward(total);
+      /* the results REPLACE the inputs rather than stacking below them */
+      b.innerHTML = '<div class="g-res"><div class="g-tot">'+total+' / '+s.total+'</div>'
+                  + '<div class="g-grid">' + bossCodePane(code)
+                  + '<div>' + cells
+                  +   '<div id="g-beh"><p class="g-lbl">what the machine says</p>'
+                  +   '<ul class="g-mp"><li style="color:#8890b5;">running your code…</li></ul></div>'
+                  + '</div>'
+                  + '<div id="g-llm" class="g-llm"></div>'
+                  + '</div></div>';
+      /* the verdict must read BOTH columns — "Strong" printed over a program the
+         machine could not even run is the exact dishonesty this panel exists to kill */
+      bossBehaviour(code, function(raw, err){
+        var el = document.getElementById('g-beh');
+        if(el) el.innerHTML = behaviourHtml(raw, err);
+        /* the third mechanic, and the only one that can read for MEANING. It runs
+           last because the consensus needs the other two to have finished. */
+        llmMark(code, document.body.getAttribute('data-lang') === 'py' ? 'py' : 'java',
+                rawHits, ofPoints, raw, document.getElementById('g-llm'));
+        if(err && err.indexOf('crash:') === 0){
+          gSay('<b>' + total + ' on the mark points — and it did not run at all.</b> '
+             + 'Fix the error on the right first; marks awarded to code that cannot execute '
+             + 'are marks you will not get twice. Press next → to finish.', 'bad');
+          return;
+        }
+        if(raw && raw.split('||')[0].indexOf('0:') !== -1){
+          if(total === s.total){
+            gSay('<b>Full marks on the mark points — and it still does not work.</b> '
+               + 'An examiner would give you ' + total + '. The machine would not. '
+               + 'Look for the chain check: that one fails silently in an exam and costs you every later part.', 'bad');
+          } else {
+            gSay('Marks missing on the left, behaviour failing on the right — '
+               + 'fix the right-hand column first. Press next → to finish.', 'bad');
+          }
+        }
+      });
+      gSay(total >= s.total-1 ? 'Strong. Press next → to finish.' : 'Read the ✗ lines — press next → to finish.',
+           total >= s.total-1 ? 'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub);
+  } else if(s.table){
+    var wrap=document.createElement('div');
+    s.fields.forEach(function(f, idx){
+      var lab=document.createElement('label');
+      lab.style.cssText='display:inline-flex; align-items:center; gap:6px; margin:0 18px 8px 0; font-size:.54em; font-weight:bold; color:var(--navy);';
+      lab.innerHTML=f.lbl+' ';
+      var inp=document.createElement('input'); inp.className='tin'; inp.id='tf'+idx;
+      inp.setAttribute('autocomplete','off'); inp.spellcheck=false;
+      lab.appendChild(inp); wrap.appendChild(lab);
+    });
+    b.appendChild(wrap);
+    var subT=document.createElement('button'); subT.className='g-sub'; subT.textContent='mark it, out of '+s.total;
+    subT.addEventListener('click', function(){
+      var got=0, rows='';
+      s.fields.forEach(function(f, idx){
+        var v=gEl('tf'+idx).value.trim().replace(/\u2212/g,'-');
+        /* an expression cell is marked on its VALUE, not its spacing: "1+0" is the
+           same answer as "1 + 0" and a student may not lose a mark to a space bar. */
+        var norm=function(t){ return String(t).replace(/\s+/g,'').toLowerCase(); };
+        var ok=(norm(v)===norm(f.want));
+        if(ok) got++;
+        rows+='<li><span class="'+(ok?'y':'n')+'">'+(ok?'\u2713':'\u2717')+'</span> '+f.lbl+' \u2014 <b>'+f.want+'</b>. '+f.why+'</li>';
+      });
+      gAward(got);
+      gSay('<b>'+got+' / '+s.total+'</b><ul class="g-mp">'+rows+'</ul>'
+         + (got===s.total && s.afterOk ? '<div style="margin-top:4px; font-size:.92em;">'+s.afterOk+'</div>' : '')
+         + '<div id="g-nexthint" style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           got===s.total?'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(subT);
+  } else {
+    var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=s.rows||2; ta.spellcheck=false;
+    b.appendChild(ta);
+    var sub2=document.createElement('button'); sub2.className='g-sub'; sub2.textContent='mark it';
+    sub2.addEventListener('click', function(){
+      var r;
+      if(s.seq){
+        var got=(ta.value.match(/-?\d+/g)||[]).join(' ');
+        if(got===s.seq) r={got:s.total, html:'<ul class="g-mp"><li><span class="y">\u2713</span> '+s.seq+' \u2014 left subtree, node, right subtree, at every node.</li></ul>'};
+        else if(got.split(' ').slice().sort().join(' ')===s.seq.split(' ').slice().sort().join(' '))
+          r={got:1, html:'<ul class="g-mp"><li><span class="n">\u2717</span> right numbers, wrong order \u2014 you have listed the VALUES, not the traversal. In-order means everything left of a node comes out before it.</li></ul>'};
+        else r={got:0, html:'<ul class="g-mp"><li><span class="n">\u2717</span> expected <b>'+s.seq+'</b> \u2014 start at the leftmost node and let the rule do the walking.</li></ul>'};
+      } else {
+        r=markOne(ta.value, s.mps, s.cap);
+      }
+      gAward(r.got);
+      /* the mirror of the boss: a Paper 3 answer written as program code. Not a
+         zero — P3 has no rubric saying so — but no mark scheme in five years
+         offers program code as an alternative, so say that plainly. */
+      var wrongForm = s.wantsPseudocode && looksLikeProgramCode(ta.value) && !looksLikePseudocode(ta.value);
+      var useLLM = !!(s.llmTask && LLM.available && LLM.on);
+      gSay((wrongForm
+             ? '<div class="formwarn"><b>That is program code, and this is Paper 3.</b> '
+             + 'Not an automatic zero the way the wrong language is on Paper 4 — but <b>no</b> published Paper 3 '
+             + 'mark scheme offers program code as an alternative. The marks below are what your logic earns.</div>'
+             : '') +
+           (useLLM ? '<div class="g-grid"><div>' : '') +
+           '<b>'+r.got+' / '+s.total+'</b>'+r.html+
+           '<div style="margin-top:5px; font-size:.92em;">model answer:<pre class="ps" style="font-size:.9em; margin:4px 0 0;">'+s.model+'</pre></div>'+
+           (useLLM ? '</div><div id="g-llm-p" class="g-llm"></div></div>' : '') +
+           '<div id="g-nexthint" style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           r.got===s.total && !wrongForm ? 'ok':'bad');
+      if(useLLM)
+        llmMarkProse(s.llmTask, s.llmFn, ta.value, r.got, s.total, document.getElementById('g-llm-p'));
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub2);
+  }
+}
+window.gReplay = function(){
+  G.i = 0; G.score = 0; G.earned = {};
+  var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
+  var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
+  gDraw();
+};
+function gBack(){
+  if(G.i <= 0) return;
+  G.locked = true;
+  G.i--;
+  gDraw();
+}
+function gNavState(){
+  var b = document.getElementById('g-back');
+  if(b) b.style.visibility = (G.i > 0) ? '' : 'hidden';
+}
+function gSkip(){
+  G.locked = true;
+  G.i++;
+  if(G.i >= STAGES.length){ gFinish(); } else { gDraw(); }
+}
+/* Bind immediately. In the A2-era decks this whole block lives inside the
+   Reveal.initialize().then() closure, which resolves AFTER DOMContentLoaded has
+   already fired -- so a DOMContentLoaded listener registered here never runs and
+   the button silently does nothing. */
+function gSkipBind(){
+  var b = document.getElementById('g-skip'), k = document.getElementById('g-back');
+  if(!b){ document.addEventListener('DOMContentLoaded', gSkipBind); return; }
+  if(!b.__bound){ b.__bound = true;
+    b.addEventListener('click', function(ev){ ev.stopPropagation(); gSkip(); }); }
+  if(k && !k.__bound){ k.__bound = true;
+    k.addEventListener('click', function(ev){ ev.stopPropagation(); gBack(); }); }
+  gNavState();
+}
+gSkipBind();
+function gNextOnce(){
+  G.i++;
+  if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
+}
+function gFinish(){
+  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
+  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
+  gEl('g-stage').textContent='done';
+  gEl('g-q').innerHTML='';
+  gEl('g-prog').innerHTML='';
+  gEl('g-score').textContent='';
+  gEl('g-body').innerHTML=
+    '<div class="g-fin"><div class="big">'+G.score+'</div>'+
+    '<p style="margin:6px 0 0;">Every mark on that boss came from a real paper\u2019s question.</p>'+
+    '<p style="margin:6px 0 0; font-size:.9em; color:#5b6488;">The two that cost the most are the two the exam expects you to miss: '+
+    '<b>the unwinding half of the trace table</b> (two of its five marks live below the base case), and '+
+    '<b>writing RETURN in front of the recursive call</b> \u2014 a call whose answer is thrown away has walked the tree for nothing.</p>'+
+    '<button class="g-sub" onclick="G.i=0;G.score=0;var s=document.getElementById(\'g-skip\');if(s)s.style.display=\'\';gDraw();">play again</button></div>';
+  gSay('');
+}
+
+Reveal.initialize({
+  hash:true, slideNumber:'c/t', width:1280, height:720, margin:.06,
+  plugins:[RevealNotes],
+  transition:'slide', backgroundTransition:'fade'
+}).then(function(){
+  initPyCells();
+  makeTrace('traceviz', ['fact','fib','gcd']);
+  llmDetect();
+  gDraw();
+  try{ var L=localStorage.getItem('a2lang'); if(L) setLang(L); }catch(e){}
+  var ob=document.getElementById('obj-btn');
+  if(ob) ob.addEventListener('click', function(){
+    var o=document.getElementById('obj');
+    o.style.display = (o.style.display==='none') ? 'block' : 'none';
+  });
+});
+Reveal.on('ready', function(e){ autoSizePyTextareas(e.currentSlide); });
+Reveal.on('slidechanged', function(e){ autoSizePyTextareas(e.currentSlide); });
+</script>
+</body>
+</html>

@@ -1,0 +1,2283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where the Promises Are Kept — the call stack</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<style>
+:root{
+  --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
+  --accent3:#F2B53C; --navy:#222B5A; --ice:#E8EEF9; --white:#fff;
+}
+.reveal{font-family:'Calibri','Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif; font-size:26px;}
+.reveal h1,.reveal h2,.reveal h3{font-family:'Georgia','Times New Roman','PingFang SC','Microsoft YaHei',serif; text-transform:none; letter-spacing:-.02em;}
+.reveal section{text-align:left;}
+.dk{color:var(--ice);} .dk h1,.dk h2,.dk h3{color:var(--white);}
+.lt{color:var(--navy);} .lt h2,.lt h3{color:var(--navy);}
+.bar{position:absolute; top:0; left:0; right:0; height:5px;}
+.card{background:var(--white); border-radius:10px; padding:16px 20px; box-shadow:0 4px 12px rgba(0,0,0,.07); text-align:left;}
+.rule{background:var(--white); border-radius:8px; padding:11px 16px; box-shadow:0 3px 10px rgba(0,0,0,.05); border-left:5px solid var(--accent1); margin:10px 0; text-align:left; font-size:.74em;}
+.rule.accent2{border-left-color:var(--accent2);} .rule.accent3{border-left-color:var(--accent3);} .rule.navy{border-left-color:var(--navy);}
+.dk .rule{background:rgba(255,255,255,.06); color:var(--ice);}
+.two-col{display:flex; gap:26px; align-items:flex-start;} .two-col>*{flex:1; min-width:0;}
+.three-col{display:flex; gap:16px;} .three-col>*{flex:1; min-width:0;}
+.smaller{font-size:.7em;} .center{text-align:center;}
+.accent1{color:var(--accent1);} .accent2{color:var(--accent2);} .accent3{color:var(--accent3);}
+.mono{font-family:'Courier New',monospace; font-weight:bold;}
+
+.badges{position:absolute; top:-14px; right:0; display:flex; gap:6px; z-index:5;}
+.bg{font-size:.44em; font-weight:bold; letter-spacing:.03em; padding:3px 12px; border-radius:20px; font-family:'Calibri','Segoe UI',sans-serif;}
+.bg-p3{background:rgba(240,101,91,.14); color:#c0392b; border:1.5px solid var(--accent2);}
+.bg-p34{background:rgba(23,179,163,.15); color:#0d7a6e; border:1.5px solid var(--accent1);}
+.bg-p4{background:rgba(242,181,60,.18); color:#8a5c00; border:1.5px solid var(--accent3);}
+.dk .bg-p3{color:#ff9d95;} .dk .bg-p34{color:#5FD6C9;} .dk .bg-p4{color:#F2B53C;}
+
+.dig{position:absolute; bottom:-34px; left:50%; transform:translateX(-50%); font-size:.5em; color:#98a0c0; animation:bob 2s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(5px);}}
+#obj-btn{background:rgba(255,255,255,.08); color:var(--ice); border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:5px 14px; cursor:pointer; font-size:.42em; opacity:.55;}
+#obj-btn:hover{opacity:1;}
+
+/* ===== py-cell: live Python ===== */
+.pycell{background:var(--navy); border-radius:12px; padding:10px 12px 12px; box-shadow:0 4px 14px rgba(0,0,0,.14); text-align:left;}
+.pycell .pybar{display:flex; gap:8px; align-items:center; margin-bottom:6px;}
+.pycell .pydots{display:flex; gap:5px;}
+.pycell .pydots i{width:9px; height:9px; border-radius:50%; display:block;}
+.pyta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.45; padding:10px 12px; resize:none; outline:none; display:block;}
+.pyta[readonly]{color:#aeb8dd;}
+.pyta:focus{box-shadow:0 0 0 2px var(--accent1);}
+.pyrun{background:var(--accent1); color:#fff; border:none; border-radius:7px; padding:4px 16px; font-size:.5em; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.pyrun:hover{background:#12907f;} .pyrun:disabled{background:#5a6394; cursor:wait;}
+.pylock{background:transparent; color:#98a0c0; border:1.5px solid #454e82; border-radius:7px; padding:3px 9px; font-size:.5em; font-weight:bold; cursor:pointer;}
+.pylock:hover{color:var(--accent3); border-color:var(--accent3);}
+.pyout{background:#0d1230; color:#5FD6C9; border-radius:8px; font-family:'Courier New',monospace; font-weight:bold;
+  font-size:.54em; line-height:1.45; padding:9px 12px; margin:8px 0 0; min-height:1.4em; white-space:pre-wrap; text-align:left;}
+.pyout .crash{color:var(--accent2);}
+.pyin-lbl{color:#5FD6C9;}
+.pyin{background:#1b234d; border:2px solid var(--accent1); border-radius:6px; color:var(--ice);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:1em; padding:1px 8px; width:130px; outline:none;}
+.pystate{font-size:.44em; color:#98a0c0; margin-left:auto;}
+.pycell.tight .pyta{font-size:.485em; line-height:1.34;}
+.pycell.tight .pyout{font-size:.485em; line-height:1.34;}
+.pycell.xtight .pyta{font-size:.43em; line-height:1.3;}
+.pycell.xtight .pyout{font-size:.43em; line-height:1.3;}
+.pycell.side .pyrow{display:flex; gap:10px; align-items:stretch;}
+.pycell.side .pyrow .pyta{flex:1; min-width:0;}
+.pycell.side .pyrow .pyout{margin:0; flex:0 0 auto; min-width:190px;}
+#py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
+#py-chip.ready{color:#5FD6C9;}
+
+/* ===== the Java lane: captured, not live ===== */
+.pycell.java .pyrun{background:#8a6100;} .pycell.java .pyrun:hover{background:#a87700;}
+.pystate.cap{color:#e0b050;}
+.pyout.cap{color:#e8c98a;}
+.pyout.err{color:#ff9d95;}
+
+/* ===== the language switch ===== */
+#langsel{position:fixed; top:14px; right:16px; z-index:99; display:flex; border:2px solid #6b74a8;
+  border-radius:9px; overflow:hidden; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+#langsel div{padding:5px 15px; background:rgba(20,26,60,.72); color:#98a0c0; transition:.12s;}
+#langsel div.on{background:var(--accent1); color:#fff;}
+#fsbtn{position:fixed; top:14px; right:calc(16px + 152px); z-index:99; background:rgba(20,26,60,.72);
+  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
+  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
+#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
+body[data-lang="java"] .lane[data-lang="py"]{display:none;}
+body[data-lang="py"] .lane[data-lang="java"]{display:none;}
+
+/* ===== 🧾 outside the exam hall ===== */
+.toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
+.toll .th{display:inline-block; font-weight:bold; font-size:.86em; letter-spacing:.05em; color:#8a6100; margin-bottom:3px;}
+.toll .yes{color:#0d7a6e; font-weight:bold;} .toll .no{color:#c0392b; font-weight:bold;}
+
+/* ===== 📐 the divergence box ===== */
+.diverge{background:#f7f5ff; border:2px dashed #b3a6e8; border-radius:10px; padding:10px 15px; text-align:left; font-size:.55em; line-height:1.5; color:var(--navy); margin:9px 0;}
+.diverge .dh{display:inline-block; font-weight:bold; font-size:.85em; letter-spacing:.04em; color:#6d4fd0; margin-bottom:3px;}
+
+/* ===== pseudocode block ===== */
+.ps{background:#f4f6fb; border:1px solid #d9deed; border-left:4px solid var(--accent3); border-radius:8px;
+  padding:10px 14px; font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.5;
+  color:var(--navy); white-space:pre; margin:8px 0; overflow-x:auto;}
+.dk .ps{background:rgba(255,255,255,.07); color:var(--ice); border-color:rgba(255,255,255,.16); border-left-color:var(--accent3);}
+.ps .k{color:#6d4fd0;} .dk .ps .k{color:#c0aef5;}
+.ps .v{color:#c0392b;} .dk .ps .v{color:#ff9d95;}
+.ps .c{color:#8890b5; font-weight:normal;}
+
+/* ===== marks table ===== */
+.mk{border-collapse:collapse; font-size:.5em; width:100%;}
+.mk td,.mk th{border:1px solid #ccd3e8; padding:4px 9px; text-align:left; vertical-align:top;}
+.mk th{background:#eef2fb; font-weight:bold; color:var(--navy);}
+.mk td.m{text-align:center; font-weight:bold; color:var(--accent2); white-space:nowrap;}
+.mk code{font-family:'Courier New',monospace; font-weight:bold; color:#6d4fd0;}
+
+/* ===== 🎮 game ===== */
+.g-wrap{background:var(--white); border-radius:12px; padding:14px 18px; box-shadow:0 5px 18px rgba(0,0,0,.09); color:var(--navy);}
+.g-top,.g-head{display:flex; align-items:center; gap:14px; margin-bottom:9px;}
+/* a teacher must be able to move on without answering */
+.g-skip{margin-left:8px; background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;
+  border-radius:7px; padding:2px 11px; font-size:.44em; font-weight:bold; cursor:pointer;
+  font-family:'Calibri','Segoe UI',sans-serif;}
+.g-skip:hover{color:var(--accent1); border-color:var(--accent1);}
+.g-opts .g-b{min-width:0;}
+.g-stage{font-size:.56em; font-weight:bold; color:var(--navy); background:rgba(242,181,60,.18); border:2px solid var(--accent3); border-radius:22px; padding:3px 20px;}
+.pbadge{display:inline-block; font-size:.82em; letter-spacing:.04em; padding:1px 9px; border-radius:14px; margin-left:5px; border:1.5px solid;}
+.pbadge.p3{background:rgba(240,101,91,.13); color:#c0392b; border-color:var(--accent2);}
+.pbadge.p4{background:rgba(23,179,163,.15); color:#0d7a6e; border-color:var(--accent1);}
+.formwarn{background:#fdeeec; border:2px solid var(--accent2); border-radius:9px; padding:8px 13px; margin:7px 0 0;
+  font-size:.92em; line-height:1.5; color:var(--navy);}
+.formwarn b{color:#c0392b;}
+.g-prog{display:flex; gap:6px; margin-left:auto;}
+.g-prog i{width:9px; height:9px; border-radius:50%; background:#d3d9ec; display:block; transition:.2s;}
+.g-prog i.done{background:var(--accent1);} .g-prog i.cur{background:var(--accent3); transform:scale(1.35);}
+.g-score{font-size:.52em; font-weight:bold; color:var(--accent2); font-family:'Courier New',monospace;}
+.g-q{font-size:.58em; line-height:1.5; margin-bottom:8px;}
+.g-q b{color:var(--accent2);}
+.g-opts{display:flex; flex-wrap:wrap; gap:8px;}
+.g-b{background:#f4f6fb; border:2px solid #ccd3e8; border-radius:9px; padding:7px 14px; font-size:.54em;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; color:var(--navy); text-align:left; line-height:1.4;}
+.g-b:hover{border-color:var(--accent1);}
+.g-b.no{border-color:var(--accent2); background:#fdeeec; animation:shake .35s;}
+.g-b.yes{border-color:var(--accent1); background:#e6f7f4;}
+.g-b .mono{display:block; font-size:.92em;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.g-ta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.54em; line-height:1.5; padding:9px 12px; resize:none; outline:none;}
+.g-ta:focus{box-shadow:0 0 0 2px var(--accent3);}
+.g-sub{background:var(--accent3); color:#4a3500; border:none; border-radius:8px; padding:5px 20px; font-size:.52em;
+  font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; margin-top:7px;}
+.g-sub:hover{background:#e0a52c;}
+.g-say{font-size:.54em; min-height:1.5em; margin-top:7px; line-height:1.5;}
+.g-say.ok{color:#0d7a6e; font-weight:bold;} .g-say.bad{color:var(--accent2); font-weight:bold;}
+/* .g-mp nested inside .g-say compounds two em reductions down to ~7px — reset it */
+.g-say .g-mp{font-size:.92em; font-weight:normal; color:var(--navy);}
+.g-say .g-mp .y{color:#0d7a6e;} .g-say .g-mp .n{color:var(--accent2);}
+/* the game panel is white even on a dark slide, so .dk .ps must not win inside it */
+.dk .g-wrap .ps{background:#f4f6fb; color:var(--navy); border-color:#d9deed; border-left-color:var(--accent3);}
+.dk .g-wrap .ps .k{color:#6d4fd0;} .dk .g-wrap .ps .v{color:#c0392b;}
+.g-say .ps{font-weight:bold;}
+.g-mp{list-style:none; padding:0; margin:6px 0 0; font-size:.48em; line-height:1.55;}
+.g-mp li{padding-left:2px;} .g-mp .y{color:#0d7a6e; font-weight:bold;} .g-mp .n{color:var(--accent2); font-weight:bold;}
+.g-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 20px;}
+.g-lbl{font-size:.5em; color:#5b6488; margin:5px 0 3px;}
+.g-res .g-tot{font-size:1.1em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace; text-align:center; margin:2px 0 4px;}
+.g-fin{text-align:center; font-size:.62em; line-height:1.6;}
+.g-fin .big{font-size:1.5em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace;}
+/* a small node table inside a game question */
+.qt{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.86em; margin:5px 0 0;}
+.qt td,.qt th{border:1px solid #ccd3e8; padding:1px 11px; text-align:center;}
+.qt th{background:#eef2fb; font-size:.85em; color:#5b6488;}
+.qt td.f{color:#b3bad2;}
+
+/* ===== the step-through trace — one line runs, one cell lights up ===== */
+.tr2{display:flex; gap:20px; align-items:flex-start;}
+.tr2 .tcode{flex:1.15; min-width:0;} .tr2 .tstate{flex:1; min-width:0;}
+.tline{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; line-height:1.5;
+  padding:3px 11px; border-radius:6px; color:#8f98c2; white-space:pre; transition:.15s;}
+.tline.cur{background:rgba(242,181,60,.24); color:#fff3d6;}
+.tline.done{color:#5FD6C9; opacity:.72;}
+.tnote{font-size:.5em; min-height:3.6em; margin-top:8px; line-height:1.55; color:#c3cae6;}
+.tnote b{color:var(--accent3);} .tnote .warn{color:#ff9d95; font-weight:bold;}
+.tbtns{display:flex; gap:8px; margin-top:6px; align-items:center;}
+.treads{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; margin-top:6px; color:#8ff0e4; min-height:1.4em;}
+.treads .lp{color:#ff9d95;}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+
+/* ===== the node table widget ===== */
+.lt-wrap{background:var(--white); border-radius:12px; padding:12px 16px; box-shadow:0 4px 14px rgba(0,0,0,.08); color:var(--navy);}
+.dk .lt-wrap{background:rgba(255,255,255,.07); color:var(--ice);}
+.ltab{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.62em; width:100%;}
+.ltab th{background:#eef2fb; color:#5b6488; padding:3px 8px; font-size:.88em; border:1px solid #ccd3e8;}
+.dk .ltab th{background:rgba(255,255,255,.08); color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.ltab td{border:1px solid #ccd3e8; padding:3px 8px; text-align:center; transition:.15s;}
+.dk .ltab td{border-color:rgba(255,255,255,.18);}
+.ltab tr.free td{color:#b3bad2; background:#fbfcff;}
+.dk .ltab tr.free td{color:#6d7699; background:rgba(255,255,255,.02);}
+.ltab tr.used td{color:var(--navy); background:rgba(23,179,163,.10);}
+.dk .ltab tr.used td{color:#d8f5f1; background:rgba(23,179,163,.16);}
+.ltab tr.hit td{background:rgba(242,181,60,.42); color:#4a3500;}
+.dk .ltab tr.hit td{background:rgba(242,181,60,.38); color:#fff3d6;}
+.ltab tr.fhit td{background:rgba(109,79,208,.28);}
+.ltab td.ix{color:#98a0c0; background:transparent;}
+.dk .ltab td.ix{color:#7b85ab;}
+.ptrchip{display:inline-block; font-family:'Courier New',monospace; font-weight:bold; font-size:.58em;
+  border-radius:16px; padding:3px 14px; margin:0 7px 7px 0; border:2px solid;}
+.ptrchip.fn{border-color:var(--accent2); color:#c0392b; background:rgba(240,101,91,.10);}
+.ptrchip.fe{border-color:#6d4fd0; color:#6d4fd0; background:rgba(109,79,208,.09);}
+.dk .ptrchip.fn{color:#ff9d95;} .dk .ptrchip.fe{color:#c0aef5;}
+.vzc{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;}
+.vzb{background:var(--navy); color:#fff; border:none; border-radius:8px; padding:6px 15px; font-size:.52em; font-weight:bold;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.vzb:hover{background:var(--accent1);} .vzb:disabled{background:#c6cde4; cursor:default;}
+.vzb.alt{background:#6d4fd0;} .vzb.alt:hover{background:#8467e0;}
+.vzb.gh{background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;}
+.dk .vzb.gh{border-color:rgba(255,255,255,.25);}
+/* ===== the trace stepper: source | call stack | the exam's table ===== */
+.trw{display:flex; gap:12px; align-items:stretch;}
+.trsrc{flex:0 0 30%; min-width:0;}
+.trstack{flex:0 0 22%; min-width:0; display:flex; flex-direction:column-reverse; justify-content:flex-start; gap:3px;
+  border-left:2px dashed #ccd3e8; padding-left:9px; min-height:150px;}
+.dk .trstack{border-left-color:rgba(255,255,255,.2);}
+.trtab{flex:1; min-width:0; max-height:196px; overflow-y:auto;}
+.trcode{font-family:'Courier New',monospace; font-weight:bold; font-size:.44em; line-height:1.5; white-space:pre;
+  background:#f4f6fb; border:1px solid #d9deed; border-radius:8px; padding:7px 9px;}
+.dk .trcode{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.16);}
+.trcode span.ln{display:block; padding:0 4px; border-radius:3px;}
+.trcode span.ln.on{background:rgba(242,181,60,.38);}
+.frm{font-family:'Courier New',monospace; font-weight:bold; font-size:.42em; border-radius:6px; padding:3px 7px;
+  border:2px solid var(--accent1); background:rgba(23,179,163,.12); color:var(--navy); transition:.15s;}
+.dk .frm{color:var(--ice);}
+.frm.top{border-color:var(--accent3); background:rgba(242,181,60,.26);}
+.frm.popping{border-color:var(--accent2); background:rgba(240,101,91,.2);}
+.frm small{display:block; font-size:.8em; font-weight:normal; color:#8890b5;}
+.trt{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.42em; width:100%;}
+.trt th{background:#eef2fb; color:#5b6488; padding:2px 6px; border:1px solid #ccd3e8; position:sticky; top:0;}
+.dk .trt th{background:#2b3566; color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.trt td{border:1px solid #ccd3e8; padding:2px 6px; text-align:center;}
+.dk .trt td{border-color:rgba(255,255,255,.18);}
+.trt tr.wind td{background:rgba(23,179,163,.13);}
+.trt tr.unwind td{background:rgba(242,181,60,.20);}
+.trt tr.new td{outline:2px solid var(--accent2); outline-offset:-2px;}
+/* ===== live LLM marking (teacher's machine only; see grade-server.py) ===== */
+#llmchip{position:fixed; top:52px; right:16px; z-index:99; font-size:13px; font-weight:bold;
+  padding:4px 12px; border-radius:20px; cursor:pointer; border:2px solid #6b74a8;
+  background:rgba(20,26,60,.72); color:#98a0c0; font-family:'Calibri','Segoe UI',sans-serif;}
+#llmchip.on{border-color:var(--accent1); color:#5FD6C9;}
+#llmchip.off{opacity:.5;}
+#llmchip.absent{display:none;}
+#llmhelp{position:fixed; top:84px; right:16px; z-index:100; display:none; width:342px;
+  background:rgba(20,26,60,.97); border:2px solid var(--accent3); border-radius:10px;
+  padding:14px 16px; font-size:13px; line-height:1.45; color:#c9cee6; text-align:left;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);}
+#llmhelp b{color:#F2B53C;}
+#llmhelp p{margin:6px 0;}
+#llmhelp ol{margin:6px 0 6px 18px; padding:0;}
+#llmhelp li{margin:7px 0;}
+#llmhelp code{background:rgba(0,0,0,.35); padding:1px 5px; border-radius:4px;
+  color:#5FD6C9; font-size:12px;}
+#llmhelp .tiny{font-size:11.5px; opacity:.78; margin-top:9px;}
+#llmhelp button{margin-top:9px; background:var(--accent1); color:#0d1230; border:0;
+  border-radius:6px; padding:5px 14px; font-weight:bold; cursor:pointer;}
+.g-llm{margin-top:6px;}
+/* The reader's column only exists on the teacher's machine, so a two-column
+   panel that fits in review can be 142px off the stage in the classroom. It
+   gets its own column the moment it has anything in it. */
+.g-llm:empty{display:none;}
+/* minmax(0,…) or a long line in the student's own code widens column 1 past its
+   share and squeezes the other two taller — 724px on a 720 stage in A3a. */
+.g-grid.three{grid-template-columns:minmax(0,.86fr) minmax(0,1.07fr) minmax(0,1.07fr); gap:6px 14px;}
+.g-grid.three .g-ans{max-height:250px; overflow:auto;}
+/* the reader's own column was the one nobody capped, and it is the tallest thing
+   on the panel: five mark points, each with its evidence and its reasoning. */
+.g-grid.three .g-llm{max-height:228px; overflow:auto;}
+.g-llm .conf{font-size:.82em; opacity:.7; font-style:italic;}
+.g-cons{margin-top:7px; border-radius:9px; padding:7px 12px; font-size:.5em; line-height:1.5;
+  border:2px solid; text-align:left;}
+.g-cons.agree{border-color:var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e;}
+.g-cons.split{border-color:var(--accent3); background:rgba(242,181,60,.14); color:#8a5c00;}
+.g-cons b{font-family:'Courier New',monospace;}
+.trlegend{display:flex; gap:14px; font-size:.42em; align-items:center; margin-top:5px; color:#8890b5;}
+.trlegend i{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:4px; vertical-align:-1px;}
+.trcount{font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; margin-left:auto; color:var(--accent2);}
+.vzmsg{font-size:.54em; min-height:3.2em; margin-top:8px; font-weight:bold; line-height:1.5;}
+.vzmsg.ok{color:#0d7a6e;} .vzmsg.bad{color:var(--accent2);} .vzmsg.nt{color:#6d4fd0;}
+.dk .vzmsg.ok{color:#5FD6C9;} .dk .vzmsg.bad{color:#ff9d95;} .dk .vzmsg.nt{color:#c0aef5;}
+.reads{font-family:'Courier New',monospace; font-weight:bold; font-size:.64em; margin-top:9px;}
+.reads b{color:var(--accent1);}
+
+/* THE GAME SLIDE GROWS AFTER REVEAL HAS LAID IT OUT, and Reveal centres a slide
+   only ONCE, at slide-change time. Stage 1 is short, so Reveal pinned top:232px
+   — and the boss then grew downward off the bottom of the 720 stage (measured
+   at 799px, i.e. 79px of the panel below the visible area). scrollHeight said
+   "fits" the whole time, because scrollHeight is not where the slide SITS.
+   min-height cannot fix it: Reveal's own stylesheet sets
+   `.reveal.center .slides section { min-height: 0 !important }`.
+   So anchor the top instead — a stylesheet !important beats Reveal's inline
+   top. The panel now sits high, does not jump between stages, and has ~50px of
+   headroom below its tallest state. Any slide whose content expands WITHOUT a
+   slide change needs this class. */
+.reveal .slides section.growslide{top:40px !important;}
+
+/* the student's own code stays on screen beside the feedback, so a tick and the
+   line that earned it can be read on the same screen */
+.g-ans{background:#1b234d; color:var(--ice); border-radius:8px; font-family:'Courier New',monospace;
+  font-weight:bold; font-size:.5em; line-height:1.45; padding:9px 12px; margin:0; white-space:pre;
+  overflow:auto; max-height:300px; text-align:left;}
+.g-ans:empty::before{content:'(you did not write anything)'; color:#7b85ab; font-weight:normal;}
+
+/* ===== the tree canvas — geometry in SVG, every label in HTML ===== */
+.tcv{position:relative; width:100%; height:270px;}
+.tcv svg{position:absolute; inset:0; width:100%; height:100%;}
+.tnode{position:absolute; transform:translate(-50%,-50%); background:var(--white); border:2.5px solid var(--accent1);
+  border-radius:50%; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.6em; color:var(--navy); transition:.2s;}
+.dk .tnode{background:#1b234d; color:var(--ice);}
+.tnode.hot{border-color:var(--accent3); background:rgba(242,181,60,.3); transform:translate(-50%,-50%) scale(1.18);}
+.tnode.new{border-color:var(--accent2);}
+.tnode .ix{position:absolute; top:-15px; right:-9px; font-size:.72em; color:#98a0c0; font-family:'Courier New',monospace;}
+.tmsg{font-size:.52em; min-height:2.9em; font-weight:bold; line-height:1.45; margin-top:4px;}
+.tmsg.ok{color:#0d7a6e;} .dk .tmsg.ok{color:#5FD6C9;}
+.tmsg.bad{color:var(--accent2);} .dk .tmsg.bad{color:#ff9d95;}
+.tmsg.nt{color:#6d4fd0;} .dk .tmsg.nt{color:#c0aef5;}
+.tio{font-family:'Courier New',monospace; font-weight:bold; font-size:.52em; margin-top:3px; color:#0d7a6e; min-height:1.4em;}
+.dk .tio{color:#8ff0e4;}
+.tin{background:#fff; border:2px solid var(--accent1); border-radius:6px; color:var(--navy);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; padding:3px 8px; width:64px; outline:none;}
+.dk .tin{background:#1b234d; color:var(--ice);}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+
+/* ===== the frame inspector — A3b's centrepiece =====
+   A3a's stepper showed a frame as a box with an argument in it. This one OPENS
+   the box, because "return address and the values of the local variables" is
+   the marked answer and a student has to see the three parts separately. */
+.fiw{display:flex; gap:14px; align-items:stretch;}
+.fisrc{flex:0 0 38%; min-width:0;}
+.fistk{flex:1; min-width:0; display:flex; flex-direction:column-reverse; justify-content:flex-start;
+  gap:4px; border-left:2px dashed #ccd3e8; padding-left:11px; min-height:210px; max-height:250px; overflow-y:auto;}
+.dk .fistk{border-left-color:rgba(255,255,255,.2);}
+.fifr{font-family:'Courier New',monospace; font-weight:bold; font-size:.4em; border-radius:6px;
+  border:2px solid var(--accent1); background:rgba(23,179,163,.10); color:var(--navy); padding:2px 7px; transition:.15s;}
+.dk .fifr{color:var(--ice);}
+.fifr.top{border-color:var(--accent3); background:rgba(242,181,60,.24);}
+.fifr.popping{border-color:var(--accent2); background:rgba(240,101,91,.22);}
+.fifr.stranded{border-color:#b3bad2; background:repeating-linear-gradient(45deg,#f4f6fb,#f4f6fb 5px,#e6e9f4 5px,#e6e9f4 10px); color:#8890b5;}
+.fifr .fra{color:#6d4fd0;} .dk .fifr .fra{color:#c0aef5;}
+.fifr .frp{color:#0d7a6e;} .dk .fifr .frp{color:#5FD6C9;}
+.fifr .frl{color:#c0392b;} .dk .fifr .frl{color:#ff9d95;}
+.fifr b{font-weight:bold;}
+.fitag{font-size:.86em; color:#8890b5; font-weight:normal;}
+.fimet{margin-top:7px;}
+.fibar{height:15px; border-radius:8px; background:#e6e9f4; overflow:hidden; border:1px solid #ccd3e8;}
+.dk .fibar{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.2);}
+.fibar i{display:block; height:100%; width:0; background:linear-gradient(90deg,#17B3A3,#F2B53C); transition:width .18s;}
+.fibar.full i{background:linear-gradient(90deg,#F2B53C,#F0655B);}
+.fimlbl{display:flex; font-size:.42em; color:#8890b5; margin-top:3px; font-family:'Courier New',monospace; font-weight:bold;}
+.fimlbl .r{margin-left:auto;}
+.fijump{font-family:'Courier New',monospace; font-weight:bold; font-size:.44em; color:#8890b5;
+  margin-top:5px; min-height:1.5em;}
+.fijump .jj{color:var(--accent2); letter-spacing:.05em;}
+.fijump b{color:var(--navy);} .dk .fijump b{color:var(--ice);}
+.fireg{font-family:'Courier New',monospace; font-weight:bold; font-size:.46em; color:#8890b5;
+  border:1.5px solid #ccd3e8; border-radius:14px; padding:2px 11px; margin-left:6px;}
+.fireg.hot{border-color:var(--accent1); color:#0d7a6e; background:rgba(23,179,163,.12);}
+.dk .fireg.hot{color:#5FD6C9;}
+.fisw{display:inline-flex; align-items:center; gap:6px; font-size:.46em; color:#5b6488; font-weight:bold; margin-left:4px;}
+.dk .fisw{color:#aeb8dd;}
+</style></head>
+<body data-lang="java">
+<div class="reveal"><div class="slides">
+
+<!-- H1 -->
+<section>
+<section data-background-color="#151B3C" class="dk center">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 6 · 9618 §19.2</p>
+  <h1 style="font-size:1.5em; margin:0 0 6px;">Where the Promises<br>Are Kept</h1>
+  <p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">the call stack 调用栈 · what a compiler has to do · writing it both ways</p>
+  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+
+</section>
+  <section data-background-color="#151B3C" class="dk">
+    <div class="bar" style="background:var(--accent3);"></div>
+    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> Explain <b class="accent1">how a compiler uses a stack</b> to translate recursive code — in the words that earn marks</div>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">2.</strong> Say <b class="accent1">why a stack is the right ADT</b> for the job</div>
+    <div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">3.</strong> Say <b class="accent1">when recursion is worth its cost</b>, and name that cost</div>
+    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">4.</strong> <b class="accent3">Rewrite a loop as a recursion, and a recursion as a loop</b> — the shape Paper 4 asks for in both directions</div>
+
+</section>
+</section>
+
+<!-- H2 HOOK — make it crash -->
+<section>
+
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.86em; margin:0 0 4px;">Last lesson's runaway, <span class="accent2">actually run</span></h2>
+  <p style="font-size:.46em; color:#98a0c0; margin:0 0 6px;">A function that calls itself and never stops. Nothing is computed. Nothing is stored. It just <b>calls</b>.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java tight" data-out="the machine gave up after 43766 unfinished calls"><script type="text/plain" class="pysrc">static int depth = 0;
+
+static void probe() {
+    depth++;              // one more unfinished call
+    probe();              // ...and it never returns
+}
+
+public static void main(String[] args) {
+    try { probe(); }
+    catch (StackOverflowError e) {
+        System.out.println("the machine gave up after " + depth + " unfinished calls");
+    }
+}</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell tight"><script type="text/plain" class="pysrc">import sys
+sys.setrecursionlimit(300)      # 300, not the usual 1000 — we are inside a browser
+
+depth = 0
+def probe():
+    global depth
+    depth += 1                  # one more unfinished call
+    probe()                     # ...and it never returns
+
+try:
+    probe()
+except RecursionError:
+    print("Python stopped after", depth, "unfinished calls")
+print("the rail was set to", sys.getrecursionlimit(), "- a few frames were already in use before probe() started")</script></div>
+  </div>
+  <p class="center fragment" style="font-size:.7em; margin-top:8px;"><b>Something ran out.</b>
+  <span style="font-size:.72em; color:#98a0c0;">Not the CPU — it was happy to keep calling. Not disk. Not the program's memory for variables, because there are none.</span><br>
+  <b class="accent3">So what, exactly?</b></p>
+  <div class="dig">🕳 it is not a rule — it is a room, and you can resize it ↓</div>
+
+</section>
+
+<!-- H2 vertical: the room -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h3 style="font-size:.72em; margin:0 0 3px;">🕳 The same program, four times — <span class="accent3">one flag changed</span></h3>
+  <p style="font-size:.42em; color:#98a0c0; margin:0 0 5px;"><span class="mono">-Xss</span> tells the JVM how much room to give the stack. <span class="mono">-Xint</span> turns the optimiser off so the frames stay one fixed size.</p>
+  <div class="pycell java xtight" data-out="the machine gave up after 9671 unfinished calls
+the machine gave up after 20594 unfinished calls
+the machine gave up after 42439 unfinished calls
+the machine gave up after 86130 unfinished calls"><script type="text/plain" class="pysrc">$ java -Xint -Xss1m Runaway        # give the stack 1 MB
+$ java -Xint -Xss2m Runaway        # 2 MB
+$ java -Xint -Xss4m Runaway        # 4 MB
+$ java -Xint -Xss8m Runaway        # 8 MB</script></div>
+  <div class="rule accent1" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
+    <b>Do the division yourself.</b> Going from 1 MB to 8 MB added <b>7 MB</b> of room and bought
+    <b>86 130 − 9 671 = 76 459</b> more calls.
+    <span class="mono">7 × 1 048 576 ÷ 76 459 = <b class="accent3">96</b></span>.
+    <b class="accent3">Each unfinished call costs exactly 96 bytes.</b> The "limit on recursion" is a division.
+  </div>
+  <div class="rule accent2 fragment" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
+    And <b>Python's 1 000 is not that at all</b> — it is a <b>rail you can move</b>, set in software, guarding
+    the real wall underneath. Two kinds of limit: <b class="accent3">a policy</b> and <b class="accent3">a room</b>.
+  </div>
+
+</section>
+
+</section>
+
+<!-- H3 what is in a frame -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">96 bytes of <span class="accent2">what?</span></h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 6px;">One call's worth of paperwork is called a <b>stack frame</b>. Three things go in it, and the exam names two of them.</p>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="k">def</span> RecursiveVowels(Value):
+    <span class="k">if</span> len(Value) == <span class="v">0</span>:
+        <span class="k">return</span> <span class="v">0</span>
+    First = Value[<span class="v">0</span>]
+    <span class="k">if</span> First <span class="k">in</span> <span class="v">"aeiou"</span>:
+        <span class="k">return</span> <span class="v">1</span> + RecursiveVowels(Value[<span class="v">1</span>:])   <span class="c"># line 6</span>
+    <span class="k">return</span> RecursiveVowels(Value[<span class="v">1</span>:])            <span class="c"># line 7</span></div>
+      <p style="font-size:.44em; color:#8890b5; margin:3px 0 0;">The code exists <b>once</b>. A thousand calls share these seven lines — so whatever is per-call cannot be the code.</p>
+    </div>
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.56em;">
+        <b>① the return address</b> — <i>which line do I come back to?</i> Call from line 6 and the answer
+        must return to line 6, where a <span class="mono">1 +</span> is still waiting for it.
+      </div>
+      <div class="rule accent3" style="font-size:.56em;">
+        <b>② the local variables</b> — this call's own <span class="mono">Value</span> and
+        <span class="mono">First</span>. Seven calls are alive at once and every one has a different
+        <span class="mono">First</span>.
+      </div>
+      <div class="rule accent2" style="font-size:.56em;">
+        <b>③ the parameters</b>, which are just locals that arrived from outside.
+      </div>
+    </div>
+  </div>
+  <div class="diverge" style="font-size:.54em;">
+    <span class="dh">📐 THE WORD THE EXAM WILL NOT SAY</span><br>
+    Mark schemes say <b>"return addresses and values of local variables"</b> — never <b>"stack frame"</b>,
+    which appears nowhere in five years of papers. <b>Frame</b> is the word every programmer and every
+    university uses, so learn it; just write the exam's longer phrase in the exam.
+  </div>
+
+</section>
+
+<!-- H4 THE FRAME INSPECTOR -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">Open the boxes — <span class="accent2">seven calls, seven sets of paperwork</span></h2>
+  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">Press <b>step</b>. Watch the frames stack up, then watch each return travel back to the line that was waiting for it.</p>
+  <div class="lt-wrap" id="frameviz"></div>
+
+</section>
+
+<!-- H4 vertical: the actual object code -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h3 style="font-size:.68em; margin:0 0 3px;">🕳 What the compiler <span class="accent3">actually wrote</span></h3>
+  <p style="font-size:.4em; color:#98a0c0; margin:0 0 5px;">The same function in C, compiled on this Mac, trimmed to the lines that matter. Apple Silicon, so the registers are <span class="mono">x0</span>/<span class="mono">x30</span>; on an Intel machine they are <span class="mono">rax</span>/the stack. <b>Same story, different spelling.</b></p>
+  <div class="two-col" style="gap:16px;">
+    <div style="flex:1.25;">
+      <div class="ps" style="margin-top:0; font-size:.44em; line-height:1.42;">_RecursiveVowels:
+    sub   sp, sp, <span class="v">#48</span>            <span class="c">; make room — THIS call's frame</span>
+    stp   x29, <span class="v">x30</span>, [sp, #32]    <span class="c">; save the RETURN ADDRESS into it</span>
+    str   x0, [sp, #16]           <span class="c">; the parameter lives in the frame</span>
+    ...
+    strb  w8, [sp, #15]           <span class="c">; the local First lives in the frame</span>
+    ...
+    add   x0, x8, #1              <span class="c">; argument for the next call: the rest</span>
+    <span class="k">bl</span>    _RecursiveVowels        <span class="c">; JUMP — to the same address, always</span>
+    add   w8, <span class="v">w0</span>, #1             <span class="c">; the answer came back in w0. Add the 1.</span>
+    ...
+    ldp   x29, <span class="v">x30</span>, [sp, #32]    <span class="c">; take the return address back</span>
+    add   sp, sp, <span class="v">#48</span>            <span class="c">; give the frame back</span>
+    <span class="k">ret</span>                           <span class="c">; jump to it</span></div>
+    </div>
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.5em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Does recursion copy the function?</b> <b class="accent2">No.</b> Look at
+        <span class="mono">bl _RecursiveVowels</span> — every call jumps to the <b>same address</b>. There is
+        one copy of the instructions, entered again and again.
+        <b class="accent3">What is copied is the data</b>: a fresh 48 bytes per call, holding this call's
+        parameter, this call's local, and this call's way back. That <i>is</i> the safety — two calls can
+        never tread on each other's variables.
+      </div>
+      <div class="rule accent3" style="font-size:.5em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Two different mechanisms, easily confused.</b> The <b>return address</b> is <b>stored in the frame</b>
+        (<span class="mono">stp … x30</span>) because there will be many of them. The <b>return value</b> comes back
+        in a <b>register</b> (<span class="mono">w0</span> here, <span class="mono">rax</span> on Intel) because
+        only one is ever in flight.
+      </div>
+      <div class="rule accent2" style="font-size:.5em; background:rgba(255,255,255,.06); color:var(--ice);">
+        And <span class="mono">add w8, w0, #1</span> is the <b class="accent3">1 +</b> of the six-mark answer —
+        one instruction, waiting for the value the register brings home. <b>Every push and pop on this slide
+        was written by the compiler.</b> That is the four-mark question, in the flesh.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</section>
+
+<!-- H5 the measurement -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 2px;">Proof that the locals are in there — <span class="accent2">weigh them</span></h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Two functions. Identical recursion. One declares twenty variables it barely uses. Same 1 MB of stack for both.</p>
+  <div class="pycell java xtight" data-out="no locals  : 9671 frames fitted
+20 locals  : 2231 frames fitted
+so a frame carrying the locals is 4x bigger"><script type="text/plain" class="pysrc">static void slimFrame() {                 // no local variables at all
+    slim++;
+    slimFrame();
+}
+
+static void fatFrame() {                  // twenty local variables
+    long a1=1,a2=2,a3=3,a4=4,a5=5,a6=6,a7=7,a8=8,a9=9,a10=10;
+    long b1=1,b2=2,b3=3,b4=4,b5=5,b6=6,b7=7,b8=8,b9=9,b10=10;
+    fat++;
+    fatFrame();
+    System.out.print(a1+a5+a10+b1+b5+b10);   // so nothing can be optimised away
+}</script></div>
+  <div class="rule accent1" style="font-size:.55em;">
+    <b>96 bytes → 416 bytes.</b> Nothing else changed: same call, same stack, same JVM. The only
+    difference in the source is <b>twenty declarations</b> — so <b class="accent2">that is where the
+    locals live</b>, and the mark scheme's second bullet is now something you have measured rather than
+    memorised. Try the <b>fat frames</b> switch on the widget and watch the meter fill four times faster.
+  </div>
+
+</section>
+
+<!-- H6 what the compiler has to do -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 3px;">The four-mark question — <span class="accent2">asked three times in five years</span></h2>
+  <div class="rule navy" style="margin-top:0; font-size:.58em;">
+    <b>"Explain how a compiler makes use of a stack when translating recursive programming code." [4]</b>
+    <span style="color:#8890b5;">— Nov 2023 Paper 32 Q9(c) &nbsp;© UCLES</span>
+  </div>
+  <table class="mk" style="margin-top:6px;">
+    <tr><th style="width:88px;">marks</th><th>the published answer</th></tr>
+    <tr><td class="m">1 only</td><td><b>The compiler must produce object code to …</b> <span style="color:#8890b5;">— a whole mark for naming <i>whose</i> job this is, and it is the one nearly every script leaves out</span></td></tr>
+    <tr><td class="m">max 3</td><td>… <b>push return addresses / values of local variables</b> onto a stack<br>
+      … with each <b>recursive call</b> &nbsp;//&nbsp; … to set up <b>winding</b><br>
+      … <b>pop</b> return addresses / values of local variables off the stack …<br>
+      … after the <b>base case</b> is reached &nbsp;//&nbsp; … to implement <b>unwinding</b></td></tr>
+  </table>
+  <div class="rule accent2" style="font-size:.55em;">
+    <b>Read the question again.</b> It does not ask what <i>your</i> program does. It asks what the
+    <b>compiler</b> emits — <b class="accent3">you never wrote a single push or pop</b>, and the whole
+    stack discipline of the last four slides was written for you, in object code, at compile time.
+  </div>
+  <div class="dig">📐 winding and unwinding are the exam's own words ↓</div>
+
+</section>
+
+<!-- H6 vertical: winding/unwinding -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h3 style="font-size:.72em; margin:0 0 4px;">📐 You have already seen both halves — <span class="accent3">in colour</span></h3>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.56em;">
+        <b>Winding</b> 递推 — calls going <b>down</b>. Each one <b>pushes</b> a frame and stops halfway
+        through, holding an unfinished sum. In last lesson's trace table these were the green rows.
+      </div>
+      <div class="rule accent3" style="font-size:.56em;">
+        <b>Unwinding</b> 回溯 — returns coming <b>back up</b>, once the base case has been reached.
+        Each one <b>pops</b> a frame and hands a value to the line that was waiting. The amber rows,
+        with the call number in brackets.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent2" style="margin-top:0; font-size:.56em;">
+        So the two colours on that table were never a teaching device. They are
+        <b>push</b> and <b>pop</b> — and the reason the trace table is marked in two halves is that
+        <b class="accent3">the machine does two different things in them.</b>
+      </div>
+      <div class="toll" style="font-size:.54em;">
+        <span class="th">🧾 OUTSIDE THE EXAM HALL</span><br>
+        <span class="yes">Transfers:</span> every debugger you will ever open shows you this stack, newest
+        frame first, and reading it is how professionals find bugs.<br>
+        <span class="no">Does not:</span> the phrase "winding" is Cambridge's. Elsewhere it is just
+        "the stack growing".
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</section>
+
+<!-- H7 why a stack -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 3px;">Why a <span class="accent2">stack</span>, and not a queue?</h2>
+  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">Do not take it on trust. <b>Step this one</b> — it is the same recursion, served <b>oldest first</b>.</p>
+  <div class="lt-wrap" id="queueviz" style="padding:9px 13px;"></div>
+  <div class="rule accent1" style="font-size:.5em;">
+    <b>The order is forced, not chosen.</b> The call made <b>last</b> is the one that finishes <b>first</b> —
+    it is innermost, and everyone outside is waiting on it. <b class="accent3">That is what LIFO means, and
+    recursion produces it whether you like it or not.</b> &nbsp;
+    <span style="color:#8890b5;">Nov 2021 P31 Q10(b) [3]: <b>LIFO</b> · <b>pushed</b> each call · <b>popped</b>
+    as the function ends · enables <b>unwinding</b> to maintain the required order.</span>
+  </div>
+  <div class="rule accent2" style="font-size:.5em;">
+    🧹 <b>You already obey this every day.</b> You are vacuuming; you notice a spill and stop to wipe it.
+    <b>You cannot finish the vacuuming until the wiping is done</b> — the job that interrupted comes off the
+    pile first. Serve the oldest job first and you would be told to finish vacuuming while still holding the
+    cloth. <b class="accent3">An interrupted job can only finish after the job that interrupted it.</b>
+  </div>
+  <div class="dig">🕳 every call uses it — recursion just makes it visible ↓</div>
+
+</section>
+
+<!-- H7 vertical: every call -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h3 style="font-size:.72em; margin:0 0 4px;">🕳 Recursion is not special. <span class="accent3">It is ordinary, in bulk.</span></h3>
+  <div class="rule navy" style="margin-top:0; font-size:.55em;">
+    <b>"Give two other uses of a stack." [2]</b> <span style="color:#8890b5;">— June 2022 Paper 31 Q5(c), after a question about evaluating an expression &nbsp;© UCLES</span><br>
+    The published answer: <b>recursion</b> · <b>procedure calls</b> · <b>interrupt handling</b> (storing the contents of registers) · implementing ADTs.
+  </div>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="rule accent2" style="font-size:.56em;">
+        <b>Procedure calls.</b> Not recursive ones — <b>all</b> of them. Every function you have ever
+        called pushed a frame: <span class="mono">main</span> has one right now.
+        <b class="accent3">Recursion did not invent the stack; it just puts hundreds of frames on it at
+        once, where you can see them.</b>
+      </div>
+    </div>
+    <div>
+      <div class="rule accent1" style="font-size:.56em;">
+        <b>Interrupt handling.</b> When a key is pressed mid-program, the CPU must remember exactly where
+        it was and what was in its registers — <b>push</b>, handle, <b>pop</b>, resume. Same structure,
+        different owner.
+      </div>
+      <div class="rule accent3" style="font-size:.56em;">
+        And that expression-evaluating question the bullet came from? Push the numbers, pop two on each
+        operator. <b>The same two operations, a third time.</b>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</section>
+
+<!-- H8 the bill -->
+<section data-background-color="#151B3C" class="dk">
+  <div class="badges"><span class="bg bg-p4">P4</span></div>
+  <h2 style="font-size:.8em; margin:0 0 2px;">The bill — <span class="accent2">paid with the exam's own two answers</span></h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Nov 2023 Paper 41 asks for both of these, in one question, for 11 marks. Here they are on 200 000 characters.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java xtight" data-out="the string is 200004 characters long
+IterativeVowels : 64287 vowels, in 4 ms
+RecursiveVowels : StackOverflowError -- it cannot do this at all"><script type="text/plain" class="pysrc">static int IterativeVowels(String Value){            // part (a) -- the loop
+    int Total = 0;
+    for (int X = 0; X < Value.length(); X++)
+        if (isVowel(Value.charAt(X))) Total++;
+    return Total;
+}
+
+static int RecursiveVowels(String Value){            // part (b) -- the mark scheme's own answer
+    if (Value.length() == 0) return 0;
+    if (isVowel(Value.charAt(0)))
+        return 1 + RecursiveVowels(Value.substring(1));
+    return RecursiveVowels(Value.substring(1));
+}</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell xtight"><script type="text/plain" class="pysrc">big = "imagine the quick brown fox " * 7143       # 200 004 characters
+
+def IterativeVowels(Value):
+    Total = 0
+    for c in Value:
+        if c in "aeiou": Total += 1
+    return Total
+
+def RecursiveVowels(Value):
+    if len(Value) == 0: return 0
+    if Value[0] in "aeiou": return 1 + RecursiveVowels(Value[1:])
+    return RecursiveVowels(Value[1:])
+
+print("IterativeVowels :", IterativeVowels(big), "vowels - no trouble at all")
+try:
+    print("RecursiveVowels :", RecursiveVowels(big), "vowels")
+except RecursionError:
+    print("RecursiveVowels : RecursionError - it cannot do this at all")</script></div>
+  </div>
+  <div class="rule accent2" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+    <b>The six-mark answer cannot do the job the five-mark answer does.</b> Not slower — <b>impossible</b>,
+    on this input, in both languages. Same algorithm, same output, and one of them needs
+    <b class="accent3">200 000 frames alive at once</b> while the other needs one loop variable.
+  </div>
+
+</section>
+
+<!-- H9 when is it worth it -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 3px;">So when <span class="accent1">is</span> it worth it?</h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">This is a marked question too — June 2025 Paper 32 Q11(b) [2] and a recent sitting, Paper 33 Q11 [3]. The published answers, near enough word for word:</p>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.57em;">
+        <b>When the problem naturally breaks into a smaller version of itself.</b> Then the code is the
+        definition, and there is nothing to get wrong between them.
+      </div>
+      <div class="rule accent3" style="font-size:.57em;">
+        <b>When there are many branches</b>, or the iterative version would be too complex — a tree has
+        two directions to go at every node, and a loop has to keep its own list of where it has not been.
+      </div>
+    </div>
+    <div>
+      <div class="rule navy" style="margin-top:0; font-size:.55em;">
+        <b>The examples the scheme prints:</b> factorial · a mathematical series · Fibonacci · compound
+        interest · <b class="accent2">tree traversal</b> · <b class="accent2">evaluating an RPN expression</b>.
+      </div>
+      <div class="rule accent2" style="font-size:.55em;">
+        <b>And the honest other half.</b> Counting the vowels in a string is <b>not</b> one of these — it
+        is a walk from one end to the other, which is what a loop is for. The exam asked for it recursively
+        to see whether you <i>can</i>, not because it is the right tool.
+      </div>
+    </div>
+  </div>
+  <div class="toll" style="font-size:.5em;">
+    <span class="th">🧾 OUTSIDE THE EXAM HALL — what professionals actually do</span><br>
+    A lot of production recursion <b>does</b> get rewritten as a loop, often with an explicit stack, exactly as
+    on the next slide. But the rule is not "recursion is for exams". <b class="accent2">Depth decides.</b><br>
+    <span class="yes">Left recursive:</span> tree and graph work, parsers, divide-and-conquer — a balanced tree
+    of a million nodes is about <b>20</b> frames deep, and the recursive version is the one you can read.<br>
+    <span class="no">Rewritten as a loop:</span> anything whose depth grows <b>with the size of the input</b> —
+    a list walk, a string walk, a degenerate tree. That is where a real user's data becomes a crash.<br>
+    <span style="color:#8a6100;">And the trap: most languages <b>do not</b> remove the frame even when the call is
+    the last thing you do. Python refuses to on purpose. So you cannot assume the compiler will save you.</span>
+  </div>
+
+</section>
+
+<!-- H10 both ways -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p4">P4</span></div>
+  <h2 style="font-size:.76em; margin:0 0 3px;">Paper 4 asks for it <span class="accent2">both ways</span></h2>
+  <table class="mk" style="margin-top:2px;">
+    <tr><th>paper</th><th>you are given</th><th>you must write</th><th style="width:52px;">marks</th></tr>
+    <tr><td>Nov 2023 P41 · P43</td><td><span class="mono">IterativeVowels</span></td><td>the same thing as <span class="mono">RecursiveVowels</span></td><td class="m">5 → 6</td></tr>
+    <tr><td>Nov 2023 P42</td><td><span class="mono">IterativeCalculate</span></td><td>a gap-filled <span class="mono">RecursiveValue</span></td><td class="m">7</td></tr>
+    <tr><td>June 2024 P42</td><td><span class="mono">RecursiveInsertion</span></td><td><span class="mono">IterativeInsertion</span> — <b>the other direction</b></td><td class="m">4 → 4</td></tr>
+  </table>
+  <div class="two-col" style="gap:16px; margin-top:7px;">
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.55em;">
+        <b>Loop → recursion.</b> Find the <b>one step + the rest</b> already hiding in the loop body.
+        The loop's <b>exit condition is your base case</b>; the loop body is your general case; what the
+        loop was accumulating becomes what you add to the returned value.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent3" style="margin-top:0; font-size:.55em;">
+        <b>Recursion → loop.</b> A loop, and — if the call is <b>not</b> the last thing that happens —
+        your own stack to hold what the frames were holding. If the call <b>is</b> last, a plain loop is enough.
+      </div>
+    </div>
+  </div>
+  <div class="rule accent2" style="font-size:.55em;">
+    <b>One mark, before any logic.</b> <span class="mono">RecursiveVowels</span>'s first published bullet is
+    just <b>"recursive call"</b> — a whole mark for the function's name appearing inside its own body.
+    Miss it and the other five are unreachable anyway.
+  </div>
+  <div class="dig">🕳 that loop was recursive all along ↓</div>
+
+</section>
+
+<!-- H10 vertical -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p4">P4</span></div>
+  <h3 style="font-size:.7em; margin:0 0 4px;">🕳 Look at what the paper's own loop does</h3>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="k">FOR</span> X ← 0 <span class="k">TO</span> LengthString - 1
+    FirstCharacter ← MID(Value, 0, 1)
+    <span class="k">IF</span> FirstCharacter = <span class="v">'a'</span> <span class="k">OR</span> … <span class="k">THEN</span>
+        Total ← Total + 1
+    <span class="k">ENDIF</span>
+    Value ← MID(Value, 1, LENGTH(Value)-1)
+<span class="k">NEXT</span> X</div>
+      <p style="font-size:.44em; color:#8890b5; margin:3px 0 0;">Nov 2023 Paper 41 Q1, part (a) — as printed. © UCLES</p>
+    </div>
+    <div>
+      <div class="rule accent2" style="margin-top:0; font-size:.56em;">
+        Look at the last line of the body. It <b>chops the first character off</b> and goes round again
+        with <b>the rest of the string</b>. That is <b class="accent3">first + rest</b> — the recursive
+        decomposition — with a counter bolted on the side to stop it.
+      </div>
+      <div class="rule accent1" style="font-size:.56em;">
+        So the rewrite is nearly mechanical: delete the counter, return <span class="mono">0</span> when
+        the string is empty, and let the call take <b>the rest</b>.
+        <b class="accent3">Look for that pattern first in any "rewrite it recursively" question</b> — when
+        a loop shortens its own data each pass, the recursion is already written.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</section>
+
+<!-- H11 do the compiler's job -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">Do the compiler's job <span class="accent2">by hand</span></h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">The tree from two lessons ago, walked in order — with <b>no recursion at all</b> and your own stack from A2a.</p>
+  <div class="lane" data-lang="java">
+  <div class="pycell java xtight" data-out="3 8 10 15 19"><script type="text/plain" class="pysrc">static void InOrderIterative(int Root){
+    int[] Stack = new int[20];           // YOUR stack, from A2a
+    int Top = -1;
+    int Current = Root;
+    while (Current != -1 || Top > -1) {
+        while (Current != -1) {          // walk left, remembering the way back
+            Top++; Stack[Top] = Current;
+            Current = ArrayNodes[Current][0];
+        }
+        Current = Stack[Top]; Top--;     // nothing further left: come back up
+        System.out.print(ArrayNodes[Current][1] + " ");
+        Current = ArrayNodes[Current][2];
+    }
+}</script></div>
+  </div>
+  <div class="lane" data-lang="py">
+  <div class="pycell xtight"><script type="text/plain" class="pysrc">ArrayNodes = [[1,15,2],[3,8,4],[-1,19,-1],[-1,3,-1],[-1,10,-1]]   # ARRAY[0:4] OF INTEGER
+
+def InOrderIterative(Root):
+    Stack = [0] * 20                  # YOUR stack, from A2a
+    Top = -1
+    Current = Root
+    while Current != -1 or Top > -1:
+        while Current != -1:          # walk left, remembering the way back
+            Top += 1; Stack[Top] = Current
+            Current = ArrayNodes[Current][0]
+        Current = Stack[Top]; Top -= 1    # nothing further left: come back up
+        print(ArrayNodes[Current][1], end=" ")
+        Current = ArrayNodes[Current][2]
+
+InOrderIterative(0)
+print()                           # flush the line</script></div>
+  </div>
+  <div class="rule accent1" style="font-size:.55em;">
+    Same output as the recursive walk: <span class="mono">3 8 10 15 19</span>. <b>The stack did not
+    disappear — it changed owner.</b> Every recursion can be turned into a loop this way, and what you
+    write when you do it is exactly the object code the compiler was emitting for you.
+  </div>
+  <div class="toll" style="font-size:.53em;">
+    <span class="th">🧾 OUTSIDE THE EXAM HALL</span><br>
+    <span class="yes">Transfers:</span> when real recursion is too deep to survive, this is the standard
+    rescue, and knowing <i>why</i> it works is the whole lesson.
+    <span class="no">Not asked:</span> no 9618 paper has ever required the explicit-stack version — it is
+    here because it proves the claim.
+  </div>
+
+</section>
+
+<!-- H12 GAME -->
+<section data-background-color="#F4F6FB" class="lt growslide">
+  <h2 style="font-size:.76em; margin:0 0 8px;">🎮 Pushing and Popping</h2>
+  <div class="g-wrap">
+    <div class="g-head"><span id="g-stage" class="g-stage"></span><span id="g-prog" class="g-prog"></span><span id="g-score" class="g-score"></span><button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button></div>
+    <div id="g-q" class="g-q"></div>
+    <div id="g-body"></div>
+    <div id="g-say" class="g-say">&nbsp;</div>
+  </div>
+
+</section>
+
+<!-- H13 the real thing -->
+<section data-background-color="#F4F6FB" class="lt">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.74em; margin:0 0 4px;">The real thing — <span class="accent3">Nov 2023 Paper 32, Question 9</span></h2>
+  <p style="font-size:.42em; color:#8890b5; margin:0 0 5px;">One question, three parts, and you can now do all of it. © UCLES</p>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <div class="rule navy" style="margin-top:0; font-size:.54em;">
+        <b>(a)</b> Complete the pseudocode for a stack's <span class="mono">Push</span> …
+        <span style="color:#8890b5;">— A2a, and it is the same stack</span>
+      </div>
+      <div class="rule navy" style="font-size:.54em;">
+        <b>(b)</b> A stack can be implemented with a linked list or an array. Describe one benefit of each. <b>[2]</b>
+      </div>
+      <div class="rule navy" style="font-size:.54em;">
+        <b>(c)</b> Explain how a compiler makes use of a stack when translating recursive programming code. <b>[4]</b>
+      </div>
+    </div>
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.55em;">
+        <b>Notice what the examiner did.</b> Parts (a) and (b) are the stack as a <b>data structure you
+        build</b>. Part (c) is the same stack as <b>the machine's own machinery</b>.
+        <b class="accent3">They put both on one question because they are one object</b>, and a candidate
+        who learned them as separate topics answers (c) with a shrug.
+      </div>
+      <div class="rule accent3 fragment" style="font-size:.55em;">
+        <b>Answer (b) from A2b:</b> a linked list is dynamic and not fixed in size; an array is static, so
+        when it is full the stack cannot grow. Two lessons, one mark each.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- vocabulary -->
+<section data-background-color="#222B5A" class="dk">
+  <h3 style="font-size:.74em; margin:0 0 8px;">词汇 Vocabulary</h3>
+  <table class="mk" style="font-size:.52em; color:var(--ice);">
+    <tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
+    <tr><td>call stack</td><td>调用栈</td><td>the one stack every running program has, holding one frame per unfinished call</td></tr>
+    <tr><td>stack frame</td><td>栈帧</td><td>one call's paperwork: <b>return address</b>, parameters, local variables. <b>Say the long phrase in the exam</b></td></tr>
+    <tr><td>return address</td><td>返回地址</td><td>the line to come back to — the reason the answer lands where the <span class="mono">1 +</span> is waiting</td></tr>
+    <tr><td>object code</td><td>目标代码</td><td>what the compiler emits — and the free mark in the four-mark question</td></tr>
+    <tr><td>winding</td><td>递推 (下行)</td><td>the calls going down, each one pushing a frame</td></tr>
+    <tr><td>unwinding</td><td>回溯 (回代)</td><td>the returns coming back up after the base case, each one popping a frame</td></tr>
+    <tr><td>stack overflow</td><td>栈溢出</td><td>frames needed &gt; room available. Never a 9618 answer — but it is what you will actually see</td></tr>
+  </table>
+
+</section>
+
+<!-- summary -->
+<section data-background-color="#151B3C" class="dk">
+  <h2 style="font-size:.82em; margin:0 0 8px;">What you can do now</h2>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="rule accent1" style="margin-top:0; font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Explain it for four marks.</b> The compiler emits object code that <b>pushes</b> return addresses
+        and local variables on each call, and <b>pops</b> them once the base case is reached.
+      </div>
+      <div class="rule accent3" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Justify the stack for three.</b> LIFO · pushed per call · popped as the function ends · enables unwinding.
+      </div>
+      <div class="rule accent2" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
+        <b>Write it both ways</b>, and say what the recursive one costs: <b>96 bytes a call</b>, on a machine
+        you measured.
+      </div>
+    </div>
+    <div>
+      <div class="rule navy" style="margin-top:0; font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice); border-left-color:var(--accent3);">
+        <b>One number has been sitting there since last lesson.</b>
+        <span class="mono">Fib(40)</span> costs <b>331 160 281</b> calls. Not 331 million bytes — 331 million
+        <b>calls</b>, and this lesson can now tell you what each one weighed.
+      </div>
+      <p class="center fragment" style="font-size:.6em; margin:12px 0 0; color:var(--ice);">
+        <b>But "21 times slower" and "96 bytes" describe <i>this</i> machine, on <i>this</i> day.</b><br>
+        <span style="font-size:.82em; color:#98a0c0;">Next year's laptop makes both numbers wrong<br>and changes nothing about which algorithm is better.</span></p>
+      <p class="center fragment" style="font-size:.78em; margin:10px 0 0;"><b class="accent3">Next: how to say "faster" in a way that survives new hardware.</b></p>
+    </div>
+  </div>
+  <p class="center" style="font-size:.46em; color:#98a0c0; margin-top:10px;">🍦 <span class="mono">challenge_A03b_BothWays</span> — every function written twice, and a judge that checks each version really is what it claims to be.</p>
+
+</section>
+</div></div>
+
+<div id="py-chip">🐍 waking Python…</div>
+<div id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</div>
+<div id="llmhelp">
+  <b>Live LLM marking is off.</b>
+  <p>The reader runs on this Mac, not inside the slides &mdash; which is why the API key never goes near a deck.</p>
+  <ol>
+    <li>In the <b>CS_Materials</b> folder, double-click<br><code>Start-LLM-Marking.command</code></li>
+    <li>A Terminal window opens and stays open. Come back here &mdash; the chip lights up on its own within five seconds. No reload.</li>
+  </ol>
+  <p class="tiny">Double-clicking <code>grade-server.py</code> does nothing: macOS opens <code>.py</code> files in an editor rather than running them. That is what the <code>.command</code> file is for.</p>
+  <button id="llmhelp-x">got it</button>
+</div>
+<div id="langsel"><div id="l-java" class="on">Java</div><div id="l-py">Python</div></div>
+<button id="fsbtn" title="fullscreen (or press F)">⛶</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+/* ===== Python runtime (Pyodide) — the audited house harness ===== */
+var pyPromise = null, pyBusy = false, currentOut = null, activeInput = null;
+
+function setRunButtons(enabled, label){
+  document.querySelectorAll('.pycell:not(.java) .pyrun').forEach(function(b){
+    b.disabled = !enabled;
+    b.textContent = enabled ? '▶ Run' : (label || '… running');
+  });
+}
+window.__pyInput = function(promptText){
+  return new Promise(function(resolve, reject){
+    var out = currentOut;
+    if(!out){ resolve(''); return; }
+    var row = document.createElement('span');
+    var lbl = document.createElement('span'); lbl.className='pyin-lbl'; lbl.textContent = promptText;
+    var inp = document.createElement('input'); inp.className='pyin';
+    inp.setAttribute('autocomplete','off'); inp.spellcheck = false;
+    row.appendChild(lbl); row.appendChild(inp); out.appendChild(row);
+    activeInput = {row: row, reject: reject};
+    setTimeout(function(){ inp.focus(); }, 60);
+    inp.addEventListener('keydown', function(ev){
+      if(ev.key === 'Enter'){ ev.stopPropagation(); var v=inp.value; row.remove(); activeInput=null; resolve(v); }
+    });
+  });
+};
+function stopPy(){
+  if(activeInput){ var r=activeInput.reject; activeInput.row.remove(); activeInput=null; r(new Error('__pyStop__')); }
+}
+function bootPython(){
+  if(pyPromise) return pyPromise;
+  pyPromise = loadPyodide().then(function(py){
+    py.runPython(
+      "import builtins, js\n" +
+      "async def __ainput(prompt=''):\n" +
+      "    v = await js.window.__pyInput(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "def _input_fallback(prompt=''):\n" +
+      "    v = js.window.prompt(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "builtins.input = _input_fallback\n" +
+      "builtins.__ainput = __ainput\n");
+    var chip=document.getElementById('py-chip');
+    chip.textContent='🐍 Python ready'; chip.className='ready';
+    if(!pyBusy) setRunButtons(true);
+    return py;
+  });
+  return pyPromise;
+}
+function runPy(code, outEl, doneCb){
+  if(pyBusy) return;
+  pyBusy = true; setRunButtons(false); currentOut = outEl;
+  outEl.style.display='block'; outEl.className='pyout'; outEl.textContent='';
+  var crashed=false, errLine='', sawOutput=false;
+  bootPython().then(function(py){
+    function emit(s){ sawOutput = true; outEl.appendChild(document.createTextNode(s + '\n')); }
+    py.setStdout({batched: emit});
+    py.setStderr({batched: emit});
+    var src = code.replace(/\binput\s*\(/g, 'await __ainput(');
+    var ns = py.toPy({});
+    return py.runPythonAsync(src, {globals: ns})
+      .catch(function(e){
+        crashed = true;
+        var lines = String(e.message||e).trim().split('\n').filter(function(l){ return l.trim(); });
+        errLine = lines[lines.length-1] || 'Error';
+        if(String(e.message||e).indexOf('__pyStop__') !== -1) errLine = '__stopped__';
+      })
+      .finally(function(){ ns.destroy(); });
+  }).then(function(){
+    if(activeInput){ activeInput.row.remove(); activeInput = null; }
+    if(!sawOutput && !crashed) outEl.textContent = '(no output)';
+    if(crashed){
+      var sp=document.createElement('span'); sp.className='crash';
+      sp.textContent = (errLine==='__stopped__') ? '⏹ stopped' : '💥 ' + errLine;
+      outEl.appendChild(sp);
+    }
+    pyBusy=false; setRunButtons(true); currentOut=null;
+    if(doneCb) doneCb(crashed, outEl.textContent, errLine);
+  });
+}
+
+/* ===== cells: Python runs live, Java replays a real build-time run ===== */
+function initPyCells(){
+  document.querySelectorAll('.pycell').forEach(function(cell){
+    var isJava = cell.classList.contains('java');
+    var srcEl  = cell.querySelector('.pysrc');
+    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
+    var capOut = cell.getAttribute('data-out') || '';
+    var isErr  = cell.getAttribute('data-err') === '1';
+    cell.innerHTML='';
+
+    var bar=document.createElement('div'); bar.className='pybar';
+    var dots=document.createElement('div'); dots.className='pydots';
+    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
+    bar.appendChild(dots);
+
+    var run=document.createElement('button'); run.className='pyrun';
+    run.textContent = isJava ? '▶ Run' : '⏳ waking…';
+    run.disabled = !isJava;
+    bar.appendChild(run);
+
+    if(!isJava){
+      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
+      stp.title='stop a program waiting for input';
+      stp.addEventListener('click', stopPy);
+      bar.appendChild(stp);
+    }
+    var st=document.createElement('span'); st.className='pystate' + (isJava?' cap':'');
+    st.textContent = isJava ? '☕ captured from a real run' : '🐍 editable · runs here';
+    bar.appendChild(st);
+
+    var ta=document.createElement('textarea'); ta.className='pyta';
+    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
+    if(isJava) ta.readOnly = true;
+    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
+
+    cell.appendChild(bar);
+    if(cell.classList.contains('side')){
+      var row=document.createElement('div'); row.className='pyrow';
+      row.appendChild(ta); row.appendChild(out);
+      out.style.display='block'; out.textContent='press ▶ Run';
+      cell.appendChild(row);
+    } else {
+      cell.appendChild(ta); cell.appendChild(out);
+    }
+
+    if(isJava){
+      run.addEventListener('click', function(){
+        out.style.display='block';
+        out.className='pyout cap' + (isErr?' err':'');
+        out.textContent = capOut;
+      });
+    } else {
+      run.addEventListener('click', function(){ runPy(ta.value, out); });
+    }
+  });
+  bootPython();
+}
+function autoSizePyTextareas(scope){
+  (scope||document).querySelectorAll('.pyta').forEach(function(ta){
+    if(ta.offsetParent === null) return;         /* hidden lane: scrollHeight is 0 */
+    ta.style.height='auto';
+    ta.style.height=(ta.scrollHeight+4)+'px';
+  });
+}
+
+/* ===== the language switch ===== */
+function setLang(l){
+  document.body.setAttribute('data-lang', l);
+  document.getElementById('l-java').className = (l==='java') ? 'on' : '';
+  document.getElementById('l-py').className   = (l==='py')   ? 'on' : '';
+  try{ localStorage.setItem('a2lang', l); }catch(e){}
+  setTimeout(function(){ autoSizePyTextareas(document); }, 20);
+}
+document.getElementById('l-java').addEventListener('click', function(){ setLang('java'); });
+document.getElementById('l-py').addEventListener('click', function(){ setLang('py'); });
+document.getElementById('fsbtn').addEventListener('click', function(){
+  var d=document.documentElement;
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else if(d.requestFullscreen){ d.requestFullscreen(); }
+});
+/* Tab must INDENT, not move focus — Python answers are whitespace-sensitive and
+   the browser's default steals the key. Shift-Tab dedents the current line. */
+document.addEventListener('keydown', function(e){
+  var t = e.target;
+  if(e.key !== 'Tab' || !t || !t.matches || !t.matches('textarea.pyta, textarea.g-ta')) return;
+  if(t.readOnly) return;
+  e.preventDefault(); e.stopPropagation();
+  if(e.shiftKey){
+    var ls = t.value.lastIndexOf('\n', t.selectionStart - 1) + 1, n = 0;
+    while(n < 4 && t.value.charAt(ls + n) === ' ') n++;
+    if(n) t.setRangeText('', ls, ls + n, 'preserve');
+  } else {
+    t.setRangeText('    ', t.selectionStart, t.selectionEnd, 'end');
+  }
+}, true);
+
+
+/* THE ANSWER FORM IS WORTH ALL OF THE MARKS, and it flips between the two papers:
+     Paper 3 — pseudocode. No 9618 P3 mark scheme 2021-2025 offers program code.
+     Paper 4 — Java, Python or VB, and the front page of all 23 papers in the
+               archive says "a mark of zero will be awarded if a programming
+               language other than those listed here is used."
+   So a boss adapted from a Paper 4 question must REFUSE pseudocode outright.
+   Accepting it teaches a habit that scores nothing in the exam it prepares for. */
+function looksLikePseudocode(src){
+  return /←|<-|\bENDPROCEDURE\b|\bENDFUNCTION\b|\bENDWHILE\b|\bENDIF\b|\bDECLARE\b|\bTHEN\b|\bRETURNS\b/i.test(src);
+}
+function looksLikeProgramCode(src){
+  return /\bdef\s+\w+|\bpublic\s+static\b|System\.out|\bprintln\b|\bprint\s*\(|;\s*$|\{[\s\S]*\}/m.test(src);
+}
+</script>
+<script>
+/* ===== the frame inspector =====
+   A3a's stepper showed a frame as a box with an argument in it. This one opens
+   the box: return address, parameters, locals -- which is the marked answer to
+   "what does the compiler push?", and the reason a frame has a SIZE.
+
+   Two switches carry slides that would otherwise be assertions:
+     fat frames  -> the measured 96 vs 416 bytes, so the meter fills 4x faster
+     serve oldest-> FIFO instead of LIFO, so the return lands in the wrong frame
+   ==================================================================== */
+
+var FI_SRC = [
+  'def RecursiveVowels(Value):',
+  '    if len(Value) == 0:',
+  '        return 0',
+  '    First = Value[0]',
+  '    if First in "aeiou":',
+  '        return 1 + RecursiveVowels(Value[1:])',
+  '    return RecursiveVowels(Value[1:])'
+];
+var FI_SLIM = 96, FI_FAT = 416, FI_ROOM = 1152;   /* bytes -- the measured numbers */
+
+/* Run the recursion for real and record what the machine would have to do. */
+function fiEvents(word){
+  var ev = [];
+  function rec(value, retLine){
+    ev.push({a:'push', line:1, value:value, ret:retLine,
+      note:'<b>Push a frame.</b> Come back to <b>' + (retLine===0 ? 'the main program' : 'line ' + retLine) +
+           '</b> when this call is done, with <span class="mono">Value = "' + value + '"</span>.'});
+    ev.push({a:'line', line:2, note:'Is the string empty? ' + (value.length===0 ? '<b>Yes.</b>' : 'No &mdash; keep going.')});
+    if(value.length === 0){
+      ev.push({a:'base', line:3, val:0,
+        note:'<b>The base case.</b> Answered outright, with no further call &mdash; and this is the moment the direction reverses.'});
+      ev.push({a:'pop', val:0, note:'<b>Pop.</b> The frame is finished with, so its 96 bytes go back.'});
+      return 0;
+    }
+    var first = value.charAt(0);
+    ev.push({a:'local', line:4, first:first,
+      note:'A <b>local variable</b> is created: <span class="mono">First = \'' + first + '\'</span>. It belongs to <i>this</i> call only.'});
+    var isV = 'aeiou'.indexOf(first) > -1;
+    var callLine = isV ? 6 : 7;
+    ev.push({a:'line', line:5, note:'Is <span class="mono">\'' + first + '\'</span> a vowel? ' + (isV ? '<b>Yes</b> &mdash; so this call owes 1 plus whatever the rest returns.' : '<b>No</b> &mdash; so this call owes exactly whatever the rest returns.')});
+    ev.push({a:'call', line:callLine,
+      note:'<b>Line ' + callLine + ' calls again</b>, half-finished. Everything above must be remembered until the answer comes back <i>here</i>.'});
+    var sub = rec(value.slice(1), callLine);
+    var val = isV ? 1 + sub : sub;
+    ev.push({a:'ret', line:callLine, val:val,
+      note:'The answer <b>' + sub + '</b> arrives back at <b>line ' + callLine + '</b>' +
+           (isV ? ', where the <span class="mono">1 +</span> was waiting. ' + sub + ' + 1 = <b>' + val + '</b>.' : '. Nothing to add, so this call returns <b>' + val + '</b>.')});
+    ev.push({a:'pop', val:val, note:'<b>Pop.</b> This frame is done.'});
+    return val;
+  }
+  rec(word, 0);
+  ev.push({a:'done', note:''});
+  return ev;
+}
+
+function makeFrames(hostId, opts){
+  var host = document.getElementById(hostId);
+  if(!host) return;
+  opts = opts || {};
+  var st = {word:'imagine', fat:false, queue:!!opts.queue, i:0, ev:[], stack:[], line:-1,
+            dead:false, timer:null};
+  var q = function(suffix){ return document.getElementById(hostId + '-' + suffix); };
+
+  host.innerHTML =
+    '<div class="fiw">'
+    + '<div class="fisrc"><div class="trcode" id="' + hostId + '-src"></div>'
+    +   '<div class="fijump" id="' + hostId + '-jump">&nbsp;</div>'
+    +   '<div class="fimet"><div class="fibar" id="' + hostId + '-bar"><i></i></div>'
+    +     '<div class="fimlbl"><span id="' + hostId + '-used">0 bytes</span>'
+    +       '<span class="r" id="' + hostId + '-room">room: 1 152 bytes</span></div>'
+    +   '</div></div>'
+    + '<div class="fistk" id="' + hostId + '-stk"></div>'
+    + '</div>'
+    + '<div class="vzc">'
+    +   '<button class="vzb" id="' + hostId + '-step">▶ step</button>'
+    +   '<button class="vzb alt" id="' + hostId + '-play">play</button>'
+    +   '<button class="vzb gh" id="' + hostId + '-reset">reset</button>'
+    +   (opts.lockWord ? '' : '<button class="vzb gh" id="' + hostId + '-word">longer string ↔</button>')
+    +   (opts.lockFat  ? '' : '<label class="fisw"><input type="checkbox" id="' + hostId + '-fat"> fat frames (20 locals)</label>')
+    +   (opts.lockQueue? '' : '<label class="fisw"><input type="checkbox" id="' + hostId + '-q"' + (opts.queue?' checked':'') + '> serve oldest first</label>')
+    +   '<span class="fireg" id="' + hostId + '-reg">x0 &nbsp;—</span>'
+    +   '<span class="trcount" id="' + hostId + '-cnt"></span>'
+    + '</div>'
+    + '<div class="vzmsg" id="' + hostId + '-msg">&nbsp;</div>';
+
+  function say(t, c){ var m=q('msg'); m.innerHTML = t || '&nbsp;'; m.className = 'vzmsg' + (c ? ' ' + c : ''); }
+  function frameBytes(){ return st.fat ? FI_FAT : FI_SLIM; }
+  /* the return-value register: on this Mac it is x0, on an Intel machine rax.
+     Different name, same job -- and it is NOT where the return address lives. */
+  function reg(v){
+    var r = q('reg');
+    r.innerHTML = (v === null || v === undefined)
+      ? 'x0 &nbsp;—' : 'x0 &nbsp;<b>' + v + '</b>';
+    r.className = 'fireg' + ((v === null || v === undefined) ? '' : ' hot');
+  }
+  function jump(html){ q('jump').innerHTML = html || '&nbsp;'; }
+
+  function drawSrc(){
+    var h = '<span class="ln' + (st.line===0?' on':'') + '">  main:  print(RecursiveVowels("' + st.word + '"))</span>';
+    h += '<span class="ln">&nbsp;</span>';
+    FI_SRC.forEach(function(l, k){
+      h += '<span class="ln' + (st.line===k+1 ? ' on' : '') + '">' + (k+1) + '  '
+         + l.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
+    });
+    q('src').innerHTML = h;
+  }
+  function drawStack(){
+    q('stk').innerHTML = st.stack.map(function(f, k){
+      var isTop = (k === st.stack.length - 1);
+      return '<div class="fifr' + (f.stranded ? ' stranded' : (isTop ? ' top' : '')) + '">'
+           + '<span class="fra">↩ return to ' + (f.ret===0 ? 'main' : 'line ' + f.ret) + '</span><br>'
+           + '<span class="frp">Value = "' + f.value + '"</span>'
+           + (f.first ? '<br><span class="frl">First = \'' + f.first + '\'</span>' : '')
+           + (f.pending ? ' <span class="fitag">· waiting on 1 +</span>' : '')
+           + '</div>';
+    }).join('');
+    var used = st.stack.length * frameBytes();
+    var pct = Math.min(100, used / FI_ROOM * 100);
+    q('bar').firstChild.style.width = pct + '%';
+    q('bar').className = 'fibar' + (pct >= 100 ? ' full' : '');
+    q('used').textContent = used + ' bytes  (' + st.stack.length + ' × ' + frameBytes() + ')';
+    q('room').textContent = 'room: ' + FI_ROOM + ' bytes';
+    q('cnt').textContent = st.stack.length + ' unfinished call' + (st.stack.length===1?'':'s');
+  }
+  function reset(quiet){
+    if(st.timer){ clearInterval(st.timer); st.timer=null; q('play').textContent='play'; }
+    st.ev = fiEvents(st.word); st.i = 0; st.stack = []; st.line = 0; st.dead = false;
+    drawSrc(); drawStack(); reg(null); jump('');
+    if(!quiet) say('<span class="mono">RecursiveVowels("' + st.word + '")</span> is about to be called from the main program. Press <b>step</b>.');
+    q('step').disabled = false;
+  }
+  function halt(){
+    q('step').disabled = true;
+    if(st.timer){ clearInterval(st.timer); st.timer=null; q('play').textContent='play'; }
+  }
+
+  function one(){
+    if(st.dead || st.i >= st.ev.length){ return; }
+    var e = st.ev[st.i++];
+    if(e.a === 'push'){
+      /* THE JUMP. One copy of the code, entered again -- so the only thing that
+         can tell two calls apart is the frame, and the way back. */
+      jump('<b class="jj">jump</b> ' + (e.ret===0 ? 'main' : 'line ' + e.ret)
+         + ' <b>→ line 1</b> <span class="fitag">· same code, new frame</span>');
+      reg(null);
+      st.stack.push({ret:e.ret, value:e.value, first:null, pending:false});
+      st.line = e.line;
+      if(st.stack.length * frameBytes() > FI_ROOM){
+        st.dead = true; drawStack(); drawSrc(); halt();
+        say('💥 <b>Stack overflow at frame ' + st.stack.length + '.</b> Nothing is wrong with the recursion — '
+          + 'it has a base case and it is moving towards it. There is simply no room left for the paperwork. '
+          + (st.fat ? '<b>Fat frames got you a quarter as far</b>, which is the whole of the measurement slide.'
+                    : 'Try it again with <b>fat frames</b> on.'), 'bad');
+        return;
+      }
+    } else if(e.a === 'local'){
+      st.stack[st.stack.length-1].first = e.first; st.line = e.line;
+    } else if(e.a === 'call'){
+      st.stack[st.stack.length-1].pending = (e.line === 6); st.line = e.line;
+    } else if(e.a === 'base'){
+      st.line = e.line; reg(e.val);
+      jump('<b class="jj">return</b> line 3 <b>→ line ' + (st.stack.length>1 ? st.stack[st.stack.length-2].ret : '—')
+         + '</b> <span class="fitag">· the value travels in the register</span>');
+    } else if(e.a === 'ret'){
+      st.line = e.line; reg(e.val);
+    } else if(e.a === 'pop'){
+      if(st.queue && st.stack.length > 1){
+        var wrong = st.stack.shift();
+        st.stack.forEach(function(f){ f.stranded = true; });
+        st.dead = true; drawStack(); drawSrc(); halt(); reg(e.val);
+        say('✗ <b>The value ' + e.val + ' went to the wrong call.</b> Serving the <b>oldest</b> frame first hands the base '
+          + 'case\'s <span class="mono">0</span> to <span class="mono">RecursiveVowels("' + wrong.value + '")</span> — the '
+          + '<b>outermost</b> call, which was not waiting for it. It answers <b>0</b> and finishes, and the '
+          + st.stack.length + ' calls that <i>were</i> waiting are stuck: nothing will ever come back to them.<br>'
+          + '<b>LIFO is not a preference.</b> An interrupted job can only finish <i>after</i> the job that interrupted it — '
+          + 'you cannot finish vacuuming while you are still wiping the spill that stopped you.', 'bad');
+        return;
+      }
+      var done = st.stack.pop();
+      reg(e.val);
+      jump('<b class="jj">return</b> line ' + (done && done.ret===0 ? '— to main' : (st.stack.length ? '→ line ' + done.ret : '→ main'))
+         + ' <span class="fitag">· carrying <b>' + e.val + '</b>, and the frame is gone</span>');
+      if(st.stack.length) st.stack[st.stack.length-1].pending = false;
+    } else if(e.a === 'done'){
+      var calls = st.word.length + 1;
+      var ans = (st.word.match(/[aeiou]/g) || []).length;
+      halt(); drawStack(); drawSrc(); jump('');
+      say('<b>Done — and the stack is empty again.</b> <b>' + calls + '</b> calls were made — one per letter, '
+        + 'plus one for the empty string that ended it — and every frame was popped. The answer is <b>' + ans
+        + '</b>, and it was assembled on the way back up.', 'ok');
+      return;
+    }
+    drawSrc(); drawStack();
+    if(e.note) say(e.note, e.a==='base' ? 'nt' : (e.a==='pop'||e.a==='ret' ? 'ok' : ''));
+  }
+
+  q('step').addEventListener('click', one);
+  q('play').addEventListener('click', function(){
+    var b=this;
+    if(st.timer){ clearInterval(st.timer); st.timer=null; b.textContent='play'; return; }
+    b.textContent='pause';
+    st.timer = setInterval(function(){
+      if(st.dead || st.i >= st.ev.length){ clearInterval(st.timer); st.timer=null; b.textContent='play'; return; }
+      one();
+    }, 620);
+  });
+  q('reset').addEventListener('click', function(){ reset(); });
+  if(q('word')) q('word').addEventListener('click', function(){
+    st.word = (st.word === 'imagine') ? 'imagine the quick' : 'imagine';
+    this.textContent = (st.word === 'imagine') ? 'longer string ↔' : 'short string ↔';
+    reset(true);
+    say('Now <span class="mono">"' + st.word + '"</span> — <b>' + (st.word.length+1) + ' frames</b> before it can answer '
+      + 'anything. The string got longer; the room did not.');
+  });
+  if(q('fat')) q('fat').addEventListener('change', function(){
+    st.fat = this.checked; reset(true);
+    say(st.fat
+      ? '<b>Fat frames.</b> Each call now costs <b>416 bytes</b> instead of 96 — the measured difference twenty local variables make. Same recursion, same room.'
+      : 'Back to <b>96 bytes</b> a frame.');
+  });
+  if(q('q')) q('q').addEventListener('change', function(){
+    st.queue = this.checked; reset(true);
+    say(st.queue
+      ? '<b>Serve oldest first</b> — a queue instead of a stack. Step until the base case returns and watch where the value goes.'
+      : 'Back to <b>last in, first out</b>.');
+  });
+  reset(true);
+  if(opts.openingLine) say(opts.openingLine);
+  else say('<span class="mono">RecursiveVowels("' + st.word + '")</span> is about to be called from the main program. Press <b>step</b>.');
+}
+
+/* ===== the boss: run the student's RecursiveVowels for real =====
+   Three things the mark points cannot check: does it give the right answers,
+   does it actually RECURSE (an iterative answer loses the scheme's first
+   bullet), and how deep does it go -- which is this lesson's own idea, measured
+   on their own code. */
+function bossBehaviour(studentCode, cb){
+  if(document.body.getAttribute('data-lang') !== 'py'){ cb(null, 'java'); return; }
+  if(pyBusy){ cb(null, 'busy'); return; }
+  pyBusy = true; setRunButtons(false, '… judging');
+  var harness =
+    studentCode + "\n" +
+    "__r = []\n" +
+    "__err = ['']\n" +
+    "def __chk(name, f):\n" +
+    "    try: __r.append((name, bool(f())))\n" +
+    "    except Exception as e:\n" +
+    "        if not __err[0]: __err[0] = type(e).__name__ + ': ' + str(e)\n" +
+    "        __r.append((name, False))\n" +
+    "__chk('counts the vowels in \"house\" as 3', lambda: RecursiveVowels('house') == 3)\n" +
+    "__chk('counts the vowels in \"imagine\" as 4', lambda: RecursiveVowels('imagine') == 4)\n" +
+    "__chk('an empty string returns 0 -- the base case', lambda: RecursiveVowels('') == 0)\n" +
+    "__chk('a string with no vowels (\"rhythm\") returns 0', lambda: RecursiveVowels('rhythm') == 0)\n" +
+    "__chk('all five vowels (\"aeiou\") returns 5', lambda: RecursiveVowels('aeiou') == 5)\n" +
+    "__n = [0]\n" +
+    "__d = [0, 0]\n" +
+    "try:\n" +
+    "    __orig = RecursiveVowels\n" +
+    "    def __counting(*a, **k):\n" +
+    "        __n[0] += 1\n" +
+    "        __d[0] += 1\n" +
+    "        if __d[0] > __d[1]: __d[1] = __d[0]\n" +
+    "        try: return __orig(*a, **k)\n" +
+    "        finally: __d[0] -= 1\n" +
+    "    RecursiveVowels = __counting\n" +
+    "    RecursiveVowels('house')\n" +
+    "    __r.append(('it RECURSES: ' + str(__n[0]) + ' call' + ('' if __n[0] == 1 else 's') + ', ' + str(__d[1]) + ' frame' + ('' if __d[1] == 1 else 's') + ' deep, for a 5-letter word -- a loop manages 1 of each', __n[0] >= 5))\n" +
+    "except Exception as e:\n" +
+    "    if not __err[0]: __err[0] = type(e).__name__ + ': ' + str(e)\n" +
+    "    __r.append(('it RECURSES rather than looping', False))\n" +
+    "'|'.join(('1' if v else '0') + ':' + k for k, v in __r) + ('||' + __err[0] if __err[0] else '')";
+  bootPython().then(function(py){
+    var ns = py.toPy({});
+    return py.runPythonAsync(harness, {globals: ns})
+      .then(function(res){ ns.destroy(); pyBusy=false; setRunButtons(true); cb(String(res), null); })
+      .catch(function(e){
+        ns.destroy(); pyBusy=false; setRunButtons(true);
+        var m = String(e.message||e).trim().split('\n');
+        cb(null, 'crash:' + (m[m.length-1] || 'error'));
+      });
+  });
+}
+</script>
+<script>
+/* ===== 🎮 Pushing and Popping ===== */
+var G = {i:0, score:0, locked:false, earned:{}};
+
+/* The teacher walks backwards and forwards through the stages, so a stage must
+   be answerable twice without being paid for twice. Record what each stage
+   earned and REPLACE it, rather than adding to a running total. */
+function gAwardAt(idx, n){
+  G.earned[idx] = n;
+  /* the total is DERIVED from the ledger, never accumulated -- so a stage can be
+     answered any number of times, and nothing can leave the two disagreeing */
+  var t = 0;
+  for(var k in G.earned) if(G.earned.hasOwnProperty(k)) t += G.earned[k];
+  G.score = t;
+  var sc = document.getElementById('g-score');
+  if(sc) sc.textContent = G.score > 0 ? ('score ' + G.score) : '';
+}
+function gAward(n){ gAwardAt(G.i, n); }
+
+/* The boss marks a REWRITE, so the mark points have to follow the student's own
+   naming rather than a fixed identifier. Find the function's name from its
+   header, then look for that name appearing again inside the body. */
+function bvName(src){
+  var m = /def\s+(\w+)\s*\(/.exec(src);
+  if(m) return m[1];
+  m = /static\s+[\w\[\]<>]+\s+(\w+)\s*\(/.exec(src);
+  if(m) return m[1];
+  m = /\bFUNCTION\s+(\w+)\s*\(/i.exec(src);
+  return m ? m[1] : null;
+}
+function bvCallLines(src){
+  var n = bvName(src); if(!n) return [];
+  var call = new RegExp('\\b' + n + '\\s*\\(');
+  return src.split('\n').filter(function(l){
+    if(!call.test(l)) return false;
+    if(/^\s*(def|static|public|private|FUNCTION|Function)\b/.test(l)) return false;  /* the header */
+    return /^\s+/.test(l) || /\breturn\b/i.test(l);                                   /* inside the body */
+  });
+}
+var BV_SLICE = /\[\s*1\s*:|substring\s*\(\s*1|MID\s*\(\s*\w+\s*,\s*1|\.slice\s*\(\s*1|\[\s*1\s*\.\./;
+
+var STAGES = [
+ { name:'Stage 1 · what actually goes on it', paper:'P3',
+   q:'A call is made. <b>What does the machine put on the stack?</b>',
+   opts:[
+     {t:'the address to return to, and the values of the local variables', ok:true,
+      why:'Exactly the mark scheme\'s words. Those two things are all that differs between one call and the next — and they are what the 96 bytes were.'},
+     {t:'a copy of the function\'s code, so each call has its own to run', ok:false,
+      why:'The most popular wrong answer. There is ONE copy of the code, shared by every call — a thousand calls, seven lines. What each call needs is its own DATA and its own way back.'},
+     {t:'the whole program, so it can be restored if something goes wrong', ok:false,
+      why:'That would be a backup, not a call. The stack holds only what is needed to resume this one call where it left off.'},
+     {t:'the value the call is going to return', ok:false,
+      why:'It does not exist yet — producing it is the entire point of making the call. It travels back at pop time, and it is not what gets pushed.'}
+   ]},
+
+ { name:'Stage 2 · put the machine\'s day in order', paper:'P3',
+   q:'<span class="mono">RecursiveVowels("ah")</span> runs. Six things happen. <b>Type their numbers in the order they happen</b>, separated by spaces.'
+    +'<table class="qt" style="margin-top:6px; font-size:.78em;">'
+    +'<tr><td>1</td><td style="text-align:left;">RecursiveVowels("") returns 0 — the base case</td></tr>'
+    +'<tr><td>2</td><td style="text-align:left;">a frame is pushed for RecursiveVowels("ah")</td></tr>'
+    +'<tr><td>3</td><td style="text-align:left;">a frame is pushed for RecursiveVowels("")</td></tr>'
+    +'<tr><td>4</td><td style="text-align:left;">the last frame standing returns 1 to the main program</td></tr>'
+    +'<tr><td>5</td><td style="text-align:left;">a frame is pushed for RecursiveVowels("h")</td></tr>'
+    +'<tr><td>6</td><td style="text-align:left;">the value 0 travels back to line 6, where the <b>1 +</b> is waiting</td></tr>'
+    +'</table>',
+   ta:'', rows:2, total:2, seq:'2 5 3 1 6 4',
+   seqOk:'Three pushes, the base case, then the returns coming back in reverse. <b>The turn is event 1</b> — everything before it is winding, everything after it is unwinding.',
+   seqPerm:'Right events, wrong order — and the order is the whole question. All the pushing happens before any of the popping, and the popping is in <b>reverse</b>.',
+   seqBad:'Start at the main program: which frame can possibly be pushed first? Then remember nothing can return until the base case has been reached.',
+   mps:[], model:'2 5 3 1 6 4' },
+
+ { name:'Stage 3 · justify the stack', paper:'P3',
+   q:'<b>"Explain the reasons why a stack is a suitable Abstract Data Type (ADT) to implement recursion." [3]</b>'
+    +' — Nov 2021 Paper 31 Q10(b). Four bullets are published for three marks; write what you can, one per line.',
+   ta:'', rows:4, total:3, cap:3, wantsPseudocode:false,
+   llmTask:'A03b-p3-stack', llmFn:'StackJustification',
+   mps:[
+     {re:/\bLIFO\b|last[\s,-]*in[\s,-]*first[\s,-]*out|\bFILO\b|first[\s,-]*in[\s,-]*last[\s,-]*out/i, pts:1,
+      label:'a stack is a <b>LIFO</b> (last in, first out) data structure'},
+     {re:/push\w*|pus\w*ed|added to the (top of the )?stack|put on(to)? the stack/i, pts:1,
+      label:'each recursive call is <b>pushed</b> onto the stack'},
+     {re:/pop\w*|removed from the (top of the )?stack|taken off the stack|first out|comes? off|taken back off/i, pts:1,
+      label:'… and is then <b>popped</b> as the function ends'},
+     {re:/unwind\w*|backtrack\w*|reverse order|required order|correct order|right order|order (they|it) (were|was)|utilis\w*|utiliz\w*|use the (returned |value )|to calculate its (own )?return/i, pts:1,
+      label:'enables <b>backtracking / unwinding</b> … to maintain the required order'}
+   ],
+   model:'A stack is a LIFO structure: the last call made is the first one to finish.\nEach recursive call is pushed onto the stack, holding what that call needs.\nEach one is popped again as its function ends.\nThat is what allows the unwinding to happen in the required order.' },
+
+ { name:'Stage 4 · the four-mark question', paper:'P3',
+   q:'<b>"Explain how a compiler makes use of a stack when translating recursive programming code." [4]</b>'
+    +' — Nov 2023 Paper 32 Q9(c). <span style="color:#8890b5;">The scheme scores this in two parts: one mark for the framing sentence, then a maximum of three from the rest.</span>',
+   ta:'', rows:5, total:4, groupCaps:{a:1, b:3},
+   llmTask:'A03b-p3-compiler', llmFn:'CompilerStack',
+   mps:[
+     {grp:'a', re:/object code|machine code|executable code|(compiler|it)\s+(produces|generates|emits|creates|writes|outputs)/i, pts:1,
+      label:'<b>the compiler must produce object code to …</b> <span style="color:#8890b5;">— scored on its own, and the mark most scripts never write</span>'},
+     {grp:'b', re:/push/i, also:/return address|local variable|address to return|value of (its |the )?local/i, pts:1,
+      label:'… <b>push return addresses / values of local variables</b> onto a stack'},
+     {grp:'b', re:/each\s+(recursive\s+)?call|every\s+(recursive\s+)?call|per call|with each|wind(ing)?\b/i, pts:1,
+      label:'… with each <b>recursive call</b> // to set up <b>winding</b>'},
+     {grp:'b', re:/pop\w*|remove\w*\s+(them\s+)?(from|off)/i, pts:1,
+      label:'… <b>pop</b> return addresses / values of local variables off the stack …'},
+     {grp:'b', re:/unwind\w*|(after|once|when).{0,20}base case|base case is reached|stopping condition is (reached|met)/i, pts:1,
+      label:'… after the <b>base case</b> is reached // to implement <b>unwinding</b>'}
+   ],
+   model:'The compiler must produce object code that uses a stack.\nWith each recursive call it pushes the return address and the values of the local variables onto the stack — this is the winding.\nOnce the base case is reached it pops those return addresses and local variables back off, which implements the unwinding.' },
+
+ { name:'Stage 5 · BOSS · rewrite it as a recursion', paper:'P4',
+   boss:true, total:6, cap:6,
+   q:'<b>Nov 2023 Paper 41 Q1(b)(i) — 6 marks.</b> '
+    +'<b>Given</b>, from part (a) of the same question: <span class="mono">IterativeVowels(Value : STRING) RETURNS INTEGER</span> '
+    +'counts the <b>lower-case</b> vowels (<span class="mono">a e i o u</span>) in a string using a loop — its pseudocode is the '
+    +'slide immediately before this game. The first character of a string is at <b>position 0</b>.<br>'
+    +'Rewrite it as a <b>recursive</b> function <span class="mono">RecursiveVowels</span>, taking the same parameter and returning the same thing.<br>'
+    +'<span style="font-size:.86em; color:#8890b5;">Adapted: the paper also asks you to call it with <span class="mono">"imagine"</span> and screenshot the output, for 2 further marks — only part (b)(i) is marked here.</span> '
+    +'<span style="font-size:.86em; color:#c0392b;"><b>Paper 4 is answered in Java, Python or VB</b> — the front page says '
+    +'<i>“a mark of zero will be awarded if a programming language other than those listed here is used”</i>.</span>',
+   parts:[
+     {lbl:'Write the whole function &nbsp;<span class="accent2">[6]</span>', rows:9,
+      mps:[
+        {fn:function(a){ return bvCallLines(a).length >= 1; }, pts:1,
+         label:'a <b>recursive call</b> — the function\'s own name, inside its own body'},
+        /* no `static` required: public int RecursiveVowels(String v) is valid Java */
+        {re:/def\s+\w+\s*\(\s*\w+|[\w\[\]<>]+\s+\w+\s*\(\s*(?:final\s+)?(?:String|char)\s*(?:\[\s*\])?\s*\w+|Function\s+\w+\s*\(\s*\w+/i, pts:1,
+         label:'function <b>header</b> taking one string parameter (and returning an integer)'},
+        {fn:function(a){ return /(len\s*\(\s*\w+\s*\)\s*==\s*0|\w+\s*\.\s*length\s*\(\s*\)\s*==\s*0|\w+\s*==\s*["']{2}|not\s+\w+\s*:|\.\s*isEmpty\s*\(\s*\))[\s\S]{0,70}?return\s+0/i.test(a); }, pts:1,
+         label:'<b>base case</b>: length is 0, so <b>return 0</b>'},
+        {re:/\[\s*0\s*\]|charAt\s*\(\s*0\s*\)|\[\s*0\s*:\s*1\s*\]|MID\s*\(\s*\w+\s*,\s*0/i,
+         also:/aeiou|['"]a['"][\s\S]{0,90}['"]u['"]/i, pts:1,
+         label:'extracts the <b>first character</b> and checks it against the vowels'},
+        {fn:function(a){
+           var n = bvName(a); if(!n) return false;
+           var re = new RegExp('return\\s+1\\s*\\+\\s*' + n + '\\s*\\(');
+           return re.test(a) && BV_SLICE.test(a);
+         }, pts:1,
+         label:'if it <b>is</b> a vowel: <b>return 1 +</b> the recursive call on one fewer character'},
+        {fn:function(a){
+           var n = bvName(a); if(!n) return false;
+           var plain = new RegExp('return\\s+' + n + '\\s*\\(');
+           return plain.test(a) && BV_SLICE.test(a);
+         }, pts:1,
+         label:'if it is <b>not</b>: <b>return</b> the recursive call on one fewer character'}
+      ],
+      model:'def RecursiveVowels(Value):\n    if len(Value) == 0:              # BASE CASE: no vowels left to find\n        return 0\n    First = Value[0]                 # this call\'s own local variable\n    if First in "aeiou":\n        return 1 + RecursiveVowels(Value[1:])   # pay 1, then ask about the rest\n    return RecursiveVowels(Value[1:])           # pay nothing, ask about the rest'}
+   ]}
+];
+function gEl(id){ return document.getElementById(id); }
+</script>
+<script>
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LIVE LLM MARKING — the third mechanic, and the consensus across all three.
+
+   The key is NOT in this file and never will be: a deck gets emailed and
+   copied, so a key written here would be a published key. Instead a small
+   server runs on the teacher's machine (grade-server.py), holds the key in
+   .env, and marks on request. If it is not there — a student's laptop, or
+   the teacher simply hasn't started it — the fetch fails and the deck keeps
+   its two deterministic mechanics. The off-switch is the absence of the
+   process; there is nothing to remember to turn off.
+   ═══════════════════════════════════════════════════════════════════════ */
+var LLM = { url:'http://127.0.0.1:8788', available:false, on:true, task:'A03b-boss' };
+
+function llmChip(){
+  var c = document.getElementById('llmchip');
+  if(!c) return;
+  if(!LLM.available){
+    /* it used to hide itself, which looks identical to "not wired up" -- and that
+       is exactly the wrong thing for the one person who can start the server */
+    c.className = 'off';
+    c.textContent = '\u26a1 no LLM \u2014 click for help';
+    c.title = 'Live marking is off. Click for the two steps that turn it on.';
+    return;
+  }
+  c.className = LLM.on ? 'on' : 'off';
+  c.textContent = LLM.on ? '\u26a1 LLM marking on' : '\u26a1 LLM marking off';
+  c.title = 'click to turn the second marker off';
+}
+/* A tooltip used to be the ONLY place the deck said how to start the server,
+   which is no help at all to someone who has already clicked and seen nothing
+   happen. Say it on the screen, in the two steps that actually do it. */
+function llmHelp(show){
+  var h = document.getElementById('llmhelp');
+  if(h) h.style.display = show ? 'block' : 'none';
+}
+function llmDetect(cb){
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, 1200);
+  fetch(LLM.url + '/ping', {signal: ctl.signal, cache: 'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ clearTimeout(t); LLM.available = !!(j && j.ok && j.key);
+                       llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
+    .catch(function(){ clearTimeout(t); LLM.available = false; llmChip(); if(cb) cb(); });
+}
+/* Detecting once, at load, was the real defect: the natural order is to open the
+   deck, SEE that marking is off, and only then go and start the server -- by
+   which time the one probe has long since failed. So keep looking. A refused
+   connection to localhost costs nothing, and it stops as soon as it connects. */
+function llmWatch(){
+  setInterval(function(){
+    if(LLM.available || document.hidden) return;
+    llmDetect();
+  }, 5000);
+}
+function llmBind(){
+  var c = document.getElementById('llmchip');
+  if(!c || c.__bound) return;
+  c.__bound = true;
+  c.addEventListener('click', function(){
+    if(!LLM.available){
+      c.textContent = '\u26a1 looking for the server\u2026';
+      llmHelp(true);
+      llmDetect(function(){ if(!LLM.available) llmChip(); });
+      return;
+    }
+    LLM.on = !LLM.on; llmChip();
+  });
+  var x = document.getElementById('llmhelp-x');
+  if(x) x.addEventListener('click', function(){ llmHelp(false); });
+  /* start looking here, NOT inside Reveal's .then() -- anything that throws in
+     there (a CDN that did not answer, say) used to take the LLM down with it */
+  llmDetect();
+  llmWatch();
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
+else llmBind();
+/* the consensus: two mechanics mark the SAME mark points, so they are directly
+   comparable; the third asks a different question (does it actually work?).
+   Agreement across all three is the strong signal Kepei is after. */
+function consensusHtml(regexRaw, llmAwarded, ofPoints, behaviour){
+  var gap = Math.abs(regexRaw - llmAwarded);
+  var beh = null;
+  if(behaviour && behaviour.indexOf('|') > -1){
+    var parts = behaviour.split('||')[0].split('|');
+    var ok = parts.filter(function(p){ return p.charAt(0) === '1'; }).length;
+    beh = {ok: ok, of: parts.length};
+  }
+  var rows = '<b>pattern ' + regexRaw + '/' + ofPoints + '</b> &nbsp;·&nbsp; '
+           + '<b>reader ' + llmAwarded + '/' + ofPoints + '</b>'
+           + (beh ? ' &nbsp;·&nbsp; <b>ran ' + beh.ok + '/' + beh.of + '</b>' : '');
+  if(gap > 1)
+    return '<div class="g-cons split">' + rows + ' — <b>the two markers disagree by ' + gap + '.</b> '
+         + 'The pattern-matcher looks for shapes and the reader looks for meaning, so a gap this big '
+         + 'usually means one of them is being fooled. <b>Worth a human eye</b> — show this to your teacher.</div>';
+  if(!beh)
+    return '<div class="g-cons agree">' + rows + ' — the two markers agree.</div>';
+  var markFrac = (regexRaw + llmAwarded) / (2 * Math.max(1, ofPoints));
+  var behFrac  = beh.ok / Math.max(1, beh.of);
+  /* THE CASE THAT LOOKS LIKE SUCCESS. The program is right and both markers
+     refuse it, because the question asked for a METHOD and got an answer. The
+     old wording here assumed the opposite arrangement and told a student with a
+     working loop that "the method is visibly there", which is exactly backwards. */
+  if(behFrac - markFrac >= 0.3)
+    return '<div class="g-cons split">' + rows + ' — <b>it works, and it still scores ' + regexRaw + '.</b> '
+         + 'The machine is satisfied: your answers are right. Both markers refused it anyway, because the '
+         + 'question did not ask for the answer — it asked for a particular <b>method</b>. On this paper that '
+         + 'is not a style note, it is most of the marks.</div>';
+  if(behFrac >= 1 && markFrac >= 0.6)
+    return '<div class="g-cons agree">' + rows + ' — <b>all three agree.</b> Two markers read your '
+         + 'code the same way and it does the right thing when run. This mark is about as certain '
+         + 'as marking gets.</div>';
+  if(markFrac >= 0.6)
+    return '<div class="g-cons split">' + rows + ' — <b>the two markers agree, the machine does not.</b> '
+         + 'The method is visibly there, so an examiner would pay for it — but it does not work yet. '
+         + 'You would score here and still have a bug to find.</div>';
+  return '<div class="g-cons split">' + rows + ' — <b>all three agree, and none of them are happy.</b> '
+       + 'This is not a marking dispute: the answer is not there yet. Start from the first ✗ on the left.</div>';
+}
+
+/* A written Paper 3 answer is where the pattern-matcher is at its worst: it cannot
+   forgive "pused" for "pushed", and it cannot see a mark point made in the student's
+   own words. Cambridge marks the NOTION. So the reader runs on these stages too --
+   and on prose its verdict is the one to trust. */
+function proseConsensus(regexRaw, llmAwarded, cap){
+  var r = Math.min(regexRaw, cap), l = Math.min(llmAwarded, cap);
+  if(l > r)
+    return '<div class="g-cons split"><b>pattern ' + r + '/' + cap + '</b> &nbsp;·&nbsp; <b>reader ' + l + '/' + cap + '</b>'
+         + ' — <b>take the reader\'s mark: ' + l + '.</b> The pattern-matcher looks for particular words, so it '
+         + 'misses a mark point made in your own words and it cannot forgive a typo. On a written question '
+         + 'an examiner marks the <b>idea</b>, which is what the reader just did.</div>';
+  if(l < r)
+    return '<div class="g-cons split"><b>pattern ' + r + '/' + cap + '</b> &nbsp;·&nbsp; <b>reader ' + l + '/' + cap + '</b>'
+         + ' — <b>the reader is stricter here.</b> The words are present but it did not think the idea was. '
+         + '<b>Worth a human eye</b> — this is the case a teacher should settle.</div>';
+  return '<div class="g-cons agree"><b>pattern ' + r + '/' + cap + '</b> &nbsp;·&nbsp; <b>reader ' + l + '/' + cap + '</b>'
+       + ' — <b>both markers agree.</b> On a written answer that is about as certain as it gets.</div>';
+}
+/* The click-prompt under a marked answer doubles as the reader's status line.
+   Without this the deck says "press next → when you are ready" while the reader
+   is still working, which is an invitation to throw its answer away — and that is
+   exactly what happened the first time this was taught. */
+function gWaiting(on){
+  G.llmBusy = !!on;
+  var h = document.getElementById('g-nexthint');
+  if(!h){
+    /* the code boss's prompt is a plain sentence with no element of its own, so give
+       it one rather than letting the notice silently do nothing */
+    var say = document.getElementById('g-say');
+    if(!say) return;
+    h = document.createElement('div');
+    h.id = 'g-nexthint'; h.style.marginTop = '5px';
+    say.appendChild(h);
+  }
+  if(on){
+    if(h.getAttribute('data-orig') === null) h.setAttribute('data-orig', h.innerHTML);
+    h.style.opacity = '1';
+    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> '
+                + 'give it a few seconds \u2014 clicking now moves on without it.</span>';
+  } else {
+    var orig = h.getAttribute('data-orig');
+    h.style.opacity = '.65';
+    if(orig !== null){ h.innerHTML = orig; h.removeAttribute('data-orig'); }
+    else h.textContent = '';
+  }
+}
+function llmMarkProse(task, fn, answer, regexRaw, cap, host){
+  if(!LLM.available || !LLM.on || !host) return;
+  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
+                 + '(this one marks the idea, not the words)</span></p>';
+  var ctl = new AbortController();
+  /* a six-mark class is a big prompt and DeepSeek is sometimes busy; 45 s was
+     not enough rope, and giving up looked identical to the server being down */
+  var timedOut = false, t0 = Date.now();
+  var t = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
+  gWaiting(true);
+  fetch(LLM.url + '/mark', {
+    method:'POST', signal: ctl.signal,
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task: task, fn: fn, lang:'py', code: answer})
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      clearTimeout(t); gWaiting(false);
+      if(!j || j.error){
+        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">('
+                       + ((j && j.error) || 'no reply') + ')</span></p>';
+        return;
+      }
+      var rows = j.marks.map(function(m){
+        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
+             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
+      }).join('');
+      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it marked the idea, not the words</b></p>'
+                     + '<ul class="g-mp">' + rows + '</ul>'
+                     + proseConsensus(regexRaw, j.awarded, cap)
+                     + (j.missed ? '<p style="font-size:.48em; margin:4px 0 0;">' + j.missed + '</p>' : '');
+      /* the reader is the better marker on prose, so the running total follows it */
+      var better = Math.min(j.awarded, cap) - Math.min(regexRaw, cap);
+      if(better > 0){ gAward(better); var sc = document.getElementById('g-score');
+                      if(sc) sc.textContent = 'score ' + G.score; }
+    })
+    .catch(function(){
+      clearTimeout(t); gWaiting(false);
+      var __s = Math.round((Date.now() - t0) / 1000);
+      host.innerHTML = timedOut
+        ? '<p class="g-lbl">the reader gave up after ' + __s + ' s <span class="conf">'
+        + '(the model is busy, not broken \u2014 the markers on the left still stand. Press mark again to retry.)</span></p>'
+        : '<p class="g-lbl">could not reach the reader <span class="conf">'
+        + '(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
+    });
+}
+function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host){
+  if(!LLM.available || !LLM.on || !host) return;
+  var grid = host.closest ? host.closest('.g-grid') : null;
+  if(grid) grid.classList.add('three');
+  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
+                 + '(this one reads for meaning, not for patterns)</span></p>';
+  var ctl = new AbortController();
+  /* a six-mark class is a big prompt and DeepSeek is sometimes busy; 45 s was
+     not enough rope, and giving up looked identical to the server being down */
+  var timedOut = false, t0 = Date.now();
+  var t = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
+  gWaiting(true);
+  fetch(LLM.url + '/mark', {
+    method:'POST', signal: ctl.signal,
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task: LLM.task, fn:'RecursiveVowels', lang: lang, code: code})
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      clearTimeout(t); gWaiting(false);
+      if(!j || j.error){
+        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">'
+                       + '(' + ((j && j.error) || 'no reply') + ')</span></p>';
+        return;
+      }
+      var rows = j.marks.map(function(m){
+        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
+             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
+      }).join('');
+      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it read your code, it did not run it</b></p>'
+                     + '<ul class="g-mp">' + rows + '</ul>'
+                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
+                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
+    })
+    .catch(function(){
+      clearTimeout(t); gWaiting(false);
+      var __s = Math.round((Date.now() - t0) / 1000);
+      host.innerHTML = timedOut
+        ? '<p class="g-lbl">the reader gave up after ' + __s + ' s <span class="conf">'
+        + '(the model is busy, not broken \u2014 the markers on the left still stand. Press mark again to retry.)</span></p>'
+        : '<p class="g-lbl">could not reach the reader <span class="conf">'
+        + '(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
+    });
+}
+
+function behaviourHtml(raw, err){
+  if(err === 'java')
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li style="color:#8890b5;">'
+         + 'This deck cannot run Java, so the ticks on the left are a <b>checklist</b>, not a test. '
+         + 'Switch the language to <b>Python</b> and press mark again — then the machine actually runs your code.</li></ul>';
+  if(err === 'pseudo')
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li style="color:#8890b5;">'
+         + 'There is pseudocode mixed into this, so it will not run — and on Paper 4 it would not score either. '
+         + 'Write it as <b>Python</b> throughout.</li></ul>';
+  if(err && err.indexOf('crash:') === 0)
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li><span class="n">✗</span> '
+         + 'it did not run — <span class="mono">' + err.slice(6) + '</span></li>'
+         + '<li style="color:#8890b5;">Mark points can be ticked by text that never executes. This is why both columns exist.</li></ul>';
+  if(!raw) return '';
+  var parts = raw.split('||');
+  var rows = parts[0].split('|').map(function(t){
+    var ok = t.charAt(0) === '1', label = t.slice(2);
+    return '<li><span class="' + (ok?'y':'n') + '">' + (ok?'✓':'✗') + '</span> ' + label + '</li>';
+  }).join('');
+  if(parts[1])
+    rows += '<li style="color:#8890b5;">first error raised: <span class="mono">' + parts[1] + '</span>'
+         +  (parts[1].indexOf('RecursionError') > -1
+             ? ' — that is the base case never being reached: the walk is not moving towards it.'
+             : parts[1].indexOf('NameError') > -1
+             ? ' — the judge calls it <span class="mono">RecursiveVowels</span>; check the name.' : '')
+         +  '</li>';
+  return '<p class="g-lbl">what the machine says — <b>your code was actually run</b></p><ul class="g-mp">' + rows + '</ul>';
+}
+
+function bossCodePane(code){
+  var esc = String(code).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<div><p class="g-lbl">your answer</p><pre class="g-ans">' + esc + '</pre></div>';
+}
+function gProg(){
+  var p=gEl('g-prog'); p.innerHTML='';
+  STAGES.forEach(function(_,k){
+    var i=document.createElement('i');
+    i.className = k<G.i ? 'done' : (k===G.i ? 'cur' : '');
+    p.appendChild(i);
+  });
+}
+function gSay(html, cls){
+  var s=gEl('g-say'); s.innerHTML=html||'&nbsp;'; s.className='g-say'+(cls?' '+cls:'');
+  /* On the code boss, gSay runs AFTER the answer has gone to the reader, so a notice
+     written before this call would be wiped. Re-assert it from the flag instead. */
+  if(G.llmBusy) gWaiting(true);
+}
+
+
+function markOne(ans, mps, cap, quiet, groupCaps){
+  var got=0, rows=[], listed=0, byGrp={};
+  mps.forEach(function(m){
+    var ok = m.fn ? m.fn(ans) : (m.re.test(ans) && (!m.also || m.also.test(ans)));
+    if(ok){
+      /* a mark scheme that caps PART of its list -- Nov 2023 P32 Q9(c) scores its
+         framing sentence on its own (max 1) and takes max 3 from the other four.
+         Capping the total alone would let four body bullets buy the first mark. */
+      if(groupCaps && m.grp){
+        byGrp[m.grp] = (byGrp[m.grp] || 0) + m.pts;
+        if(byGrp[m.grp] <= groupCaps[m.grp]) got += m.pts;
+      } else got += m.pts;
+    }
+    listed += m.pts;
+    rows.push('<li><span class="'+(ok?'y':'n')+'">'+(ok?'✓':'✗')+'</span> '+m.label+' <b>['+m.pts+']</b></li>');
+  });
+  var raw = got, missed = listed - got;
+  if(cap && got > cap) got = cap;
+  /* the cap footnotes are irrelevant when the answer was refused on form, and they are
+     the two longest rows in the column — dropping them keeps the panel on the stage */
+  if(cap && listed > cap && !quiet){
+    rows.push('<li style="color:#8890b5;">the published scheme lists <b>'+listed+'</b> bullets for a maximum of <b>'+cap
+            + '</b> marks — mark schemes are generous on purpose, so you do not have to hit every one</li>');
+    if(missed > 0 && got === cap)
+      rows.push('<li style="color:#8890b5;">…which is why you have <b>'+cap+'/'+cap+'</b> with <b>'+missed
+              + '</b> bullet'+(missed>1?'s':'')+' missing. <b>The cap did that, not your answer</b> — and the '
+              + 'bullet you dropped is still a bug in your program.</li>');
+  }
+  return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
+}
+function gDraw(){
+  var s=STAGES[G.i];
+  /* which paper this stage is, because the ANSWER FORM changes with it and the
+     form is worth all of the marks */
+  gEl('g-stage').innerHTML = s.name
+    + (s.paper ? ' <span class="pbadge ' + (s.paper==='P4'?'p4':'p3') + '">' + s.paper + '</span>' : '');
+  gEl('g-score').textContent = G.score>0 ? ('score ' + G.score) : '';
+  gNavState();
+  gEl('g-q').innerHTML = s.q;
+  var b=gEl('g-body'); b.innerHTML=''; G.locked=false; gSay('');
+  gProg();
+
+  if(s.opts){
+    var wrap=document.createElement('div'); wrap.className='g-opts';
+    s.opts.forEach(function(o){
+      var btn=document.createElement('button'); btn.className='g-b'; btn.style.flex='1 1 44%';
+      btn.innerHTML=o.t;
+      btn.addEventListener('click', function(){
+        if(G.locked) return;
+        if(o.ok){
+          G.locked=true; btn.className='g-b yes'; gAward(1);
+          gSay('✓ ' + o.why + ' <span style="opacity:.6">— press next → when you are ready</span>', 'ok'); /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */
+        } else {
+          btn.className='g-b no';
+          gSay('✗ ' + o.why, 'bad');
+        }
+      });
+      wrap.appendChild(btn);
+    });
+    b.appendChild(wrap);
+  } else if(s.boss){
+    var grid=document.createElement('div'); grid.className='g-grid';
+    s.parts.forEach(function(p, idx){
+      var col=document.createElement('div');
+      var lab=document.createElement('p'); lab.className='g-lbl'; lab.innerHTML=p.lbl;
+      var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=p.rows; ta.spellcheck=false;
+      ta.id='boss'+idx;
+      col.appendChild(lab); col.appendChild(ta); grid.appendChild(col);
+    });
+    b.appendChild(grid);
+    var sub=document.createElement('button'); sub.className='g-sub'; sub.textContent='mark it, out of '+s.total;
+    sub.addEventListener('click', function(){
+      var code = gEl('boss0').value;
+      /* Paper 4 refuses pseudocode by rubric, so this marker refuses it too — but it
+         still shows what the logic would have earned, because the logic is not the
+         thing that was wrong. */
+      var wrongForm = looksLikePseudocode(code) && !looksLikeProgramCode(code);
+      var total=0, cells='', rawHits=0, ofPoints=0;
+      s.parts.forEach(function(p, idx){
+        var r=markOne(gEl('boss'+idx).value, p.mps, s.cap, wrongForm);
+        total+=r.got;
+        /* the LLM marks the same bullets uncapped, so compare uncapped counts */
+        p.mps.forEach(function(m){
+          ofPoints += m.pts;
+          var hit = m.fn ? m.fn(gEl('boss'+idx).value) : (m.re.test(gEl('boss'+idx).value) && (!m.also || m.also.test(gEl('boss'+idx).value)));
+          if(hit) rawHits += m.pts;
+        });
+        if(wrongForm) return;      /* the ticks match against CODE, so a pseudocode
+                                     answer fails some of them on notation alone --
+                                     showing them next to a refusal reads as a second fault */
+        cells += '<div><p class="g-lbl">'
+              +  (p.lbl)
+              +  ' &mdash; <b class="'+(r.got>=s.total?'accent1':'accent2')+'">'+r.got+'</b></p>'+r.html+'</div>';
+      });
+      if(wrongForm){
+        b.innerHTML = '<div class="g-res"><div class="g-tot" style="color:var(--accent2);">0 / '+s.total+'</div>'
+                    + '<div class="g-grid">' + bossCodePane(code)
+                    + '<div>'
+                    + '<div class="formwarn"><b>That is pseudocode, and this is Paper 4.</b><br>'
+                    + 'The front page of every Paper 4 says: <i>"a mark of zero will be awarded if a programming '
+                    + 'language other than those listed here is used"</i> — Java, Python or Visual Basic, console mode. '
+                    + 'Pseudocode is not one of them.<br><br>'
+                    + 'Nothing here has been marked, because the mark points attach to <b>code</b>. '
+                    + 'Write the same answer in <b>'
+                    + (document.body.getAttribute('data-lang')==='py' ? 'Python' : 'Java')
+                    + '</b> and press mark again — then you find out what it is actually worth.</div></div>'
+                    + '</div></div>';
+        gSay('<b>Zero — and not for anything that was wrong with your answer.</b> '
+           + 'On this paper the form is worth all of the marks. Press next → to finish.', 'bad');
+        if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+        return;
+      }
+      gAward(total);
+      /* the results REPLACE the inputs rather than stacking below them */
+      b.innerHTML = '<div class="g-res"><div class="g-tot">'+total+' / '+s.total+'</div>'
+                  + '<div class="g-grid">' + bossCodePane(code)
+                  + '<div>' + cells
+                  +   '<div id="g-beh"><p class="g-lbl">what the machine says</p>'
+                  +   '<ul class="g-mp"><li style="color:#8890b5;">running your code…</li></ul></div>'
+                  + '</div>'
+                  + '<div id="g-llm" class="g-llm"></div>'
+                  + '</div></div>';
+      /* the verdict must read BOTH columns — "Strong" printed over a program the
+         machine could not even run is the exact dishonesty this panel exists to kill */
+      bossBehaviour(code, function(raw, err){
+        var el = document.getElementById('g-beh');
+        if(el) el.innerHTML = behaviourHtml(raw, err);
+        /* the third mechanic, and the only one that can read for MEANING. It runs
+           last because the consensus needs the other two to have finished. */
+        llmMark(code, document.body.getAttribute('data-lang') === 'py' ? 'py' : 'java',
+                rawHits, ofPoints, raw, document.getElementById('g-llm'));
+        if(err && err.indexOf('crash:') === 0){
+          gSay('<b>' + total + ' on the mark points — and it did not run at all.</b> '
+             + 'Fix the error on the right first; marks awarded to code that cannot execute '
+             + 'are marks you will not get twice. Press next → to finish.', 'bad');
+          return;
+        }
+        if(raw && raw.split('||')[0].indexOf('0:') !== -1){
+          if(total === s.total){
+            gSay('<b>Full marks on the mark points — and it still does not work.</b> '
+               + 'An examiner would give you ' + total + '. The machine would not. '
+               + 'Check what you pass to the call: one fewer character, every time, or the base case never arrives.', 'bad');
+          } else {
+            gSay('Marks missing on the left, behaviour failing on the right — '
+               + 'fix the right-hand column first. Press next → to finish.', 'bad');
+          }
+        }
+      });
+      gSay(total >= s.total-1 ? 'Strong. Press next → to finish.' : 'Read the ✗ lines — press next → to finish.',
+           total >= s.total-1 ? 'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub);
+  } else if(s.table){
+    var wrap=document.createElement('div');
+    s.fields.forEach(function(f, idx){
+      var lab=document.createElement('label');
+      lab.style.cssText='display:inline-flex; align-items:center; gap:6px; margin:0 18px 8px 0; font-size:.54em; font-weight:bold; color:var(--navy);';
+      lab.innerHTML=f.lbl+' ';
+      var inp=document.createElement('input'); inp.className='tin'; inp.id='tf'+idx;
+      inp.setAttribute('autocomplete','off'); inp.spellcheck=false;
+      lab.appendChild(inp); wrap.appendChild(lab);
+    });
+    b.appendChild(wrap);
+    var subT=document.createElement('button'); subT.className='g-sub'; subT.textContent='mark it, out of '+s.total;
+    subT.addEventListener('click', function(){
+      var got=0, rows='';
+      s.fields.forEach(function(f, idx){
+        var v=gEl('tf'+idx).value.trim().replace(/\u2212/g,'-');
+        /* an expression cell is marked on its VALUE, not its spacing: "1+0" is the
+           same answer as "1 + 0" and a student may not lose a mark to a space bar. */
+        var norm=function(t){ return String(t).replace(/\s+/g,'').toLowerCase(); };
+        var ok=(norm(v)===norm(f.want));
+        if(ok) got++;
+        rows+='<li><span class="'+(ok?'y':'n')+'">'+(ok?'\u2713':'\u2717')+'</span> '+f.lbl+' \u2014 <b>'+f.want+'</b>. '+f.why+'</li>';
+      });
+      gAward(got);
+      gSay('<b>'+got+' / '+s.total+'</b><ul class="g-mp">'+rows+'</ul>'
+         + (got===s.total && s.afterOk ? '<div style="margin-top:4px; font-size:.92em;">'+s.afterOk+'</div>' : '')
+         + '<div id="g-nexthint" style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           got===s.total?'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(subT);
+  } else {
+    var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=s.rows||2; ta.spellcheck=false;
+    b.appendChild(ta);
+    var sub2=document.createElement('button'); sub2.className='g-sub'; sub2.textContent='mark it';
+    sub2.addEventListener('click', function(){
+      var r;
+      if(s.seq){
+        var got=(ta.value.match(/-?\d+/g)||[]).join(' ');
+        if(got===s.seq) r={got:s.total, html:'<ul class="g-mp"><li><span class="y">\u2713</span> '+s.seq+' \u2014 '+(s.seqOk||'')+'</li></ul>'};
+        else if(got.split(' ').slice().sort().join(' ')===s.seq.split(' ').slice().sort().join(' '))
+          r={got:1, html:'<ul class="g-mp"><li><span class="n">\u2717</span> '+(s.seqPerm||'right events, wrong order.')+'</li></ul>'};
+        else r={got:0, html:'<ul class="g-mp"><li><span class="n">\u2717</span> expected <b>'+s.seq+'</b> \u2014 '+(s.seqBad||'')+'</li></ul>'};
+      } else {
+        r=markOne(ta.value, s.mps, s.cap, false, s.groupCaps);
+      }
+      gAward(r.got);
+      /* the mirror of the boss: a Paper 3 answer written as program code. Not a
+         zero — P3 has no rubric saying so — but no mark scheme in five years
+         offers program code as an alternative, so say that plainly. */
+      var wrongForm = s.wantsPseudocode && looksLikeProgramCode(ta.value) && !looksLikePseudocode(ta.value);
+      var useLLM = !!(s.llmTask && LLM.available && LLM.on);
+      gSay((wrongForm
+             ? '<div class="formwarn"><b>That is program code, and this is Paper 3.</b> '
+             + 'Not an automatic zero the way the wrong language is on Paper 4 — but <b>no</b> published Paper 3 '
+             + 'mark scheme offers program code as an alternative. The marks below are what your logic earns.</div>'
+             : '') +
+           (useLLM ? '<div class="g-grid"><div>' : '') +
+           '<b>'+r.got+' / '+s.total+'</b>'+r.html+
+           '<div style="margin-top:5px; font-size:.92em;">model answer:<pre class="ps" style="font-size:.9em; margin:4px 0 0;">'+s.model+'</pre></div>'+
+           (useLLM ? '</div><div id="g-llm-p" class="g-llm"></div></div>' : '') +
+           '<div id="g-nexthint" style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           r.got===s.total && !wrongForm ? 'ok':'bad');
+      if(useLLM)
+        llmMarkProse(s.llmTask, s.llmFn, ta.value, r.got, s.total, document.getElementById('g-llm-p'));
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub2);
+  }
+}
+window.gReplay = function(){
+  G.i = 0; G.score = 0; G.earned = {};
+  var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
+  var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
+  gDraw();
+};
+function gBack(){
+  if(G.i <= 0) return;
+  G.locked = true;
+  G.i--;
+  gDraw();
+}
+function gNavState(){
+  var b = document.getElementById('g-back');
+  if(b) b.style.visibility = (G.i > 0) ? '' : 'hidden';
+}
+function gSkip(){
+  G.locked = true;
+  G.i++;
+  if(G.i >= STAGES.length){ gFinish(); } else { gDraw(); }
+}
+/* Bind immediately. In the A2-era decks this whole block lives inside the
+   Reveal.initialize().then() closure, which resolves AFTER DOMContentLoaded has
+   already fired -- so a DOMContentLoaded listener registered here never runs and
+   the button silently does nothing. */
+function gSkipBind(){
+  var b = document.getElementById('g-skip'), k = document.getElementById('g-back');
+  if(!b){ document.addEventListener('DOMContentLoaded', gSkipBind); return; }
+  if(!b.__bound){ b.__bound = true;
+    b.addEventListener('click', function(ev){ ev.stopPropagation(); gSkip(); }); }
+  if(k && !k.__bound){ k.__bound = true;
+    k.addEventListener('click', function(ev){ ev.stopPropagation(); gBack(); }); }
+  gNavState();
+}
+gSkipBind();
+function gNextOnce(){
+  G.i++;
+  if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
+}
+function gFinish(){
+  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
+  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
+  gEl('g-stage').textContent='done';
+  gEl('g-q').innerHTML='';
+  gEl('g-prog').innerHTML='';
+  gEl('g-score').textContent='';
+  gEl('g-body').innerHTML=
+    '<div class="g-fin"><div class="big">'+G.score+'</div>'+
+    '<p style="margin:6px 0 0;">Every mark on that boss came from one real question \u2014 and the paper asked for the loop version too.</p>'+
+    '<p style="margin:6px 0 0; font-size:.9em; color:#5b6488;">The two worth most for the least effort: '+
+    '<b>saying the compiler produces object code</b> (a whole mark, on its own, that most scripts never write), and '+
+    '<b>the recursive call itself</b> \u2014 the first published bullet of the boss, earned by the function\u2019s own name appearing inside it.</p>'+
+    '<button class="g-sub"  onclick="G.i=0;G.score=0;gDraw();">play again</button></div>';
+  gSay('');
+}
+
+Reveal.initialize({
+  hash:true, slideNumber:'c/t', width:1280, height:720, margin:.06,
+  plugins:[RevealNotes],
+  transition:'slide', backgroundTransition:'fade'
+}).then(function(){
+  initPyCells();
+  makeFrames('frameviz');
+  makeFrames('queueviz', {queue:true, lockWord:true, lockFat:true, lockQueue:true,
+    openingLine:'This one serves the <b>oldest</b> frame first. Step until the base case returns — then watch where its value goes.'});
+  llmDetect();
+  gDraw();
+  try{ var L=localStorage.getItem('a2lang'); if(L) setLang(L); }catch(e){}
+  var ob=document.getElementById('obj-btn');
+  if(ob) ob.addEventListener('click', function(){
+    var o=document.getElementById('obj');
+    o.style.display = (o.style.display==='none') ? 'block' : 'none';
+  });
+});
+Reveal.on('ready', function(e){ autoSizePyTextareas(e.currentSlide); });
+Reveal.on('slidechanged', function(e){ autoSizePyTextareas(e.currentSlide); });
+</script>
+</body>
+</html>
