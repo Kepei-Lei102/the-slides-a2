@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Judging Algorithms — searching and sorting</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css" rel="stylesheet"/>
 <style>
 :root{
   --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
@@ -68,23 +69,7 @@
 #py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
 #py-chip.ready{color:#5FD6C9;}
 
-/* ===== the Java lane: captured, not live ===== */
-.pycell.java .pyrun{background:#8a6100;} .pycell.java .pyrun:hover{background:#a87700;}
-.pystate.cap{color:#e0b050;}
-.pyout.cap{color:#e8c98a;}
-.pyout.err{color:#ff9d95;}
 
-/* ===== the language switch ===== */
-#langsel{position:fixed; top:14px; right:16px; z-index:99; display:flex; border:2px solid #6b74a8;
-  border-radius:9px; overflow:hidden; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
-#langsel div{padding:5px 15px; background:rgba(20,26,60,.72); color:#98a0c0; transition:.12s;}
-#langsel div.on{background:var(--accent1); color:#fff;}
-#fsbtn{position:fixed; top:14px; right:calc(16px + 152px); z-index:99; background:rgba(20,26,60,.72);
-  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
-  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
-#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
-body[data-lang="java"] .lane[data-lang="py"]{display:none;}
-body[data-lang="py"] .lane[data-lang="java"]{display:none;}
 
 /* ===== 🧾 outside the exam hall ===== */
 .toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
@@ -406,93 +391,86 @@ body[data-lang="py"] .lane[data-lang="java"]{display:none;}
 .sb tr.win td{background:rgba(23,179,163,.14);}
 .sb .big{color:var(--accent2);} .sb .small{color:#0d7a6e;}
 .dk .sb .small{color:#5FD6C9;}
-</style></head><body data-lang="java">
-<div class="reveal"><div class="slides">
 
+/* Reviewed classroom route: main task first; references below. */
+.foundation-task p,.foundation-task li{font-size:24px;line-height:1.4;}
+.foundation-task h2{font-size:36px;}
+.foundation-task .rule{font-size:22px;}
+.foundation-rubric{font-size:17px;margin:5px 0;text-align:left;}
+.foundation-rubric summary{cursor:pointer;font-weight:bold;}
+.pyout{max-height:150px;overflow:auto;}
+.pyta{max-height:420px;overflow:auto;}
+.growslide #g-body{max-height:470px;overflow:auto;}
+#llmchip,#llmhelp{display:none!important;}
+</style><meta content="disabled-human-review" name="classroom-submissions"/></head><body data-lang="py">
+<div class="reveal"><div class="slides">
 <!-- H1 -->
 <section>
-<section data-background-color="#151B3C" class="dk center">
-  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
-  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 7 · 9618 §19.1</p>
-  <h1 style="font-size:1.5em; margin:0 0 6px;">Judging Algorithms</h1>
-  <p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">linear and binary search · bubble, insertion and one more · what <i>better</i> means</p>
-  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+<section class="dk center" data-background-color="#151B3C" id="a04a-leaf-01">
+<div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+<p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 7 · 9618 §19.1</p>
+<h1 style="font-size:1.5em; margin:0 0 6px;">Judging Algorithms</h1>
+<p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">linear and binary search · bubble, insertion and one more · what <i>better</i> means</p>
+<p style="margin-top:16px;"><button class="g-sub" onclick="Reveal.down()" style="font-size:.5em;">🎯 what you will be able to do</button></p>
 
 </section>
-  <section data-background-color="#151B3C" class="dk">
-    <div class="bar" style="background:var(--accent3);"></div>
-    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
-    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> <b class="accent1">Write and trace</b> a linear search, a binary search, a bubble sort and an insertion sort</div>
-    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">2.</strong> State <b class="accent1">the condition binary search needs</b> — and what it costs</div>
-    <div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">3.</strong> Say which algorithm suits a situation and <b class="accent1">justify it in Big O</b> — the exam asks for those two words by name</div>
-    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">4.</strong> <b class="accent3">Build a sort you have never been shown</b>, from a description alone</div>
+<section class="dk" data-background-color="#151B3C" id="a04a-leaf-02">
+<div class="bar" style="background:var(--accent3);"></div>
+<h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+<div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> <b class="accent1">Write and trace</b> a linear search, a binary search, a bubble sort and an insertion sort</div>
+<div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">2.</strong> State <b class="accent1">the condition binary search needs</b> — and what it costs</div>
+<div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">3.</strong> Say which algorithm suits a situation and <b class="accent1">justify it in Big O</b> — the exam asks for those two words by name</div>
+<div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">4.</strong> <b class="accent3">Build a sort you have never been shown</b>, from a description alone</div>
 
 </section>
-</section>
-
+<section class="lt foundation-task" data-background-color="#F4F6FB" data-reference="evidence" id="a04a-frequency-evidence"><h2>What the historical corpus asks us to practise</h2><ul><li>P3: Binary search — 6/25 papers; complete/draw 38%, write code 34%, how it works 12%</li><li>P3: Insertion sort — 3/25 papers; write code 100%</li><li>P3: Linear search — 2/25 papers; complete/draw 89%, adv/disadv 11%</li><li>P4: Insertion sort — 5/24 papers; write code 100%</li><li>P4: Binary search — 2/24 papers; write code 100%</li><li>P4: Linear search — 2/24 papers; write code 100%</li></ul><p class="rule fragment">Maintained normalized corpus, 2021–2026; duplicate variants removed. Use these response shapes for practice. This is not a forecast or permission to omit syllabus content.</p>
+</section></section>
 <!-- H2 HOOK -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.86em; margin:0 0 4px;">You wrote a sorting algorithm last week. <span class="accent2">Is it any good?</span></h2>
-  <p style="font-size:.44em; color:#98a0c0; margin:0 0 6px;">Last homework, questions 7 and 8. It sorted. It was marked. <b>Nobody said whether it was the right one to reach for.</b></p>
-  <div class="two-col" style="gap:18px;">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="c">// your question 8</span>
-<span class="k">for</span> (i = 1; i &lt; NumberElements; i++) {
-    Last = IntegerArray[i];
-    j = i - 1;
-    <span class="k">while</span> (j &gt;= 0 &amp;&amp; IntegerArray[j] &gt; Last) {
-        IntegerArray[j+1] = IntegerArray[j];
-        j--;
-    }
-    IntegerArray[j+1] = Last;
-}</div>
-      <p style="font-size:.42em; color:#8890b5; margin:3px 0 0;">This has a name — and it is one of the two sorts on your syllabus. You wrote it to learn about recursion.</p>
-    </div>
-    <div>
-      <div class="rule accent2" style="margin-top:0; font-size:.56em;">
+<section class="dk" data-background-color="#151B3C" id="a04a-leaf-03">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.86em; margin:0 0 4px;">You wrote a sorting algorithm last week. <span class="accent2">Is it any good?</span></h2>
+<p style="font-size:.44em; color:#98a0c0; margin:0 0 6px;">Last homework, questions 7 and 8. It sorted. It was marked. <b>Nobody said whether it was the right one to reach for.</b></p>
+<div class="two-col" style="gap:18px;">
+<div>
+<div class="ps" style="margin-top:0; font-size:.5em;"># Recall the earlier insertion task
+for i in range(1, NumberElements):
+    Last = IntegerArray[i]
+    j = i - 1
+    while j &gt;= 0 and IntegerArray[j] &gt; Last:
+        IntegerArray[j + 1] = IntegerArray[j]
+        j -= 1
+    IntegerArray[j + 1] = Last</div>
+<p style="font-size:.42em; color:#8890b5; margin:3px 0 0;">This has a name — and it is one of the two sorts on your syllabus. You wrote it to learn about recursion.</p>
+</div>
+<div>
+<div class="rule accent2" style="margin-top:0; font-size:.56em;">
         You now own <b>four</b> algorithms: a tree search, a list traversal, this sort, and the search
         you have used since you were six. <b class="accent3">Nobody has ever asked you to compare two of
         them.</b>
-      </div>
-      <div class="rule accent1 fragment" style="font-size:.56em;">
+</div>
+<div class="rule accent1 fragment" style="font-size:.56em;">
         Today the word is <b>better</b> — and by the end of the lesson it will mean something you can
         count, not something you feel.
       </div>
-    </div>
-  </div>
-  <p class="center fragment" style="font-size:.6em; margin-top:8px;">Five sorts, the same fifty numbers, started together. <b class="accent3">They do not finish together.</b></p>
+</div>
+</div>
+<p class="center fragment" style="font-size:.6em; margin-top:8px;">Five sorts, the same fifty numbers, started together. <b class="accent3">They do not finish together.</b></p>
 
 </section>
-
 <!-- H2↓ the race film -->
-<section data-background-color="#151B3C" class="dk">
-  <h3 style="font-size:.7em; margin:0 0 4px;">🎬 Five sorts, fifty numbers, <span class="accent3">one start line</span></h3>
-  <video src="sort-race.mp4" controls preload="metadata" style="width:78%; display:block; margin:0 auto; border-radius:10px;"></video>
-  <p class="center" style="font-size:.44em; color:#98a0c0; margin-top:6px;">One comparison = one tick, so they race on equal terms. The counters are the story: a few hundred against well over a thousand.</p>
+<section class="dk" data-background-color="#151B3C" id="a04a-leaf-04">
+<h3 style="font-size:.7em; margin:0 0 4px;">🎬 Five sorts, fifty numbers, <span class="accent3">one start line</span></h3>
+<video controls="" preload="metadata" src="sort-race.mp4" style="width:78%; display:block; margin:0 auto; border-radius:10px;"></video>
+<p class="center" style="font-size:.44em; color:#98a0c0; margin-top:6px;">One comparison = one tick, so they race on equal terms. The counters are the story: a few hundred against well over a thousand.</p>
 
 </section>
-
 <!-- H3 linear search -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 2px;">Linear search — <span class="accent2">the one you would have invented</span></h2>
-  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Start at the beginning. Look at each item. Stop when you find it, or when you run out.</p>
-  <div class="lane" data-lang="java">
-  <div class="pycell java side tight" data-out="found 7 at index 2
-99 is not there: -1"><script type="text/plain" class="pysrc">static int LinearSearch(int[] A, int Target) {
-    for (int i = 0; i < A.length; i++) {
-        if (A[i] == Target) return i;   // found it
-    }
-    return -1;                          // walked the lot, never found it
-}
-
-int[] A = {3, 9, 7, 1, 5};              // NOT sorted -- and it does not care
-System.out.println("found 7 at index " + LinearSearch(A, 7));
-System.out.println("99 is not there: " + LinearSearch(A, 99));</script></div>
-  </div>
-  <div class="lane" data-lang="py">
-  <div class="pycell side tight"><script type="text/plain" class="pysrc">def LinearSearch(A, Target):
+<section><section class="lt foundation-task" data-background-color="#F4F6FB" id="a04a-derive-a-search-from-the-stop-conditions"><h2>Derive a search from the stop conditions</h2><p>A = [12,4,7,19,2]. Return the index of target7, or −1 if absent. Trace target99 too.</p><p>Write a linear search. Explain which condition stops a successful search and which stops an unsuccessful one.</p><p class="rule fragment">Check: indices begin at0; target7 returns2. The missing target needs all five comparisons. Full code ↓.</p>
+</section><section class="lt" data-background-color="#F4F6FB" data-reference="optional-working" id="a04a-leaf-05">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 2px;">Linear search — <span class="accent2">the one you would have invented</span></h2>
+<p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Start at the beginning. Look at each item. Stop when you find it, or when you run out.</p>
+<div class="pycell side tight"><script class="pysrc" type="text/plain">def LinearSearch(A, Target):
     for i in range(len(A)):
         if A[i] == Target:
             return i        # found it
@@ -501,29 +479,26 @@ System.out.println("99 is not there: " + LinearSearch(A, 99));</script></div>
 A = [3, 9, 7, 1, 5]         # NOT sorted -- and it does not care
 print("found 7 at index", LinearSearch(A, 7))
 print("99 is not there:", LinearSearch(A, 99))</script></div>
-  </div>
-  <div class="rule accent1" style="font-size:.56em;">
-    <b>Its whole case is what it does not need.</b> No order. No preparation. No promises. Hand it any
+<div class="rule accent1" style="font-size:.56em;">
+<b>Its whole case is what it does not need.</b> No order. No preparation. No promises. Hand it any
     array at all and it works — and for <b>one</b> search of unsorted data it is exactly the right tool.
     <b class="accent3">Best case 1 look; worst case n; on average about n ÷ 2.</b>
-  </div>
+</div>
 
-</section>
-
+</section></section>
 <!-- H4 binary search -->
 <section>
-
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.78em; margin:0 0 2px;">Binary search — <span class="accent2">you have done this since you were six</span></h2>
-  <div class="two-col" style="gap:16px;">
-    <div>
-      <div class="rule accent3" style="margin-top:0; font-size:.55em;">
-        <b>"I'm thinking of a number between 1 and 100."</b> Nobody guesses 1, then 2, then 3. Everybody
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-06">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.78em; margin:0 0 2px;">Binary search — <span class="accent2">you have done this since you were six</span></h2>
+<div class="two-col" style="gap:16px;">
+<div>
+<div class="rule accent3" style="margin-top:0; font-size:.55em;">
+<b>"I'm thinking of a number between 1 and 100."</b> Nobody guesses 1, then 2, then 3. Everybody
         guesses <b>50</b> — and every answer throws half the numbers away.
         <b class="accent2">Worst case: 7 guesses.</b> Because 2⁶ = 64 is not enough and 2⁷ = 128 is.
       </div>
-      <div class="ps" style="font-size:.48em;"><span class="k">int</span> Low = 0, High = A.length - 1;
+<div class="ps" style="font-size:.48em;"><span class="k">int</span> Low = 0, High = A.length - 1;
 <span class="k">while</span> (Low &lt;= High) {
     <span class="k">int</span> Mid = (Low + High) / 2;
     <span class="k">if</span> (A[Mid] == Target) <span class="k">return</span> Mid;
@@ -531,115 +506,92 @@ print("99 is not there:", LinearSearch(A, 99))</script></div>
     <span class="k">else</span> High = Mid - 1;
 }
 <span class="k">return</span> -1;</div>
-    </div>
-    <div>
-      <div class="rule accent2" style="margin-top:0; font-size:.55em;">
-        <b>The three ways to get it wrong</b>, and every one of them appears in real scripts:<br>
-        ① <span class="mono">while (Low &lt; High)</span> — misses an array of one, so it never finds the last candidate.<br>
-        ② <span class="mono">Low = Mid</span> instead of <span class="mono">Mid + 1</span> — the window stops shrinking and it loops for ever.<br>
+</div>
+<div>
+<div class="rule accent2" style="margin-top:0; font-size:.55em;">
+<b>The three ways to get it wrong</b>, and every one of them appears in real scripts:<br/>
+        ① <span class="mono">while (Low &lt; High)</span> — misses an array of one, so it never finds the last candidate.<br/>
+        ② <span class="mono">Low = Mid</span> instead of <span class="mono">Mid + 1</span> — the window stops shrinking and it loops for ever.<br/>
         ③ forgetting that it returns <b>−1</b> when the window collapses. <b>That collapse IS the answer</b> "not there".
       </div>
-      <div class="rule accent1" style="font-size:.55em;">
+<div class="rule accent1" style="font-size:.55em;">
         And one line the exam wants said out loud: <b class="accent3">the array must already be sorted.</b>
-      </div>
-    </div>
-  </div>
-  <div class="dig">📐 that precondition is not free — someone paid for it ↓</div>
+</div>
+</div>
+</div>
+<div class="dig">📐 that precondition is not free — someone paid for it ↓</div>
 
 </section>
-
 <!-- H4↓ the precondition -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h3 style="font-size:.7em; margin:0 0 4px;">📐 The precondition <span class="accent2">is</span> the trade</h3>
-  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Binary search does not <i>have</i> speed. It <b>rents</b> it, and the rent is sorted data. So the real question is never "which search is faster?" — it is <b>what are you actually doing?</b></p>
-  <div class="two-col" style="gap:16px;">
-    <div>
-      <table class="sb" style="font-size:.46em;">
-        <tr><th colspan="2">1 000 items, and you must search it</th></tr>
-        <tr><td class="nm">one linear search, average</td><td class="big">500</td></tr>
-        <tr><td class="nm">sorting it first, with one of today's sorts</td><td class="big">499 500</td></tr>
-        <tr><td class="nm">…then each binary search costs</td><td class="small">10</td></tr>
-      </table>
-      <p style="font-size:.44em; color:#8890b5; margin:4px 0 0;">Comparisons, counted — not estimated.</p>
-    </div>
-    <div>
-      <div class="rule accent2" style="margin-top:0; font-size:.55em;">
-        <b>Searching once?</b> Do not sort. The sort costs a thousand times what the single scan you are
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-07">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h3 style="font-size:.7em; margin:0 0 4px;">📐 The precondition <span class="accent2">is</span> the trade</h3>
+<p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Binary search does not <i>have</i> speed. It <b>rents</b> it, and the rent is sorted data. So the real question is never "which search is faster?" — it is <b>what are you actually doing?</b></p>
+<div class="two-col" style="gap:16px;">
+<div>
+<table class="sb" style="font-size:.46em;">
+<tr><th colspan="2">1 000 items, and you must search it</th></tr>
+<tr><td class="nm">one linear search, average</td><td class="big">500</td></tr>
+<tr><td class="nm">sorting it first, with one of today's sorts</td><td class="big">499 500</td></tr>
+<tr><td class="nm">…then each binary search costs</td><td class="small">10</td></tr>
+</table>
+<p style="font-size:.44em; color:#8890b5; margin:4px 0 0;">Comparisons, counted — not estimated.</p>
+</div>
+<div>
+<div class="rule accent2" style="margin-top:0; font-size:.55em;">
+<b>Searching once?</b> Do not sort. The sort costs a thousand times what the single scan you are
         avoiding would have cost.
       </div>
-      <div class="rule accent1" style="font-size:.55em;">
-        <b>Searching again and again?</b> Sort once, then binary-search for ever. With today's sorts that
+<div class="rule accent1" style="font-size:.55em;">
+<b>Searching again and again?</b> Sort once, then binary-search for ever. With today's sorts that
         investment pays for itself after about <b class="accent2">1 020 searches</b>.
       </div>
-      <div class="rule accent3 fragment" style="font-size:.55em;">
-        <b>And here is the crack in the floor.</b> Sort with a <i>better</i> sort — one this course has
+<div class="rule accent3 fragment" style="font-size:.55em;">
+<b>And here is the crack in the floor.</b> Sort with a <i>better</i> sort — one this course has
         not taught you — and the same investment pays for itself after <b>21</b>.
         <b class="accent2">The precondition's price depends on an algorithm you have not met.</b> 🕳
       </div>
-    </div>
-  </div>
+</div>
+</div>
 
 </section>
-
 </section>
-
 <!-- H5 THE SEARCH RACE -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.76em; margin:0 0 2px;">Race them — <span class="accent2">and count, do not guess</span></h2>
-  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">The same sorted array, the same target, both searches stepping together. The counters do the arguing.</p>
-  <div class="lt-wrap" id="raceviz"></div>
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-08">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.76em; margin:0 0 2px;">Race them — <span class="accent2">and count, do not guess</span></h2>
+<p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">The same sorted array, the same target, both searches stepping together. The counters do the arguing.</p>
+<div class="lt-wrap" id="raceviz"></div>
 
 </section>
-
 <!-- H6 the marked comparison -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.74em; margin:0 0 3px;">The question they actually ask — <span class="accent3">and how it is scored</span></h2>
-  <div class="rule navy" style="margin-top:0; font-size:.55em;">
-    <b>"Compare the methods used by the linear and binary search algorithms to find an item in an array.
+<section><section class="lt foundation-task" data-background-color="#F4F6FB" id="a04a-compare-the-methods-then-their-growth"><h2>Compare the methods, then their growth</h2><p>“Compare the methods used by the linear and binary search algorithms to find an item in an array. Refer to Big O notation in your answer.” [4] — June 2024 Paper 32 Q8(b), © UCLES.</p><p>Use a sorted array of 1,000 distinct integers. Explain what each method does if the target is absent; state the precondition that permits discarding candidates.</p><p class="rule fragment">Write first. Method points cap at 3, notation/complexity points at 2, overall at 4. These are caps, not a compulsory 2+2 allocation. Full scheme ↓.</p>
+</section><section class="lt" data-background-color="#F4F6FB" data-reference="optional-working" id="a04a-leaf-09">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.74em; margin:0 0 3px;">The question they actually ask — <span class="accent3">and how it is scored</span></h2>
+<div class="rule navy" style="margin-top:0; font-size:.55em;">
+<b>"Compare the methods used by the linear and binary search algorithms to find an item in an array.
     Refer to Big O notation in your answer."</b> <b class="accent2">[4]</b>
-    <span style="color:#8890b5;">— June 2024 Paper 32 Q8(b) &nbsp;© UCLES</span>
-  </div>
-  <table class="mk" style="margin-top:5px;">
-    <tr><th style="width:78px;">marks</th><th>the published answer</th></tr>
-    <tr><td class="m">max 3</td><td>linear checks <b>each element in turn</b> … until it is found or the end is reached · binary finds the <b>mid-point</b> and decides which side holds it · … and <b>discards the half that does not</b> · binary <b>requires the elements to be sorted</b> · binary usually does <b>many fewer comparisons</b> · linear starts at the <b>beginning</b>, binary at the <b>middle</b></td></tr>
-    <tr><td class="m">max 2</td><td>binary search is <b>O(log₂ n)</b> · linear search is <b>O(n)</b> · <b>Big O indicates the time / space complexity</b> of an algorithm</td></tr>
-  </table>
-  <div class="rule accent2" style="font-size:.55em;">
-    <b>Two of the four marks are the notation</b>, and it is the half most scripts leave out. Compare the
-    two algorithms perfectly, never write a Big O, and you cap at <b>3</b>.
-    <b class="accent3">So learn the two values now</b> — what they mean is next lesson's whole job.
-  </div>
+<span style="color:#8890b5;">— June 2024 Paper 32 Q8(b)  © UCLES</span>
+</div>
+<table class="mk" style="margin-top:5px;">
+<tr><th style="width:78px;">marks</th><th>the published answer</th></tr>
+<tr><td class="m">max 3</td><td>linear checks <b>each element in turn</b> … until it is found or the end is reached · binary finds the <b>mid-point</b> and decides which side holds it · … and <b>discards the half that does not</b> · binary <b>requires the elements to be sorted</b> · binary usually does <b>many fewer comparisons</b> · linear starts at the <b>beginning</b>, binary at the <b>middle</b></td></tr>
+<tr><td class="m">max 2</td><td>binary search is <b>O(log₂ n)</b> · linear search is <b>O(n)</b> · <b>Big O indicates the time / space complexity</b> of an algorithm</td></tr>
+</table>
+<div class="rule accent2" style="font-size:.55em;"><b>Group maxima are not reserved marks.</b> Method points cap at 3; complexity/notation points at 2; the whole answer at 4. A method-only answer can earn at most 3. One eligible complexity point can complete 4.</div>
 
-</section>
-
+</section></section>
 <!-- H7 bubble -->
-<section>
-
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.76em; margin:0 0 2px;">Bubble sort — <span class="accent2">you wrote this last year</span></h2>
-  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">AS asked for it in <b>pseudocode</b>. A2 asks for it <b>typed</b>, in four of the last Paper 4s. Same algorithm; the form is what changed.</p>
-  <div class="two-col" style="gap:14px;">
-    <div style="flex:1.15;">
-      <div class="lane" data-lang="java">
-      <div class="pycell java xtight" data-out="3 9 4 1 2  ->  1 2 3 4 9"><script type="text/plain" class="pysrc">static void BubbleSort(int[] A) {
-    int Temp;
-    for (int Count = 0; Count < A.length; Count++) {
-        for (int Count2 = 0; Count2 < A.length - 1; Count2++) {
-            if (A[Count2] > A[Count2 + 1]) {     // out of order?
-                Temp = A[Count2];                // the swap needs a
-                A[Count2] = A[Count2 + 1];       // THIRD variable
-                A[Count2 + 1] = Temp;
-            }
-        }
-    }
-}</script></div>
-      </div>
-      <div class="lane" data-lang="py">
-      <div class="pycell xtight"><script type="text/plain" class="pysrc">def BubbleSort(A):
+<section><section class="lt foundation-task" data-background-color="#F4F6FB" id="a04a-one-bubble-pass-predict-every-swap"><h2>One bubble pass — predict every swap</h2><p>Start with [3,9,4,1,2]. Compare adjacent pairs from left to right, swapping only when the left value is larger.</p><p>Write the array after each comparison and after the first complete pass. Then derive the nested loops and explain what is fixed after each pass.</p><p class="rule fragment">Check: first pass ends [3,4,1,2,9]. Python tuple assignment and the pseudocode Temp form are below.</p>
+</section>
+<section class="lt" data-background-color="#F4F6FB" data-reference="optional-working" id="a04a-leaf-10">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.76em; margin:0 0 2px;">Bubble sort — <span class="accent2">you wrote this last year</span></h2>
+<p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">AS asked for it in <b>pseudocode</b>. A2 asks for it <b>typed</b>, in four of the last Paper 4s. Same algorithm; the form is what changed.</p>
+<div class="two-col" style="gap:14px;">
+<div style="flex:1.15;">
+<div class="pycell xtight"><script class="pysrc" type="text/plain">def BubbleSort(A):
     for Count in range(len(A)):
         for Count2 in range(len(A) - 1):
             if A[Count2] > A[Count2 + 1]:                    # out of order?
@@ -648,150 +600,111 @@ print("99 is not there:", LinearSearch(A, 99))</script></div>
 A = [3, 9, 4, 1, 2]
 BubbleSort(A)
 print(A)</script></div>
-      </div>
-    </div>
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.53em;">
-        <b>Big values rise one place per pass</b>, like a bubble. It is the easiest sort to get right and
-        the one the exam asks for most.
-      </div>
-      <div class="rule accent2" style="font-size:.53em;">
-        <b>The mark points, published:</b> the header and a loop through every element · a working
+</div>
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.53em;"><b>After a complete left-to-right pass, the largest remaining value is at the end.</b> A value can move through several adjacent swaps during that pass. Name the fixed suffix before the next pass.</div>
+<div class="rule accent2" style="font-size:.53em;">
+<b>The mark points, published:</b> the header and a loop through every element · a working
         <b>inner</b> loop · the <b>comparison</b> · the <b>swap</b>. Four marks, and three of them are the
         shape rather than the detail.
       </div>
-      <div class="rule accent3" style="font-size:.53em;">
-        📐 <b>In Python the swap is one line</b> and needs no <span class="mono">Temp</span>. In Java —
-        and in pseudocode — it needs three, because <b>the first assignment destroys what you were about
-        to move</b>. Say it out loud; it is the classic lost mark.
-      </div>
-    </div>
-  </div>
-  <div class="dig">🧾 one boolean turns 1 560 comparisons into 39 — and no exam has ever asked for it ↓</div>
+<div class="rule accent3" style="font-size:.53em;"><b>Python assignment and exam pseudocode.</b> Tuple assignment swaps the two values together. In a pseudocode sequence of separate assignments, preserve one old value in Temp before overwriting it. Use the form the question requests.</div>
+</div>
+</div>
+<div class="dig">Optional: predict how a no-swaps flag changes a sorted-input run ↓</div>
 
 </section>
-
 <!-- H7↓ the flag -->
-<section data-background-color="#F4F6FB" class="lt">
-  <h3 style="font-size:.7em; margin:0 0 4px;">🧾 The flag they never ask for</h3>
-  <div class="two-col" style="gap:16px;">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="k">for</span> (Count = 0; Count &lt; n; Count++) {
-    Swapped = <span class="v">false</span>;
-    <span class="k">for</span> (Count2 = 0; Count2 &lt; n-1-Count; Count2++) {
-        <span class="k">if</span> (A[Count2] &gt; A[Count2+1]) {
-            <span class="c">// ...swap...</span>
-            Swapped = <span class="v">true</span>;
-        }
-    }
-    <span class="k">if</span> (!Swapped) <span class="k">break</span>;   <span class="c">// nothing moved: it is sorted</span>
-}</div>
-    </div>
-    <div>
-      <table class="sb" style="font-size:.48em;">
-        <tr><th colspan="2">40 items, <b>already sorted</b></th></tr>
-        <tr><td class="nm">the plain double loop</td><td class="big">1 560</td></tr>
-        <tr class="win"><td class="nm">with a no-swaps flag</td><td class="small">39</td></tr>
-      </table>
-      <div class="toll" style="font-size:.52em;">
-        <span class="th">🧾 OUTSIDE THE EXAM HALL</span><br>
-        <span class="no">Never asked:</span> no published Paper 4 scheme mentions a flag or an early exit.
-        Write the plain version in the exam.<br>
-        <span class="yes">Transfers:</span> one boolean turned n² work into n. That gap — <b>the same
-        algorithm being fast or slow depending on the data it is handed</b> — is the thing the next
-        lesson is built on.
-      </div>
-    </div>
-  </div>
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-11">
+<h3 style="font-size:.7em; margin:0 0 4px;">Optional variant: stop when a pass makes no swaps</h3>
+<div class="two-col" style="gap:16px;">
+<div>
+<div class="ps" style="margin-top:0; font-size:.5em;">for Count in range(len(A)):
+    Swapped = False
+    for Count2 in range(len(A) - 1 - Count):
+        if A[Count2] &gt; A[Count2 + 1]:
+            A[Count2], A[Count2 + 1] = A[Count2 + 1], A[Count2]
+            Swapped = True
+    if not Swapped:
+        break</div>
+</div>
+<div>
+<table class="sb" style="font-size:.48em;">
+<tr><th colspan="2">40 items, <b>already sorted</b></th></tr>
+<tr><td class="nm">the plain double loop</td><td class="big">1 560</td></tr>
+<tr class="win"><td class="nm">with a no-swaps flag</td><td class="small">39</td></tr>
+</table>
+<div class="toll" style="font-size:.52em;"><b>ALGORITHM VARIANT</b><br/>The no-swaps flag allows early exit on sorted data. The supplied plain double loop does not. Follow a question’s requested variant; historical scheme frequency is not a prohibition on an optimisation.</div>
+</div>
+</div>
 
 </section>
-
 </section>
-
 <!-- H8 insertion -->
 <section>
-
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.76em; margin:0 0 2px;">Insertion sort — <span class="accent2">sort a hand of cards</span></h2>
-  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">§19.1's other named sort, and the one you have not written yet. You already know how to do it: you do it every time you pick up a hand of cards.</p>
-  <div class="two-col" style="gap:14px;">
-    <div style="flex:1.05;">
-      <video src="sort-insertion.mp4" controls preload="metadata" style="width:100%; border-radius:9px; display:block;"></video>
-      <p style="font-size:.4em; color:#8890b5; margin:3px 0 0;">Green is the sorted hand. Amber is the card being carried back into it.</p>
-    </div>
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.53em;">
-        <b>Four moves, said before any code:</b><br>
-        ① <b>pick up</b> the next card<br>
-        ② while the card on its left is <b>bigger</b>, <b>slide</b> that card one place right<br>
-        ③ <b>drop</b> yours into the gap<br>
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-12">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div><p class="rule">Before running: insert each next value in [5, 1, 4, 2, 8]. Write the array after every pass, naming the sorted prefix and where the saved card lands. Trace check and complete code ↓.</p>
+<h2 style="font-size:.76em; margin:0 0 2px;">Insertion sort — <span class="accent2">sort a hand of cards</span></h2>
+<p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">§19.1's other named sort, and the one you have not written yet. You already know how to do it: you do it every time you pick up a hand of cards.</p>
+<div class="two-col" style="gap:14px;">
+<div style="flex:1.05;">
+<video controls="" preload="metadata" src="sort-insertion.mp4" style="width:100%; border-radius:9px; display:block;"></video>
+<p style="font-size:.4em; color:#8890b5; margin:3px 0 0;">Green is the sorted hand. Amber is the card being carried back into it.</p>
+</div>
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.53em;">
+<b>Four moves, said before any code:</b><br/>
+        ① <b>pick up</b> the next card<br/>
+        ② while the card on its left is <b>bigger</b>, <b>slide</b> that card one place right<br/>
+        ③ <b>drop</b> yours into the gap<br/>
         ④ repeat, from the <b>second</b> card to the last
       </div>
-      <div class="rule accent2 fragment" style="font-size:.53em;">
-        <b>Why start at the second card?</b> One card on its own is already a sorted hand.
+<div class="rule accent2 fragment" style="font-size:.53em;">
+<b>Why start at the second card?</b> One card on its own is already a sorted hand.
       </div>
-      <div class="rule accent3 fragment" style="font-size:.53em;">
-        <b>The invariant:</b> everything to the left of the card you are holding is <b>always sorted</b>.
+<div class="rule accent3 fragment" style="font-size:.53em;">
+<b>The invariant:</b> everything to the left of the card you are holding is <b>always sorted</b>.
         Each drop keeps it true, so when the last card is dropped the whole array is sorted. That is the
         proof it works.
       </div>
-    </div>
-  </div>
-  <div class="dig">🃏 trace it before you write it ↓</div>
+</div>
+</div>
+<div class="dig">🃏 trace it before you write it ↓</div>
 
 </section>
-
 <!-- H8↓ the trace -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h3 style="font-size:.7em; margin:0 0 4px;">Trace it first — <span class="accent2">predict each row before it appears</span></h3>
-  <p style="font-size:.42em; color:#8890b5; margin:0 0 6px;"><span class="mono">DataArray = [5, 1, 4, 2, 8]</span> · <span class="mono">X</span> is the position of the card you pick up · <span class="mono">Y</span> walks left from <span class="mono">X − 1</span></p>
-  <table class="sb" style="font-size:.5em;">
-    <tr><th>X</th><th>CurrentValue<br><span style="font-weight:normal;">the card in your hand</span></th><th>the walk left</th><th>stops because</th><th>DataArray after the drop</th></tr>
-    <tr class="fragment"><td>1</td><td>1</td><td>5 &gt; 1 → slide 5</td><td><span class="big" style="font-size:1em;">Y = −1</span> · no cards left</td><td>[1, 5, 4, 2, 8]</td></tr>
-    <tr class="fragment"><td>2</td><td>4</td><td>5 &gt; 4 → slide 5</td><td>1 is not bigger than 4</td><td>[1, 4, 5, 2, 8]</td></tr>
-    <tr class="fragment"><td>3</td><td>2</td><td>5 &gt; 2 → slide 5 · 4 &gt; 2 → slide 4</td><td>1 is not bigger than 2</td><td>[1, 2, 4, 5, 8]</td></tr>
-    <tr class="fragment win"><td>4</td><td>8</td><td>— nothing to slide</td><td>5 is not bigger than 8</td><td>[1, 2, 4, 5, 8]</td></tr>
-  </table>
-  <div class="two-col fragment" style="gap:14px; margin-top:8px;">
-    <div class="rule accent1" style="margin:0; font-size:.53em;">
-      <b>Two ways out of the walk</b>, and both appeared: you <b>run out of cards</b> (row 1), or the card on
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-13">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h3 style="font-size:.7em; margin:0 0 4px;">Trace it first — <span class="accent2">predict each row before it appears</span></h3>
+<p style="font-size:.42em; color:#8890b5; margin:0 0 6px;"><span class="mono">DataArray = [5, 1, 4, 2, 8]</span> · <span class="mono">X</span> is the position of the card you pick up · <span class="mono">Y</span> walks left from <span class="mono">X − 1</span></p>
+<table class="sb" style="font-size:.5em;">
+<tr><th>X</th><th>CurrentValue<br/><span style="font-weight:normal;">the card in your hand</span></th><th>the walk left</th><th>stops because</th><th>DataArray after the drop</th></tr>
+<tr class="fragment"><td>1</td><td>1</td><td>5 &gt; 1 → slide 5</td><td><span class="big" style="font-size:1em;">Y = −1</span> · no cards left</td><td>[1, 5, 4, 2, 8]</td></tr>
+<tr class="fragment"><td>2</td><td>4</td><td>5 &gt; 4 → slide 5</td><td>1 is not bigger than 4</td><td>[1, 4, 5, 2, 8]</td></tr>
+<tr class="fragment"><td>3</td><td>2</td><td>5 &gt; 2 → slide 5 · 4 &gt; 2 → slide 4</td><td>1 is not bigger than 2</td><td>[1, 2, 4, 5, 8]</td></tr>
+<tr class="fragment win"><td>4</td><td>8</td><td>— nothing to slide</td><td>5 is not bigger than 8</td><td>[1, 2, 4, 5, 8]</td></tr>
+</table>
+<div class="two-col fragment" style="gap:14px; margin-top:8px;">
+<div class="rule accent1" style="margin:0; font-size:.53em;">
+<b>Two ways out of the walk</b>, and both appeared: you <b>run out of cards</b> (row 1), or the card on
       your left is <b>not bigger</b> (rows 2–4). The loop condition is exactly those two halves.
     </div>
-    <div class="rule accent3" style="margin:0; font-size:.53em;">
-      <b>Row 4 cost one comparison</b> and moved nothing. Hand insertion sort data that is <b>nearly sorted</b>
+<div class="rule accent3" style="margin:0; font-size:.53em;">
+<b>Row 4 cost one comparison</b> and moved nothing. Hand insertion sort data that is <b>nearly sorted</b>
       and almost every row looks like that. Hold on to this for the order question two slides away.
     </div>
-  </div>
-  <div class="dig">✍️ four moves, four lines ↓</div>
+</div>
+<div class="dig">✍️ four moves, four lines ↓</div>
 
 </section>
-
 <!-- H8↓ the code -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h3 style="font-size:.7em; margin:0 0 2px;">Now write it — <span class="accent2">each move is one line</span></h3>
-  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">The names are the ones the published scheme uses. Paper 4 asks for it <b>typed</b>, worth 5 marks.</p>
-  <div class="two-col" style="gap:14px;">
-    <div style="flex:1.2;">
-      <div class="lane" data-lang="java">
-      <div class="pycell java xtight" data-out="5 1 4 2 8  ->  1 2 4 5 8"><script type="text/plain" class="pysrc">static int[] InsertionSort(int[] DataArray) {
-    int CurrentValue, Y;
-    for (int X = 1; X < DataArray.length; X++) {   // ④ from the SECOND card
-        CurrentValue = DataArray[X];                // ① pick it up
-        Y = X - 1;
-        while (Y >= 0 && DataArray[Y] > CurrentValue) {
-            DataArray[Y + 1] = DataArray[Y];        // ② slide it right
-            Y--;
-        }
-        DataArray[Y + 1] = CurrentValue;            // ③ drop into the gap
-    }
-    return DataArray;
-}</script></div>
-      </div>
-      <div class="lane" data-lang="py">
-      <div class="pycell xtight"><script type="text/plain" class="pysrc">def InsertionSort(DataArray):
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-14">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h3 style="font-size:.7em; margin:0 0 2px;">Now write it — <span class="accent2">each move is one line</span></h3>
+<p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">The names are the ones the published scheme uses. Paper 4 asks for it <b>typed</b>, worth 5 marks.</p>
+<div class="two-col" style="gap:14px;">
+<div style="flex:1.2;">
+<div class="pycell xtight"><script class="pysrc" type="text/plain">def InsertionSort(DataArray):
     for X in range(1, len(DataArray)):    # ④ from the SECOND card
         CurrentValue = DataArray[X]       # ① pick it up
         Y = X - 1
@@ -802,38 +715,31 @@ print(A)</script></div>
     return DataArray
 
 print(InsertionSort([5, 1, 4, 2, 8]))</script></div>
-      </div>
-    </div>
-    <div>
-      <div class="rule accent2" style="margin-top:0; font-size:.5em;">
-        <b>The published mark points [5]:</b> the header taking the array and <b>returning</b> it · a loop
+</div>
+<div>
+<div class="rule accent2" style="margin-top:0; font-size:.5em;">
+<b>The published mark points [5]:</b> the header taking the array and <b>returning</b> it · a loop
         through <b>each element</b> · <b>extracting</b> the element and comparing it to the sorted part ·
         <b>moving</b> elements along · <b>inserting</b> it in the right place.
         <span style="color:#8890b5;">June 2025 Paper 43 Q2(b)</span>
-      </div>
-      <div class="rule accent1 fragment" style="font-size:.5em;">
-        <b>Why is the drop <span class="mono">Y + 1</span>?</b> The walk stops <b>on</b> the first card that
+</div>
+<div class="rule accent1 fragment" style="font-size:.5em;">
+<b>Why is the drop <span class="mono">Y + 1</span>?</b> The walk stops <b>on</b> the first card that
         is not bigger, or at −1. The gap is one place to its right.
       </div>
-      <div class="rule accent3 fragment" style="font-size:.5em;">
-        📐 <b>Write <span class="mono">Y &gt;= 0</span> first.</b> Swap the two halves and Java checks
-        <span class="mono">DataArray[-1]</span> before it notices: <span class="mono">ArrayIndexOutOfBoundsException:
-        Index -1</span>, captured from a real run. Python reads <span class="mono">[-1]</span> as the
-        <b>last</b> item and happens to get away with it. Do not rely on that.
-      </div>
-    </div>
-  </div>
-  <div class="dig">📝 Paper 3 wants the same thing in pseudocode ↓</div>
+<div class="rule accent3 fragment" style="font-size:.5em;"><b>Check Y ≥ 0 before indexing.</b> Python evaluates and left to right and stops when the guard is false. Python’s negative indices mean an incorrectly ordered condition can read the last item without raising an exception. Guard first expresses the valid sorted-prefix range.</div>
+</div>
+</div>
+<div class="dig">📝 Paper 3 wants the same thing in pseudocode ↓</div>
 
 </section>
-
 <!-- H8↓ pseudocode -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h3 style="font-size:.7em; margin:0 0 4px;">The same four moves in pseudocode — <span class="accent2">arrays start at 1</span></h3>
-  <div class="two-col" style="gap:16px;">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.52em;"><span class="k">FOR</span> X ← 2 <span class="k">TO</span> n                  <span class="c">// ④ from the second card</span>
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-15">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h3 style="font-size:.7em; margin:0 0 4px;">The same four moves in pseudocode — <span class="accent2">arrays start at 1</span></h3>
+<div class="two-col" style="gap:16px;">
+<div>
+<div class="ps" style="margin-top:0; font-size:.52em;"><span class="k">FOR</span> X ← 2 <span class="k">TO</span> n                  <span class="c">// ④ from the second card</span>
     CurrentValue ← DataArray[X]    <span class="c">// ① pick it up</span>
     Y ← X - 1
     <span class="k">WHILE</span> Y &gt;= 1 <span class="k">AND</span> DataArray[Y] &gt; CurrentValue
@@ -842,120 +748,92 @@ print(InsertionSort([5, 1, 4, 2, 8]))</script></div>
     <span class="k">ENDWHILE</span>
     DataArray[Y + 1] ← CurrentValue   <span class="c">// ③ drop into the gap</span>
 <span class="k">NEXT</span> X</div>
-      <p style="font-size:.42em; color:#8890b5; margin:4px 0 0;">Only the edges move: <span class="mono">2</span> instead of 1, <span class="mono">&gt;= 1</span> instead of <span class="mono">&gt;= 0</span>. The moves are the same.</p>
-    </div>
-    <div>
-      <div class="rule accent2" style="margin-top:0; font-size:.5em;">
-        <b>What Paper 3 schemes award</b>, one mark each: an outer loop starting at the <b>second</b> item ·
+<p style="font-size:.42em; color:#8890b5; margin:4px 0 0;">Only the edges move: <span class="mono">2</span> instead of 1, <span class="mono">&gt;= 1</span> instead of <span class="mono">&gt;= 0</span>. The moves are the same.</p>
+</div>
+<div>
+<div class="rule accent2" style="margin-top:0; font-size:.5em;">
+<b>What Paper 3 schemes award</b>, one mark each: an outer loop starting at the <b>second</b> item ·
         the value <b>stored</b> before the walk · a <b>WHILE</b> that compares, with the right exit · data <b>moved</b> to the
         next element · the counter <b>going down</b> · the value <b>re-inserted outside</b> the inner loop.
       </div>
-      <div class="rule accent3 fragment" style="font-size:.5em;">
-        <b>Two arrays that belong together</b> (an ID and a name, a score and a student)? Every move happens
+<div class="rule accent3 fragment" style="font-size:.5em;">
+<b>Two arrays that belong together</b> (an ID and a name, a score and a student)? Every move happens
         <b>to both</b>: two values picked up, two slides, two drops. Sort one without the other and every
         name ends up next to someone else's ID.
       </div>
-      <div class="rule accent1 fragment" style="font-size:.5em;">
-        <b>The classic lost mark:</b> the drop written <b>inside</b> the WHILE. Then the card is dropped after
+<div class="rule accent1 fragment" style="font-size:.5em;">
+<b>The classic lost mark:</b> the drop written <b>inside</b> the WHILE. Then the card is dropped after
         every slide instead of once, at the end of the walk.
       </div>
-    </div>
-  </div>
-  <div class="dig">🕳 sort never meant "numbers" ↓</div>
+</div>
+</div>
+<div class="dig">🕳 sort never meant "numbers" ↓</div>
 
 </section>
-
 <!-- H8↓ strings -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p4">P4</span></div>
-  <h3 style="font-size:.7em; margin:0 0 4px;">🕳 A sort is a <span class="accent3">shape</span>, not something you do to numbers</h3>
-  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Nov 2024 Paper 41 asks for a bubble sort in <b>ascending alphabetical order</b>, using a supplied function <span class="mono">CompareStrings()</span>. © UCLES</p>
-  <div class="two-col" style="gap:16px;">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="c">// numbers</span>
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-16">
+<div class="badges"><span class="bg bg-p4">P4</span></div>
+<h3 style="font-size:.7em; margin:0 0 4px;">🕳 A sort is a <span class="accent3">shape</span>, not something you do to numbers</h3>
+<p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Nov 2024 Paper 41 asks for a bubble sort in <b>ascending alphabetical order</b>, using a supplied function <span class="mono">CompareStrings()</span>. © UCLES</p>
+<div class="two-col" style="gap:16px;">
+<div>
+<div class="ps" style="margin-top:0; font-size:.5em;"><span class="c">// numbers</span>
 <span class="k">if</span> (A[j] &gt; A[j+1]) swap;
 
 <span class="c">// names — the SAME algorithm</span>
 <span class="k">if</span> (CompareStrings(A[j], A[j+1])) swap;</div>
-    </div>
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.55em;">
+</div>
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.55em;">
         Two loops, a comparison, a swap. <b>Only the comparison changed</b>, and it changed into a
         function call. The sort did not need to know what it was sorting.
       </div>
-      <div class="rule accent3" style="font-size:.55em;">
-        <b class="accent2">That is why it is worth learning four of these.</b> An algorithm is a shape you
+<div class="rule accent3" style="font-size:.55em;">
+<b class="accent2">That is why it is worth learning four of these.</b> An algorithm is a shape you
         can pour different things into — dates, names, scores, records ordered by one field.
       </div>
-      <div class="rule accent1" style="font-size:.53em;">
-        ☕ <b>Java gave this a name: <span class="mono">Comparable</span>.</b> A class that implements it
-        promises one method — <span class="mono">compareTo(other)</span>, returning negative, zero or
-        positive — and in exchange <b>every sort in the language will sort it</b>.
-        <span class="mono">String</span> already implements it, which is why
-        <span class="mono">"Ali".compareTo("Bo")</span> works and why Cambridge had to <i>supply</i>
-        <span class="mono">CompareStrings()</span> in pseudocode, where no such promise exists.
-        <b class="accent3">Write compareTo once; every sort you ever write works on your objects.</b>
-      </div>
-    </div>
-  </div>
+<div class="rule accent1" style="font-size:.53em;"><b>Python offers an ordering key.</b> For example, <code>sorted(records, key=lambda row: row["score"])</code> orders records by one field. In the supplied exam algorithm, use its comparison function and its documented return meaning. The traversal shape stays the same when the comparison changes.</div>
+</div>
+</div>
 
 </section>
-
 </section>
-
 <!-- H9 selection -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg" style="background:rgba(109,79,208,.14); color:#6d4fd0; border:1.5px solid #b3a6e8;">off-syllabus</span></div>
-  <h2 style="font-size:.76em; margin:0 0 2px;">Selection sort — <span class="accent2">the third strategy</span></h2>
-  <div class="two-col" style="gap:14px;">
-    <div style="flex:1.05;">
-      <video src="sort-selection.mp4" controls preload="metadata" style="width:100%; border-radius:9px; display:block;"></video>
-      <p style="font-size:.4em; color:#8890b5; margin:3px 0 0;">Find the smallest thing left. Swap it into place. Once per pass, and never again.</p>
-    </div>
-    <div>
-      <div class="toll" style="margin-top:0; font-size:.52em;">
-        <span class="th">🧾 THIS ONE IS NOT ON YOUR SYLLABUS</span><br>
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-17">
+<div class="badges"><span class="bg" style="background:rgba(109,79,208,.14); color:#6d4fd0; border:1.5px solid #b3a6e8;">off-syllabus</span></div>
+<h2 style="font-size:.76em; margin:0 0 2px;">Selection sort — <span class="accent2">the third strategy</span></h2>
+<div class="two-col" style="gap:14px;">
+<div style="flex:1.05;">
+<video controls="" preload="metadata" src="sort-selection.mp4" style="width:100%; border-radius:9px; display:block;"></video>
+<p style="font-size:.4em; color:#8890b5; margin:3px 0 0;">Find the smallest thing left. Swap it into place. Once per pass, and never again.</p>
+</div>
+<div>
+<div class="toll" style="margin-top:0; font-size:.52em;">
+<span class="th">🧾 THIS ONE IS NOT ON YOUR SYLLABUS</span><br/>
         9618 §19.1 names <b>two</b> sorts — insertion and bubble — and "selection sort" appears in none
         of the last five years of papers. <span class="yes">It is here</span> because bubble
         <b>exchanges</b>, insertion <b>inserts</b>, and this one <b>selects</b>: three different
         strategies is what makes the word <i>judge</i> mean anything. And because it is the only sort in
         this room that <b>nobody can have memorised.</b>
-      </div>
-      <div class="rule accent1" style="font-size:.53em;">
-        <b>The whole description, and you get no code:</b> walk the unsorted part, remember where the
+</div>
+<div class="rule accent1" style="font-size:.53em;">
+<b>The whole description, and you get no code:</b> walk the unsorted part, remember where the
         smallest value is, and when you reach the end, swap it with the first unsorted slot. Repeat.
       </div>
-      <div class="rule accent2" style="font-size:.53em;">
-        <b class="accent3">It has a fingerprint.</b> One swap per pass means <b>at most n − 1 swaps,
+<div class="rule accent2" style="font-size:.53em;">
+<b class="accent3">It has a fingerprint.</b> One swap per pass means <b>at most n − 1 swaps,
         ever</b> — where bubble on the same 40 items averages <b>364</b>. Remember that; the boss checks it.
       </div>
-    </div>
-  </div>
+</div>
+</div>
 
 </section>
-
 <!-- H10 does the order matter -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.78em; margin:0 0 2px;">Does the <span class="accent2">initial order</span> matter?</h2>
-  <p style="font-size:.42em; color:#98a0c0; margin:0 0 5px;">Your syllabus says it might: <i>"performance of a sorting routine may depend on the initial order of the data and the number of data items."</i> So measure it. Same forty numbers, same three sorts, twice.</p>
-  <div class="lane" data-lang="java">
-  <div class="pycell java xtight" data-out="40 items, shuffled
-  bubble         1560 comparisons     364 swaps
-  insertion       400 comparisons     364 swaps
-  selection       780 comparisons      36 swaps
-
-40 items, ALMOST sorted (two pairs out of place)
-  bubble         1560 comparisons       2 swaps
-  insertion        41 comparisons       2 swaps
-  selection       780 comparisons       2 swaps"><script type="text/plain" class="pysrc">// each sort counts its own comparisons and swaps as it runs
-run("bubble",    shuffled);   run("insertion", shuffled);   run("selection", shuffled);
-
-// now the SAME sorts on data that is nearly in order already
-run("bubble",    nearly);     run("insertion", nearly);     run("selection", nearly);</script></div>
-  </div>
-  <div class="lane" data-lang="py">
-  <div class="pycell xtight"><script type="text/plain" class="pysrc">import random
+<section class="dk" data-background-color="#151B3C" id="a04a-leaf-18">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.78em; margin:0 0 2px;">Does the <span class="accent2">initial order</span> matter?</h2>
+<p style="font-size:.42em; color:#98a0c0; margin:0 0 5px;">Your syllabus says it might: <i>"performance of a sorting routine may depend on the initial order of the data and the number of data items."</i> So measure it. Same forty numbers, same three sorts, twice.</p>
+<div class="pycell xtight"><script class="pysrc" type="text/plain">import random
 def bubble(a):
     a, c = a[:], 0
     for i in range(len(a)):
@@ -979,125 +857,105 @@ nearly = list(range(40)); nearly[7], nearly[8] = nearly[8], nearly[7]
 
 print("shuffled : bubble", bubble(shuffled), " insertion", insertion(shuffled))
 print("nearly   : bubble", bubble(nearly),   " insertion", insertion(nearly))</script></div>
-  </div>
-  <div class="rule accent3" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
-    <b>Read the second table again.</b> Bubble does <b>1 560</b> either way. Selection does <b>780</b>
+<div class="rule accent3" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Read the second table again.</b> Bubble does <b>1 560</b> either way. Selection does <b>780</b>
     either way. <b class="accent2">Insertion drops from 400 to 41.</b> Only one of these three noticed
     that the data was nearly sorted — and that is the answer to the syllabus's question.
   </div>
 
 </section>
-
 <!-- H11 GAME -->
-<section data-background-color="#F4F6FB" class="lt growslide">
-  <h2 style="font-size:.76em; margin:0 0 8px;">🎮 Judging Algorithms</h2>
-  <div class="g-wrap">
-    <div class="g-head"><span id="g-stage" class="g-stage"></span><span id="g-prog" class="g-prog"></span><span id="g-score" class="g-score"></span><button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button></div>
-    <div id="g-q" class="g-q"></div>
-    <div id="g-body"></div>
-    <div id="g-say" class="g-say">&nbsp;</div>
-  </div>
+<section class="lt growslide" data-background-color="#F4F6FB" id="a04a-leaf-19">
+<h2 style="font-size:.76em; margin:0 0 8px;">🎮 Judging Algorithms</h2>
+<div class="g-wrap">
+<div class="g-head"><span class="g-stage" id="g-stage"></span><span class="g-prog" id="g-prog"></span><span class="g-score" id="g-score"></span><button class="g-skip" id="g-back" title="back to the previous question">← back</button><button class="g-skip" id="g-skip" title="on to the next question, answered or not">next →</button></div>
+<div class="g-q" id="g-q"></div>
+<div id="g-body"></div>
+<div class="g-say" id="g-say"> </div>
+</div>
 
 </section>
-
 <!-- H12 the real thing -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.74em; margin:0 0 4px;">The real thing — <span class="accent3">June 2024 Paper 32, Question 8</span></h2>
-  <p style="font-size:.42em; color:#8890b5; margin:0 0 5px;">One question, two parts, and you can now do both. © UCLES</p>
-  <div class="two-col" style="gap:16px;">
-    <div>
-      <div class="rule navy" style="margin-top:0; font-size:.54em;">
-        <b>(a)</b> Complete the pseudocode for a <b>linear search</b> of an array of 50 000 items. <b>[4]</b>
-        <span style="color:#8890b5;">— one mark per completed line</span>
-      </div>
-      <div class="rule navy" style="font-size:.54em;">
-        <b>(b)</b> Compare the methods used by the linear and binary search algorithms.
+<section class="lt" data-background-color="#F4F6FB" id="a04a-leaf-20">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.74em; margin:0 0 4px;">The real thing — <span class="accent3">June 2024 Paper 32, Question 8</span></h2>
+<p style="font-size:.42em; color:#8890b5; margin:0 0 5px;">One question, two parts, and you can now do both. © UCLES</p>
+<div class="two-col" style="gap:16px;">
+<div>
+<div class="rule navy" style="margin-top:0; font-size:.54em;">
+<b>(a)</b> Complete the pseudocode for a <b>linear search</b> of an array of 50 000 items. <b>[4]</b>
+<span style="color:#8890b5;">— one mark per completed line</span>
+</div>
+<div class="rule navy" style="font-size:.54em;">
+<b>(b)</b> Compare the methods used by the linear and binary search algorithms.
         <b>Refer to Big O notation in your answer.</b> <b>[4]</b>
-      </div>
-      <div class="rule accent3" style="font-size:.54em;">
-        <b>Notice the array size.</b> 50 000 items — chosen so that the difference between 50 000 looks
+</div>
+<div class="rule accent3" style="font-size:.54em;">
+<b>Notice the array size.</b> 50 000 items — chosen so that the difference between 50 000 looks
         and <b>16</b> is not an abstraction.
       </div>
-    </div>
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.54em;">
-        <b>What (a) is really testing</b> is the <b>ending</b>: the loop has to stop for <i>two</i>
+</div>
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.54em;">
+<b>What (a) is really testing</b> is the <b>ending</b>: the loop has to stop for <i>two</i>
         different reasons — found it, or ran out — and the published answer carries two booleans,
         <span class="mono">Found</span> and <span class="mono">NotInList</span>, to tell them apart.
       </div>
-      <div class="rule accent2 fragment" style="font-size:.54em;">
-        <b>And (b) is where the marks are lost.</b> Two of its four are the notation. Write
+<div class="rule accent2 fragment" style="font-size:.54em;">
+<b>And (b) is where the marks are lost.</b> Two of its four are the notation. Write
         <b>O(n)</b> and <b>O(log₂ n)</b> before you write anything else — then compare.
       </div>
-    </div>
-  </div>
+</div>
+</div>
 
 </section>
-
 <!-- vocabulary -->
-<section data-background-color="#222B5A" class="dk">
-  <h3 style="font-size:.74em; margin:0 0 8px;">词汇 Vocabulary</h3>
-  <table class="mk" style="font-size:.52em; color:var(--ice);">
-    <tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
-    <tr><td>linear search</td><td>线性查找 / 顺序查找</td><td>look at each item in turn. Needs <b>nothing</b> of the data</td></tr>
-    <tr><td>binary search</td><td>二分查找</td><td>halve the window each time. <b>Needs the data sorted</b> — that is the rent</td></tr>
-    <tr><td>precondition</td><td>前提条件</td><td>what must already be true before an algorithm may be used</td></tr>
-    <tr><td>bubble sort</td><td>冒泡排序</td><td>compare neighbours, swap, repeat. The one Paper 4 asks for most</td></tr>
-    <tr><td>insertion sort</td><td>插入排序</td><td>carry each item back into the sorted part. <b>The only one that notices</b> nearly-sorted data</td></tr>
-    <tr><td>selection sort</td><td>选择排序</td><td>find the smallest, swap it home. <b>n − 1 swaps</b>, and not on your syllabus</td></tr>
-    <tr><td>comparison</td><td>比较</td><td>the unit we count in, because it is what every one of these actually does</td></tr>
-  </table>
+<section class="dk" data-background-color="#222B5A" id="a04a-leaf-21">
+<h3 style="font-size:.74em; margin:0 0 8px;">词汇 Vocabulary</h3>
+<table class="mk" style="font-size:.52em; color:var(--ice);">
+<tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
+<tr><td>linear search</td><td>线性查找 / 顺序查找</td><td>look at each item in turn. Needs <b>nothing</b> of the data</td></tr>
+<tr><td>binary search</td><td>二分查找</td><td>halve the window each time. <b>Needs the data sorted</b> — that is the rent</td></tr>
+<tr><td>precondition</td><td>前提条件</td><td>what must already be true before an algorithm may be used</td></tr>
+<tr><td>bubble sort</td><td>冒泡排序</td><td>compare neighbours, swap, repeat. The one Paper 4 asks for most</td></tr>
+<tr><td>insertion sort</td><td>插入排序</td><td>carry each item back into the sorted part. <b>The only one that notices</b> nearly-sorted data</td></tr>
+<tr><td>selection sort</td><td>选择排序</td><td>find the smallest, swap it home. <b>n − 1 swaps</b>, and not on your syllabus</td></tr>
+<tr><td>comparison</td><td>比较</td><td>the unit we count in, because it is what every one of these actually does</td></tr>
+</table>
 
 </section>
-
 <!-- summary -->
-<section data-background-color="#151B3C" class="dk">
-  <h2 style="font-size:.82em; margin:0 0 8px;">What you can do now</h2>
-  <div class="two-col" style="gap:18px;">
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
-        <b>Write all four</b> — and one you had never seen, from a description.
+<section class="dk" data-background-color="#151B3C" id="a04a-leaf-22">
+<h2 style="font-size:.82em; margin:0 0 8px;">What you can do now</h2>
+<div class="two-col" style="gap:18px;">
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Write all four</b> — and one you had never seen, from a description.
       </div>
-      <div class="rule accent3" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
-        <b>Name the precondition</b> and what it costs: sorted data, bought once, repaid by every later
+<div class="rule accent3" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Name the precondition</b> and what it costs: sorted data, bought once, repaid by every later
         search.
       </div>
-      <div class="rule accent2" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
-        <b>Say which is better, and why</b> — in comparisons you counted, not in adjectives.
+<div class="rule accent2" style="font-size:.55em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Say which is better, and why</b> — in comparisons you counted, not in adjectives.
       </div>
-    </div>
-    <div>
-      <div class="rule navy" style="margin-top:0; font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice); border-left-color:var(--accent3);">
-        <b>But every number today came with a size attached.</b> 1 560 at forty items. 19 at a million.
+</div>
+<div>
+<div class="rule navy" style="margin-top:0; font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice); border-left-color:var(--accent3);">
+<b>But every number today came with a size attached.</b> 1 560 at forty items. 19 at a million.
         1 020 searches to break even — or <b>21</b>, with a sort you have not met.
       </div>
-      <p class="center fragment" style="font-size:.6em; margin:12px 0 0; color:var(--ice);">
-        <b>Nobody can carry a table of numbers into an exam,<br>or into a job.</b><br>
-        <span style="font-size:.8em; color:#98a0c0;">There is a notation that throws the numbers away<br>and keeps the only thing that mattered: <b>the shape of the growth</b>.</span></p>
-      <p class="center fragment" style="font-size:.78em; margin:10px 0 0;"><b class="accent3">Next: the two words the exam already made you write.</b></p>
-    </div>
-  </div>
-  <p class="center" style="font-size:.46em; color:#98a0c0; margin-top:10px;">🍦 <span class="mono">challenge_A04a_SortRace</span> — write all four, and the judge races them against each other instead of checking answers.</p>
+<p class="center fragment" style="font-size:.6em; margin:12px 0 0; color:var(--ice);">
+<b>Nobody can carry a table of numbers into an exam,<br/>or into a job.</b><br/>
+<span style="font-size:.8em; color:#98a0c0;">There is a notation that throws the numbers away<br/>and keeps the only thing that mattered: <b>the shape of the growth</b>.</span></p>
+<p class="center fragment" style="font-size:.78em; margin:10px 0 0;"><b class="accent3">Next: the two words the exam already made you write.</b></p>
+</div>
+</div>
 
 </section>
 </div></div>
-
 <div id="py-chip">🐍 waking Python…</div>
-<div id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</div>
-<div id="llmhelp">
-  <b>Live LLM marking is off.</b>
-  <p>The reader runs on this Mac, not inside the slides &mdash; which is why the API key never goes near a deck.</p>
-  <ol>
-    <li>In the <b>CS_Materials</b> folder, double-click<br><code>Start-LLM-Marking.command</code></li>
-    <li>A Terminal window opens and stays open. Come back here &mdash; the chip lights up on its own within five seconds. No reload.</li>
-  </ol>
-  <p class="tiny">Double-clicking <code>grade-server.py</code> does nothing: macOS opens <code>.py</code> files in an editor rather than running them. That is what the <code>.command</code> file is for.</p>
-  <button id="llmhelp-x">got it</button>
-</div>
-<div id="langsel"><div id="l-java" class="on">Java</div><div id="l-py">Python</div></div>
 <button id="fsbtn" title="fullscreen (or press F)">⛶</button>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
@@ -1132,7 +990,7 @@ function stopPy(){
 }
 function bootPython(){
   if(pyPromise) return pyPromise;
-  pyPromise = loadPyodide().then(function(py){
+  pyPromise = Promise.resolve().then(function(){ if(typeof loadPyodide!=="function") throw new Error("Python runtime download unavailable"); return loadPyodide(); }).then(function(py){
     py.runPython(
       "import builtins, js\n" +
       "async def __ainput(prompt=''):\n" +
@@ -1188,60 +1046,20 @@ function runPy(code, outEl, doneCb){
 
 /* ===== cells: Python runs live, Java replays a real build-time run ===== */
 function initPyCells(){
-  document.querySelectorAll('.pycell').forEach(function(cell){
-    var isJava = cell.classList.contains('java');
-    var srcEl  = cell.querySelector('.pysrc');
-    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
-    var capOut = cell.getAttribute('data-out') || '';
-    var isErr  = cell.getAttribute('data-err') === '1';
-    cell.innerHTML='';
-
-    var bar=document.createElement('div'); bar.className='pybar';
-    var dots=document.createElement('div'); dots.className='pydots';
-    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
-    bar.appendChild(dots);
-
-    var run=document.createElement('button'); run.className='pyrun';
-    run.textContent = isJava ? '▶ Run' : '⏳ waking…';
-    run.disabled = !isJava;
-    bar.appendChild(run);
-
-    if(!isJava){
-      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
-      stp.title='stop a program waiting for input';
-      stp.addEventListener('click', stopPy);
-      bar.appendChild(stp);
-    }
-    var st=document.createElement('span'); st.className='pystate' + (isJava?' cap':'');
-    st.textContent = isJava ? '☕ captured from a real run' : '🐍 editable · runs here';
-    bar.appendChild(st);
-
-    var ta=document.createElement('textarea'); ta.className='pyta';
-    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
-    if(isJava) ta.readOnly = true;
-    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
-
-    cell.appendChild(bar);
-    if(cell.classList.contains('side')){
-      var row=document.createElement('div'); row.className='pyrow';
-      row.appendChild(ta); row.appendChild(out);
-      out.style.display='block'; out.textContent='press ▶ Run';
-      cell.appendChild(row);
-    } else {
-      cell.appendChild(ta); cell.appendChild(out);
-    }
-
-    if(isJava){
-      run.addEventListener('click', function(){
-        out.style.display='block';
-        out.className='pyout cap' + (isErr?' err':'');
-        out.textContent = capOut;
-      });
-    } else {
-      run.addEventListener('click', function(){ runPy(ta.value, out); });
-    }
-  });
-  bootPython();
+ document.querySelectorAll('.pycell').forEach(function(cell){
+  var src=cell.querySelector('.pysrc'); var code=src?src.textContent.replace(/^\n/,'').replace(/\s+$/,''):'';
+  cell.innerHTML='';
+  var bar=document.createElement('div');bar.className='pybar';
+  var run=document.createElement('button');run.className='pyrun';run.textContent='loading Python';run.disabled=true;
+  var stop=document.createElement('button');stop.className='pylock';stop.textContent='stop input';stop.onclick=stopPy;
+  var label=document.createElement('span');label.className='pystate';label.textContent='Python · editable · fresh namespace';
+  bar.append(run,stop,label);
+  var ta=document.createElement('textarea');ta.className='pyta';ta.value=code;ta.rows=Math.max(2,code.split('\n').length);ta.spellcheck=false;
+  var out=document.createElement('pre');out.className='pyout';out.style.display='none';
+  cell.append(bar,ta,out);
+  run.onclick=function(){runPy(ta.value,out,function(){Reveal.layout();});};
+ });
+ bootPython().catch(function(e){document.getElementById('py-chip').textContent='Python unavailable — reload to retry';});
 }
 function autoSizePyTextareas(scope){
   (scope||document).querySelectorAll('.pyta').forEach(function(ta){
@@ -1251,16 +1069,7 @@ function autoSizePyTextareas(scope){
   });
 }
 
-/* ===== the language switch ===== */
-function setLang(l){
-  document.body.setAttribute('data-lang', l);
-  document.getElementById('l-java').className = (l==='java') ? 'on' : '';
-  document.getElementById('l-py').className   = (l==='py')   ? 'on' : '';
-  try{ localStorage.setItem('a2lang', l); }catch(e){}
-  setTimeout(function(){ autoSizePyTextareas(document); }, 20);
-}
-document.getElementById('l-java').addEventListener('click', function(){ setLang('java'); });
-document.getElementById('l-py').addEventListener('click', function(){ setLang('py'); });
+
 document.getElementById('fsbtn').addEventListener('click', function(){
   var d=document.documentElement;
   if(document.fullscreenElement){ document.exitFullscreen(); }
@@ -1694,66 +1503,22 @@ function gEl(id){ return document.getElementById(id); }
    ═══════════════════════════════════════════════════════════════════════ */
 var LLM = { url:'http://127.0.0.1:8788', available:false, on:true, task:'A04a-boss-bubble' };
 
-function llmChip(){
-  var c = document.getElementById('llmchip');
-  if(!c) return;
-  if(!LLM.available){
-    /* it used to hide itself, which looks identical to "not wired up" -- and that
-       is exactly the wrong thing for the one person who can start the server */
-    c.className = 'off';
-    c.textContent = '\u26a1 no LLM \u2014 click for help';
-    c.title = 'Live marking is off. Click for the two steps that turn it on.';
-    return;
-  }
-  c.className = LLM.on ? 'on' : 'off';
-  c.textContent = LLM.on ? '\u26a1 LLM marking on' : '\u26a1 LLM marking off';
-  c.title = 'click to turn the second marker off';
+function llmChip(){ /* Classroom revision: external grading disabled. */
 }
 /* A tooltip used to be the ONLY place the deck said how to start the server,
    which is no help at all to someone who has already clicked and seen nothing
    happen. Say it on the screen, in the two steps that actually do it. */
-function llmHelp(show){
-  var h = document.getElementById('llmhelp');
-  if(h) h.style.display = show ? 'block' : 'none';
+function llmHelp(){ /* Classroom revision: external grading disabled. */
 }
-function llmDetect(cb){
-  var ctl = new AbortController();
-  var t = setTimeout(function(){ ctl.abort(); }, 1200);
-  fetch(LLM.url + '/ping', {signal: ctl.signal, cache: 'no-store'})
-    .then(function(r){ return r.json(); })
-    .then(function(j){ clearTimeout(t); LLM.available = !!(j && j.ok && j.key);
-                       llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
-    .catch(function(){ clearTimeout(t); LLM.available = false; llmChip(); if(cb) cb(); });
+function llmDetect(){ /* Classroom revision: external grading disabled. */
 }
 /* Detecting once, at load, was the real defect: the natural order is to open the
    deck, SEE that marking is off, and only then go and start the server -- by
    which time the one probe has long since failed. So keep looking. A refused
    connection to localhost costs nothing, and it stops as soon as it connects. */
-function llmWatch(){
-  setInterval(function(){
-    if(LLM.available || document.hidden) return;
-    llmDetect();
-  }, 5000);
+function llmWatch(){ /* Classroom revision: external grading disabled. */
 }
-function llmBind(){
-  var c = document.getElementById('llmchip');
-  if(!c || c.__bound) return;
-  c.__bound = true;
-  c.addEventListener('click', function(){
-    if(!LLM.available){
-      c.textContent = '\u26a1 looking for the server\u2026';
-      llmHelp(true);
-      llmDetect(function(){ if(!LLM.available) llmChip(); });
-      return;
-    }
-    LLM.on = !LLM.on; llmChip();
-  });
-  var x = document.getElementById('llmhelp-x');
-  if(x) x.addEventListener('click', function(){ llmHelp(false); });
-  /* start looking here, NOT inside Reveal's .then() -- anything that throws in
-     there (a CDN that did not answer, say) used to take the LLM down with it */
-  llmDetect();
-  llmWatch();
+function llmBind(){ /* Classroom revision: external grading disabled. */
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
 else llmBind();
@@ -1822,119 +1587,11 @@ function proseConsensus(regexRaw, llmAwarded, cap){
    Without this the deck says "press next → when you are ready" while the reader
    is still working, which is an invitation to throw its answer away — and that is
    exactly what happened the first time this was taught. */
-function gWaiting(on){
-  G.llmBusy = !!on;
-  var h = document.getElementById('g-nexthint');
-  if(!h){
-    /* the code boss's prompt is a plain sentence with no element of its own, so give
-       it one rather than letting the notice silently do nothing */
-    var say = document.getElementById('g-say');
-    if(!say) return;
-    h = document.createElement('div');
-    h.id = 'g-nexthint'; h.style.marginTop = '5px';
-    say.appendChild(h);
-  }
-  if(on){
-    if(h.getAttribute('data-orig') === null) h.setAttribute('data-orig', h.innerHTML);
-    h.style.opacity = '1';
-    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> '
-                + 'give it a few seconds \u2014 clicking now moves on without it.</span>';
-  } else {
-    var orig = h.getAttribute('data-orig');
-    h.style.opacity = '.65';
-    if(orig !== null){ h.innerHTML = orig; h.removeAttribute('data-orig'); }
-    else h.textContent = '';
-  }
+function gWaiting(){ /* Classroom revision: external grading disabled. */
 }
-function llmMarkProse(task, fn, answer, regexRaw, cap, host){
-  var idx = G.i;                    /* the stage this belongs to, captured before it can move */
-  if(!LLM.available || !LLM.on || !host) return;
-  var grid = host.closest ? host.closest('.g-grid') : null;
-  if(grid) grid.classList.add('three');
-  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
-                 + '(this one marks the idea, not the words)</span></p>';
-  var ctl = new AbortController();
-  /* a six-mark class is a big prompt and DeepSeek is sometimes busy; 45 s was
-     not enough rope, and giving up looked identical to the server being down */
-  var timedOut = false, t0 = Date.now();
-  var t = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
-  gWaiting(true);
-  fetch(LLM.url + '/mark', {
-    method:'POST', signal: ctl.signal,
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({task: task, fn: fn, lang:'py', code: answer})
-  }).then(function(r){ return r.json(); })
-    .then(function(j){
-      clearTimeout(t); gWaiting(false);
-      if(!j || j.error){
-        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">('
-                       + ((j && j.error) || 'no reply') + ')</span></p>';
-        return;
-      }
-      var rows = j.marks.map(function(m){
-        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
-             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
-      }).join('');
-      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it marked the idea, not the words</b></p>'
-                     + '<ul class="g-mp">' + rows + '</ul>'
-                     + proseConsensus(regexRaw, j.awarded, cap)
-                     + (j.missed ? '<p style="font-size:.48em; margin:4px 0 0;">' + j.missed + '</p>' : '');
-      /* the reader is the better marker on prose, so the running total follows it */
-      var better = Math.min(j.awarded, cap) - Math.min(regexRaw, cap);
-      if(better > 0) gAwardAt(idx, Math.min(j.awarded, cap));
-    })
-    .catch(function(){
-      clearTimeout(t); gWaiting(false);
-      var __s = Math.round((Date.now() - t0) / 1000);
-      host.innerHTML = timedOut
-        ? '<p class="g-lbl">the reader gave up after ' + __s + ' s <span class="conf">'
-        + '(the model is busy, not broken \u2014 the markers on the left still stand. Press mark again to retry.)</span></p>'
-        : '<p class="g-lbl">could not reach the reader <span class="conf">'
-        + '(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
-    });
+function llmMarkProse(){ /* Classroom revision: external grading disabled. */
 }
-function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host, task, fn){
-  if(!LLM.available || !LLM.on || !host) return;
-  var grid = host.closest ? host.closest('.g-grid') : null;
-  if(grid) grid.classList.add('three');
-  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
-                 + '(this one reads for meaning, not for patterns)</span></p>';
-  var ctl = new AbortController();
-  /* a six-mark class is a big prompt and DeepSeek is sometimes busy; 45 s was
-     not enough rope, and giving up looked identical to the server being down */
-  var timedOut = false, t0 = Date.now();
-  var t = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
-  gWaiting(true);
-  fetch(LLM.url + '/mark', {
-    method:'POST', signal: ctl.signal,
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({task: task || LLM.task, fn: fn || 'BubbleSort', lang: lang, code: code})
-  }).then(function(r){ return r.json(); })
-    .then(function(j){
-      clearTimeout(t); gWaiting(false);
-      if(!j || j.error){
-        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">'
-                       + '(' + ((j && j.error) || 'no reply') + ')</span></p>';
-        return;
-      }
-      var rows = j.marks.map(function(m){
-        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
-             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
-      }).join('');
-      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it read your code, it did not run it</b></p>'
-                     + '<ul class="g-mp">' + rows + '</ul>'
-                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
-                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
-    })
-    .catch(function(){
-      clearTimeout(t); gWaiting(false);
-      var __s = Math.round((Date.now() - t0) / 1000);
-      host.innerHTML = timedOut
-        ? '<p class="g-lbl">the reader gave up after ' + __s + ' s <span class="conf">'
-        + '(the model is busy, not broken \u2014 the markers on the left still stand. Press mark again to retry.)</span></p>'
-        : '<p class="g-lbl">could not reach the reader <span class="conf">'
-        + '(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
-    });
+function llmMark(){ /* Classroom revision: external grading disabled. */
 }
 
 function behaviourHtml(raw, err){
@@ -2016,7 +1673,7 @@ function markOne(ans, mps, cap, quiet, groupCaps){
   }
   return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
 }
-function gDraw(){
+function foundationLegacyDraw(){
   var s=STAGES[G.i];
   /* which paper this stage is, because the ANSWER FORM changes with it and the
      form is worth all of the marks */
@@ -2117,7 +1774,7 @@ function gDraw(){
         if(el) el.innerHTML = behaviourHtml(raw, err);
         /* the third mechanic, and the only one that can read for MEANING. It runs
            last because the consensus needs the other two to have finished. */
-        llmMark(code, document.body.getAttribute('data-lang') === 'py' ? 'py' : 'java',
+        llmMark(code, 'py',
                 rawHits, ofPoints, raw, document.getElementById('g-llm'), s.llmTask, s.llmFn);
         if(err && err.indexOf('crash:') === 0){
           gSay('<b>' + total + ' on the mark points — and it did not run at all.</b> '
@@ -2215,7 +1872,7 @@ function gDraw(){
   }
 }
 window.gReplay = function(){
-  G.i = 0; G.score = 0; G.earned = {};
+  G.i = 0; G.score = 0; G.earned = {}; foundationReviews = {};
   var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
   var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
   gDraw();
@@ -2254,20 +1911,45 @@ function gNextOnce(){
   if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
 }
 function gFinish(){
-  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
-  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
-  gEl('g-stage').textContent='done';
-  gEl('g-q').innerHTML='';
-  gEl('g-prog').innerHTML='';
-  gEl('g-score').textContent='';
-  gEl('g-body').innerHTML=
-    '<div class="g-fin"><div class="big">'+G.score+'</div>'+
-    '<p style="margin:6px 0 0;">Four algorithms written, and one of them you had never seen.</p>'+
-    '<p style="margin:6px 0 0; font-size:.9em; color:#5b6488;">The two that decide the marks: '+
-    '<b>the two Big O values</b> in stage 3, which are half of that question and the half most scripts skip \u2014 and '+
-    '<b>the swap in a sort</b>, which needs three lines and a temporary variable everywhere except Python.</p>'+
-    '<button class="g-sub"   onclick="gReplay();">play again</button></div>';
-  gSay('');
+ var sk=gEl('g-skip'),bk=gEl('g-back');if(sk)sk.style.display='none';if(bk)bk.style.display='none';
+ gEl('g-stage').textContent='Review complete';gEl('g-q').innerHTML='';gEl('g-prog').innerHTML='';gEl('g-score').textContent='';
+ var marks=Object.keys(foundationReviews).filter(function(k){return foundationReviews[k].reviewed;}).length;
+ gEl('g-body').innerHTML='<div class="g-fin"><p>Automatic checks: '+G.score+'</p><p>Human-reviewed written answers: '+marks+'. Their marks are recorded separately.</p><p>Revisit an unfinished task or explain one correction before leaving.</p><button class="g-sub" onclick="gReplay();">play again</button></div>';gSay('');
+}
+
+
+// Written explanations: commit first; meaning is reviewed by a person, never token-scored.
+var foundationReviews={};
+function gDraw(){
+ var s=STAGES[G.i];
+ if(!s.llmTask||s.boss||!s.mps||s.seq){foundationLegacyDraw();return;}
+ var ix=G.i;G.locked=false;var state=foundationReviews[ix]||(foundationReviews[ix]={answer:'',committed:false,selected:[],reviewed:false});
+ gEl('g-stage').textContent=s.name+' · P3 · human review';gEl('g-q').innerHTML=s.q;
+ gEl('g-score').textContent=G.score?'automatic checks '+G.score:'';gNavState();gProg();gSay('');
+ var host=gEl('g-body');host.innerHTML='';
+ var ta=document.createElement('textarea');ta.className='g-ta';ta.rows=3;ta.value=state.answer;ta.readOnly=state.committed;ta.setAttribute('aria-label','Written answer');
+ ta.oninput=function(){state.answer=ta.value;state.reviewed=false;};host.appendChild(ta);
+ var commit=document.createElement('button');commit.className='g-sub';commit.textContent=state.committed?'Edit answer':'Commit answer';
+ commit.onclick=function(){state.answer=ta.value;state.committed=!state.committed;state.reviewed=false;gDraw();};host.appendChild(commit);
+ var status=document.createElement('p');status.style.cssText='font-size:15px;margin:5px 0';status.textContent='No automatic prose score. Human marks stay separate from automatic checks.';host.appendChild(status);
+ if(!state.committed)return;
+ var details=document.createElement('details');details.className='foundation-rubric';
+ var summary=document.createElement('summary');summary.textContent='Optional self/teacher rubric · max '+s.total;details.appendChild(summary);
+ var content=document.createElement('div');content.style.cssText='max-height:145px;overflow:auto;font-size:16px;line-height:1.25';
+ s.mps.forEach(function(m,i){
+  var row=document.createElement('label');row.style.cssText='display:flex;gap:7px;margin:4px 0';
+  var box=document.createElement('input');box.type='checkbox';box.checked=!!state.selected[i];box.disabled=!state.answer.trim();
+  box.onchange=function(){state.selected[i]=box.checked;state.reviewed=false;showScore();};
+  var text=document.createElement('span');text.innerHTML=m.label+' ['+m.pts+']'+(m.grp?' · group '+m.grp:'');row.append(box,text);content.appendChild(row);
+ });
+ if(s.groupCaps){var caps=document.createElement('p');caps.textContent='Group caps: '+Object.entries(s.groupCaps).map(function(x){return x[0]+' max '+x[1];}).join('; ')+'; overall max '+s.total;content.prepend(caps);}
+ var save=document.createElement('button');save.className='g-sub';save.textContent='Record self/teacher mark';save.disabled=!state.answer.trim();save.onclick=function(){state.reviewed=true;showScore();};content.appendChild(save);
+ var result=document.createElement('p');content.appendChild(result);
+ function showScore(){var groups={},points=0;s.mps.forEach(function(m,i){if(!state.selected[i])return;if(m.grp&&s.groupCaps)groups[m.grp]=(groups[m.grp]||0)+m.pts;else points+=m.pts;});Object.keys(groups).forEach(function(k){points+=Math.min(groups[k],s.groupCaps[k]);});points=Math.min(s.total,points);result.textContent=!state.answer.trim()?'Not attempted · 0 / '+s.total:state.reviewed?'Recorded self/teacher mark '+points+' / '+s.total:'Awaiting self/teacher review';result.dataset.mode='human';result.dataset.score=state.reviewed?String(points):'pending';}
+ showScore();details.appendChild(content);host.appendChild(details);
+ var model=document.createElement('details');model.className='foundation-rubric';model.innerHTML='<summary>Optional model answer — compare meaning</summary>';
+ var answer=document.createElement('p');answer.style.cssText='font-size:16px;max-height:95px;overflow:auto;white-space:pre-wrap';answer.textContent=s.model||'';model.appendChild(answer);host.appendChild(model);
+ host.querySelectorAll('details').forEach(function(x){x.ontoggle=function(){Reveal.layout();};});Reveal.layout();
 }
 
 Reveal.initialize({
@@ -2279,7 +1961,6 @@ Reveal.initialize({
   makeRace('raceviz');
   llmDetect();
   gDraw();
-  try{ var L=localStorage.getItem('a2lang'); if(L) setLang(L); }catch(e){}
   var ob=document.getElementById('obj-btn');
   if(ob) ob.addEventListener('click', function(){
     var o=document.getElementById('obj');

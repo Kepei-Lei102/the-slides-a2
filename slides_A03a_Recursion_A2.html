@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>The Function That Calls Itself — Recursion</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css" rel="stylesheet"/>
 <style>
 :root{
   --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
@@ -68,23 +69,7 @@
 #py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
 #py-chip.ready{color:#5FD6C9;}
 
-/* ===== the Java lane: captured, not live ===== */
-.pycell.java .pyrun{background:#8a6100;} .pycell.java .pyrun:hover{background:#a87700;}
-.pystate.cap{color:#e0b050;}
-.pyout.cap{color:#e8c98a;}
-.pyout.err{color:#ff9d95;}
 
-/* ===== the language switch ===== */
-#langsel{position:fixed; top:14px; right:16px; z-index:99; display:flex; border:2px solid #6b74a8;
-  border-radius:9px; overflow:hidden; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
-#langsel div{padding:5px 15px; background:rgba(20,26,60,.72); color:#98a0c0; transition:.12s;}
-#langsel div.on{background:var(--accent1); color:#fff;}
-#fsbtn{position:fixed; top:14px; right:calc(16px + 152px); z-index:99; background:rgba(20,26,60,.72);
-  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
-  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
-#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
-body[data-lang="java"] .lane[data-lang="py"]{display:none;}
-body[data-lang="py"] .lane[data-lang="java"]{display:none;}
 
 /* ===== 🧾 outside the exam hall ===== */
 .toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
@@ -325,351 +310,326 @@ body[data-lang="py"] .lane[data-lang="java"]{display:none;}
   font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; padding:3px 8px; width:64px; outline:none;}
 .dk .tin{background:#1b234d; color:var(--ice);}
 .ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
-</style></head>
-<body data-lang="java">
-<div class="reveal"><div class="slides">
 
+/* Reviewed classroom route: main task first; references below. */
+.foundation-task p,.foundation-task li{font-size:24px;line-height:1.4;}
+.foundation-task h2{font-size:36px;}
+.foundation-task .rule{font-size:22px;}
+.foundation-rubric{font-size:17px;margin:5px 0;text-align:left;}
+.foundation-rubric summary{cursor:pointer;font-weight:bold;}
+.pyout{max-height:150px;overflow:auto;}
+.pyta{max-height:420px;overflow:auto;}
+.growslide #g-body{max-height:470px;overflow:auto;}
+#llmchip,#llmhelp{display:none!important;}
+</style><meta content="disabled-human-review" name="classroom-submissions"/></head>
+<body data-lang="py">
+<div class="reveal"><div class="slides">
 <!-- H1 -->
 <section>
-<section data-background-color="#151B3C" class="dk center">
-  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
-  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 5 · 9618 §19.2</p>
-  <h1 style="font-size:1.5em; margin:0 0 6px;">The Function<br>That Calls Itself</h1>
-  <p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">recursion 递归 · winding and unwinding · the trace table</p>
-  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+<section class="dk center" data-background-color="#151B3C" id="a03a-leaf-01">
+<div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+<p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 5 · 9618 §19.2</p>
+<h1 style="font-size:1.5em; margin:0 0 6px;">The Function<br/>That Calls Itself</h1>
+<p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">recursion 递归 · winding and unwinding · the trace table</p>
+<p style="margin-top:16px;"><button class="g-sub" onclick="Reveal.down()" style="font-size:.5em;">🎯 what you will be able to do</button></p>
 
 </section>
-  <section data-background-color="#151B3C" class="dk">
-    <div class="bar" style="background:var(--accent3);"></div>
-    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
-    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> State the <b class="accent1">essential features of recursion</b> in the words that earn marks</div>
-    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">2.</strong> <b class="accent1">Complete a trace table</b> through both its halves — winding down, unwinding back</div>
-    <div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">3.</strong> <b class="accent1">Write a recursive routine</b> on the tree you built last lesson</div>
-    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">4.</strong> Say, in one sentence, <b class="accent3">when recursion is worth it</b></div>
+<section class="dk" data-background-color="#151B3C" id="a03a-leaf-02">
+<div class="bar" style="background:var(--accent3);"></div>
+<h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+<div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> State the <b class="accent1">essential features of recursion</b> in the words that earn marks</div>
+<div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">2.</strong> <b class="accent1">Complete a trace table</b> through both its halves — winding down, unwinding back</div>
+<div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">3.</strong> <b class="accent1">Write a recursive routine</b> on the tree you built last lesson</div>
+<div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">4.</strong> Say, in one sentence, <b class="accent3">when recursion is worth it</b></div>
 
 </section>
-</section>
-
+<section class="lt foundation-task" data-background-color="#F4F6FB" data-reference="evidence" id="a03a-frequency-evidence"><h2>What the historical corpus asks us to practise</h2><ul><li>P3: Recursion (trace/write/explain) — 10/25 papers; why/purpose 34%, define 32%, trace 22%</li><li>P4: Recursion — 12/24 papers; write code 100%</li></ul><p class="rule fragment">Maintained normalized corpus, 2021–2026; duplicate variants removed. Use these response shapes for practice. This is not a forecast or permission to omit syllabus content.</p>
+</section></section>
 <!-- H2 HOOK -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.88em; margin:0 0 6px;">You already wrote one. <span class="accent2">For five marks.</span></h2>
-  <p style="font-size:.5em; color:#98a0c0; margin:0 0 8px;">Last lesson's homework, question 9. It worked. It was marked. Nobody said <b>why it is allowed</b>.</p>
-  <div class="two-col">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.6em;"><span class="k">def</span> InOrder(Node):
+<section class="dk" data-background-color="#151B3C" id="a03a-leaf-03">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.88em; margin:0 0 6px;">You already wrote one. <span class="accent2">For five marks.</span></h2>
+<p style="font-size:.5em; color:#98a0c0; margin:0 0 8px;">Last lesson's homework, question 9. It worked. It was marked. Nobody said <b>why it is allowed</b>.</p>
+<div class="two-col">
+<div>
+<div class="ps" style="margin-top:0; font-size:.6em;"><span class="k">def</span> InOrder(Node):
     <span class="k">if</span> ArrayNodes[Node][0] != -1:
         InOrder(ArrayNodes[Node][0])
     <span class="k">print</span>(ArrayNodes[Node][1])
     <span class="k">if</span> ArrayNodes[Node][2] != -1:
         InOrder(ArrayNodes[Node][2])</div>
-    </div>
-    <div>
-      <div class="rule accent2" style="margin-top:0; font-size:.6em;">
+</div>
+<div>
+<div class="rule accent2" style="margin-top:0; font-size:.6em;">
         Line 3 calls <b>InOrder</b>. You are <b>inside InOrder</b> when it runs.
         <b class="accent3">A function that has not finished starts itself again.</b>
-      </div>
-      <div class="rule accent1 fragment" style="font-size:.6em;">
+</div>
+<div class="rule accent1 fragment" style="font-size:.6em;">
         Every instinct says this should be a trap — like a dog chasing its own tail, or two mirrors
         facing each other. <b>It is not.</b> It walked the whole tree and stopped.
       </div>
-    </div>
-  </div>
-  <p class="center fragment" style="font-size:.76em; margin-top:10px;"><b>Today is the receipt.</b><br>
-  <span style="font-size:.66em; color:#98a0c0;">Why it stops, how the machine keeps track, and how to trace it for marks.</span></p>
+</div>
+</div>
+<p class="center fragment" style="font-size:.76em; margin-top:10px;"><b>Today is the receipt.</b><br/>
+<span style="font-size:.66em; color:#98a0c0;">Why it stops, how the machine keeps track, and how to trace it for marks.</span></p>
 
 </section>
-
 <!-- H3 the monks -->
-<section data-background-color="#151B3C" class="dk">
-  <h2 style="font-size:.86em; margin:0 0 6px;">The other one that calls itself — <span class="accent3">从前有座山</span></h2>
-  <div class="two-col" style="gap:20px;">
-    <div style="flex:1.15;">
-      <img src="recursion-monks.jpg" alt="the old monk telling the story" style="width:100%; border-radius:10px; display:block;">
-    </div>
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.54em; line-height:1.6;">从前有座山，
+<section class="dk" data-background-color="#151B3C" id="a03a-leaf-04">
+<h2 style="font-size:.86em; margin:0 0 6px;">The other one that calls itself — <span class="accent3">从前有座山</span></h2>
+<div class="two-col" style="gap:20px;">
+<div style="flex:1.15;">
+<img alt="the old monk telling the story" src="recursion-monks.jpg" style="width:100%; border-radius:10px; display:block;"/>
+</div>
+<div>
+<div class="ps" style="margin-top:0; font-size:.54em; line-height:1.6;">从前有座山，
 山里有座庙，
 庙里有个老和尚，
 老和尚在给小和尚讲故事，
 故事是这样的：<span class="v">从前有座山……</span></div>
-      <div class="rule accent2" style="font-size:.56em;">
+<div class="rule accent2" style="font-size:.56em;">
         Every one of you has heard this, and every one of you knows how it ends: <b>it does not.</b>
         The <b>story the monk tells is the story you are in</b> — so each retelling adds another
         mountain, temple, monk.
       </div>
-      <div class="rule accent3 fragment" style="font-size:.56em;">
+<div class="rule accent3 fragment" style="font-size:.56em;">
         This is a <b>function that calls itself</b>, told by parents a thousand years before anyone
         wrote one. Chinese folk culture got there first — and it got the <b>bug</b> first too.
       </div>
-    </div>
-  </div>
+</div>
+</div>
 
 </section>
-
 <!-- H4 the difference + the four features -->
 <section>
-
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.84em; margin:0 0 4px;">So what is the difference?</h2>
-  <p style="font-size:.46em; color:#8890b5; margin:0 0 6px;">Both call themselves. One finished and got marked; one has been running since your grandmother told it.</p>
-  <div class="two-col">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.52em;"><span class="c"># the monk</span>
+<section class="lt" data-background-color="#F4F6FB" id="a03a-leaf-05">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.84em; margin:0 0 4px;">So what is the difference?</h2>
+<p style="font-size:.46em; color:#8890b5; margin:0 0 6px;">Both call themselves. One finished and got marked; one has been running since your grandmother told it.</p>
+<div class="two-col">
+<div>
+<div class="ps" style="margin-top:0; font-size:.52em;"><span class="c"># the monk</span>
 <span class="k">def</span> tell_story():
     print(<span class="v">"从前有座山……"</span>)
     tell_story()          <span class="c"># always</span></div>
-      <div class="ps" style="font-size:.52em;"><span class="c"># the homework</span>
+<div class="ps" style="font-size:.52em;"><span class="c"># the homework</span>
 <span class="k">def</span> InOrder(Node):
     <span class="k">if</span> ArrayNodes[Node][0] != -1:   <span class="c"># SOMETIMES</span>
         InOrder(...)</div>
-    </div>
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.58em;">
+</div>
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.58em;">
         The monk's story calls itself <b>every time, unconditionally</b>. Yours calls itself
         <b class="accent2">only when there is a child to visit</b> — and a tree runs out of children.
         <b>There is a case where the calling stops.</b>
-      </div>
-      <div class="rule accent3 fragment" style="font-size:.58em;">
+</div>
+<div class="rule accent3 fragment" style="font-size:.58em;">
         That case has a name, and the name is worth <b>three marks</b> on Paper 3:
         the <b class="accent2">base case</b>.
       </div>
-    </div>
-  </div>
-  <div class="rule navy fragment" style="font-size:.55em;">
-    <b>"State three essential features of recursion" [3]</b> — Nov 2021 Paper 31. The published answer, in its own words:
-    <b>① a base case / stopping condition</b> &nbsp;·&nbsp; <b>② a general case</b> &nbsp;·&nbsp;
-    <b>③ … which calls itself</b> (defined in terms of itself) &nbsp;·&nbsp;
+</div>
+</div>
+<div class="rule navy fragment" style="font-size:.55em;">
+<b>"State three essential features of recursion" [3]</b> — Nov 2021 Paper 31. The published answer, in its own words:
+    <b>① a base case / stopping condition</b>  ·  <b>② a general case</b>  · 
+    <b>③ … which calls itself</b> (defined in terms of itself)  · 
     <b>④ … which changes its state and moves towards the base case</b>.
   </div>
-  <div class="dig">📐 having a base case is not the same as reaching it ↓</div>
+<div class="dig">📐 having a base case is not the same as reaching it ↓</div>
 
 </section>
-
 <!-- H4 vertical: the divergence -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h3 style="font-size:.72em; margin:0 0 4px;">📐 Having a base case is not the same as <span class="accent2">reaching</span> it</h3>
-  <div class="two-col">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">def</span> countdown(n):
+<section class="lt" data-background-color="#F4F6FB" id="a03a-leaf-06">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h3 style="font-size:.72em; margin:0 0 4px;">📐 Having a base case is not the same as <span class="accent2">reaching</span> it</h3>
+<div class="two-col">
+<div>
+<div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">def</span> countdown(n):
     <span class="k">if</span> n == 0:       <span class="c"># base case ✓</span>
-        <span class="k">return</span> 0
+<span class="k">return</span> 0
     <span class="k">return</span> countdown(n - <span class="v">1</span>)</div>
-      <p style="font-size:.46em; color:#0d7a6e; margin:2px 0 0;"><b>countdown(5)</b> → 5, 4, 3, 2, 1, 0. <b>Stops.</b></p>
-    </div>
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">def</span> countup(n):
+<p style="font-size:.46em; color:#0d7a6e; margin:2px 0 0;"><b>countdown(5)</b> → 5, 4, 3, 2, 1, 0. <b>Stops.</b></p>
+</div>
+<div>
+<div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">def</span> countup(n):
     <span class="k">if</span> n == 0:       <span class="c"># base case ✓ (identical!)</span>
-        <span class="k">return</span> 0
+<span class="k">return</span> 0
     <span class="k">return</span> countup(n + <span class="v">1</span>)</div>
-      <p style="font-size:.46em; color:#c0392b; margin:2px 0 0;"><b>countup(5)</b> → 6, 7, 8, 9 … <b>never.</b></p>
-    </div>
-  </div>
-  <div class="diverge" style="font-size:.55em;">
-    <span class="dh">📐 SAME BASE CASE, OPPOSITE FATES</span><br>
+<p style="font-size:.46em; color:#c0392b; margin:2px 0 0;"><b>countup(5)</b> → 6, 7, 8, 9 … <b>never.</b></p>
+</div>
+</div>
+<div class="diverge" style="font-size:.55em;">
+<span class="dh">📐 SAME BASE CASE, OPPOSITE FATES</span><br/>
     Both functions have a base case, and it is <b>the same base case</b>. One walks toward it; the other
     walks away and the condition is never true again. That is why the published mark point is not
     "has a base case" but <b>"changes its state and <span class="accent2">moves towards</span> the base
     case"</b> — four extra words, one whole mark, and the difference between a program and a crash.
   </div>
-  <div class="rule accent3" style="font-size:.55em;">
-    🧾 <b>What happens when you run <span class="mono">countup(5)</span>:</b> not a hang — a
-    <b>RecursionError</b> in Python, a <b>StackOverflowError</b> in Java. There is a limit on how many
-    unfinished calls the machine will hold, and <b>next lesson is about where it holds them.</b>
-    <span style="color:#8890b5;">(The website is named after this error.)</span>
-  </div>
+<div class="rule accent3" style="font-size:.55em;"><b>Python observation:</b> an unbounded countup(5) reaches the configured recursion guard and raises RecursionError. A base case must be reached from the supplied input. The next lesson separates the exam stack model from runtime resource limits.</div>
 
 </section>
-
 </section>
-
 <!-- H5 factorial both lanes -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 2px;">The canonical one — <span class="accent3">and it has no loop in it</span></h2>
-  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">4! = 4 × 3 × 2 × 1 = 24. Look for the <b>for</b> or the <b>while</b>. There is not one.</p>
-  <div class="lane" data-lang="java">
-  <div class="pycell java side tight" data-out="factorial(4) = 24
-factorial(0) = 1"><script type="text/plain" class="pysrc">static int factorial(int n) {
-    if (n == 0) return 1;            // BASE CASE: answered outright, no recursive call
-    return n * factorial(n - 1);     // GENERAL CASE: smaller, and moving toward 0
-}
-
-System.out.println("factorial(4) = " + factorial(4));
-System.out.println("factorial(0) = " + factorial(0));</script></div>
-  </div>
-  <div class="lane" data-lang="py">
-  <div class="pycell side tight"><script type="text/plain" class="pysrc">def factorial(n):
+<section><section class="lt foundation-task" data-background-color="#F4F6FB" id="a03a-write-a-base-case-and-a-step-that-reaches-it"><h2>Write a base case and a step that reaches it</h2><p>For non-negative integer n, factorial(n) is the product 1×2×…×n and factorial(0)=1.</p><p>Write a recursive function. Trace factorial(4) down to the base case, then write the returned values as the calls resume.</p><p class="rule fragment">Check: factorial(4)=24 and factorial(0)=1. State the input domain. Full Python working ↓.</p>
+</section><section class="lt" data-background-color="#F4F6FB" data-reference="optional-working" id="a03a-leaf-07">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 2px;">The canonical one — <span class="accent3">and it has no loop in it</span></h2>
+<p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">4! = 4 × 3 × 2 × 1 = 24. Look for the <b>for</b> or the <b>while</b>. There is not one.</p>
+<div class="pycell side tight"><script class="pysrc" type="text/plain">def factorial(n):
     if n == 0:                    # BASE CASE: answered outright, no recursive call
         return 1
     return n * factorial(n - 1)   # GENERAL CASE: smaller, and moving toward 0
 
 print("factorial(4) =", factorial(4))
 print("factorial(0) =", factorial(0))</script></div>
-  </div>
-  <div class="rule accent1" style="font-size:.58em;">
-    <b>The repetition is real, and it is hidden inside the call.</b> Four multiplications happen and
+<div class="rule accent1" style="font-size:.58em;">
+<b>The repetition is real, and it is hidden inside the call.</b> Four multiplications happen and
     the word "repeat" never appears — because <span class="mono">factorial(3)</span> generates its own
     next call, and that one generates the next. <b class="accent2">You wrote the rule; the machine wrote the loop.</b>
-  </div>
+</div>
 
-</section>
-
+</section></section>
 <!-- H6 the trace stepper -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.78em; margin:0 0 2px;">Trace it — <span class="accent2">down to the base case, then all the way back</span></h2>
-  <p style="font-size:.44em; color:#8890b5; margin:0 0 4px;">Press <b>step</b>. Watch the stack grow, then watch it pay out in reverse. The table on the right is the exam's.</p>
-  <div class="lt-wrap" id="traceviz"></div>
+<section class="lt" data-background-color="#F4F6FB" id="a03a-leaf-08">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.78em; margin:0 0 2px;">Trace it — <span class="accent2">down to the base case, then all the way back</span></h2>
+<p style="font-size:.44em; color:#8890b5; margin:0 0 4px;">Press <b>step</b>. Watch the stack grow, then watch it pay out in reverse. The table on the right is the exam's.</p>
+<div class="lt-wrap" id="traceviz"></div>
 
 </section>
-
 <!-- H7q the question, on its OWN slide — the answer must not be one click away -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.78em; margin:0 0 2px;">Your turn — <span class="accent2">complete the trace</span></h2>
-  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">June 2023 Paper 31, as it is printed. <b>[5]</b> &nbsp;© UCLES</p>
-  <div class="two-col" style="gap:16px;">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="k">FUNCTION</span> Fib(Number : <span class="k">INTEGER</span>) <span class="k">RETURNS INTEGER</span>
-   <span class="k">IF</span> Number &lt;= 1 <span class="k">THEN</span>
+<section><section class="lt" data-background-color="#F4F6FB" id="a03a-leaf-09">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.78em; margin:0 0 2px;">Your turn — <span class="accent2">complete the trace</span></h2>
+<p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">June 2023 Paper 31, as it is printed. <b>[5]</b>  © UCLES</p>
+<div class="two-col" style="gap:16px;">
+<div>
+<div class="ps" style="margin-top:0; font-size:.5em;"><span class="k">FUNCTION</span> Fib(Number : <span class="k">INTEGER</span>) <span class="k">RETURNS INTEGER</span>
+<span class="k">IF</span> Number &lt;= 1 <span class="k">THEN</span>
       Result <span class="v">←</span> Number
    <span class="k">ELSE</span>
       Result <span class="v">←</span> Fib(Number - 1) + Fib(Number - 2)
    <span class="k">ENDIF</span>
-   <span class="k">RETURN</span> Result
+<span class="k">RETURN</span> Result
 <span class="k">ENDFUNCTION</span></div>
-      <div class="rule accent3" style="font-size:.54em;">
-        Complete the trace table for <b class="mono">Fib(5)</b>.<br>
-        <span style="font-size:.9em; color:#5b6488;">Two things to decide before you start: how many rows you will need, and what happens to the table <b>after</b> you reach the base case.</span>
+<div class="rule accent3" style="font-size:.54em;">
+        Complete the trace table for <b class="mono">Fib(5)</b>.<br/>
+<span style="font-size:.9em; color:#5b6488;">Two things to decide before you start: how many rows you will need, and what happens to the table <b>after</b> you reach the base case.</span>
+</div>
+</div>
+<div>
+<table class="mk" style="font-size:.46em;">
+<tr><th>Call number</th><th>Function call</th><th>Number</th><th>Result</th><th>Return value</th></tr>
+<tr><td style="height:14px;"></td><td></td><td><b>5</b></td><td></td><td></td></tr>
+<tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p style="font-size:.44em; color:#8890b5; margin:4px 0 0;">The paper gives you the <b>5</b> and nothing else.</p>
+</div>
+</div>
+<p class="center" style="font-size:.5em; color:#8890b5; margin-top:6px; font-style:italic;">Try it. The marked working is below, after your attempt.</p>
+
+</section><section class="lt" data-background-color="#F4F6FB" id="a03a-leaf-10">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.78em; margin:0 0 2px;">The same table, <span class="accent3">and where its five marks live</span></h2>
+<p style="font-size:.44em; color:#98a0c0; margin:0 0 4px;">Mark yours against it before you read the breakdown.  © UCLES</p>
+<div class="two-col" style="gap:16px;">
+<div style="flex:1.2;">
+<table class="mk" style="font-size:.42em;">
+<tr><th>Call</th><th>Function call</th><th>Number</th><th>Result</th><th>Return</th></tr>
+<tr><td>1</td><td class="mono">Fib(5)</td><td>5</td><td class="mono">Fib(4) + Fib(3)</td><td></td></tr>
+<tr><td>2</td><td class="mono">Fib(4)</td><td>4</td><td class="mono">Fib(3) + Fib(2)</td><td></td></tr>
+<tr><td>3</td><td class="mono">Fib(3)</td><td>3</td><td class="mono">Fib(2) + Fib(1)</td><td></td></tr>
+<tr><td>4</td><td class="mono">Fib(2)</td><td>2</td><td class="mono">Fib(1) + Fib(0)</td><td></td></tr>
+<tr style="background:rgba(23,179,163,.12);"><td>5</td><td class="mono">Fib(1)</td><td>1</td><td>1</td><td>1</td></tr>
+<tr style="background:rgba(23,179,163,.12);"><td>6</td><td class="mono">Fib(0)</td><td>0</td><td>0</td><td>0</td></tr>
+<tr style="background:rgba(242,181,60,.16);"><td class="mono">(4)</td><td class="mono">Fib(2)</td><td>2</td><td>1 + 0</td><td>1</td></tr>
+<tr style="background:rgba(242,181,60,.16);"><td class="mono">(3)</td><td class="mono">Fib(3)</td><td>3</td><td>1 + 1</td><td>2</td></tr>
+<tr style="background:rgba(242,181,60,.16);"><td class="mono">(2)</td><td class="mono">Fib(4)</td><td>4</td><td>2 + 1</td><td>3</td></tr>
+<tr style="background:rgba(242,181,60,.16);"><td class="mono">(1)</td><td class="mono">Fib(5)</td><td>5</td><td>3 + 2</td><td><b>5</b></td></tr>
+</table>
+</div>
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.5em;">
+<b>Five marks, and the scheme names them:</b><br/>
+        ① the <b>Call number</b> column   ② <b>Function call</b> + <b>Number</b>  
+        ③ Result <b class="accent1">down to the base case — "Winding"</b>  
+        ④ Result <b class="accent3">back up from it — "Unwinding"</b>   ⑤ the <b>Return value</b> column.
       </div>
-    </div>
-    <div>
-      <table class="mk" style="font-size:.46em;">
-        <tr><th>Call number</th><th>Function call</th><th>Number</th><th>Result</th><th>Return value</th></tr>
-        <tr><td style="height:14px;"></td><td></td><td><b>5</b></td><td></td><td></td></tr>
-        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td style="height:14px;"></td><td></td><td></td><td></td><td></td></tr>
-      </table>
-      <p style="font-size:.44em; color:#8890b5; margin:4px 0 0;">The paper gives you the <b>5</b> and nothing else.</p>
-    </div>
-  </div>
-  <p class="center" style="font-size:.5em; color:#8890b5; margin-top:6px; font-style:italic;">→ Try it. The marked version is on the next slide.</p>
-
-</section>
-
-<!-- H8 the marked table + the hole -->
-<section>
-
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.78em; margin:0 0 2px;">The same table, <span class="accent3">and where its five marks live</span></h2>
-  <p style="font-size:.44em; color:#98a0c0; margin:0 0 4px;">Mark yours against it before you read the breakdown. &nbsp;© UCLES</p>
-  <div class="two-col" style="gap:16px;">
-    <div style="flex:1.2;">
-      <table class="mk" style="font-size:.42em;">
-        <tr><th>Call</th><th>Function call</th><th>Number</th><th>Result</th><th>Return</th></tr>
-        <tr><td>1</td><td class="mono">Fib(5)</td><td>5</td><td class="mono">Fib(4) + Fib(3)</td><td></td></tr>
-        <tr><td>2</td><td class="mono">Fib(4)</td><td>4</td><td class="mono">Fib(3) + Fib(2)</td><td></td></tr>
-        <tr><td>3</td><td class="mono">Fib(3)</td><td>3</td><td class="mono">Fib(2) + Fib(1)</td><td></td></tr>
-        <tr><td>4</td><td class="mono">Fib(2)</td><td>2</td><td class="mono">Fib(1) + Fib(0)</td><td></td></tr>
-        <tr style="background:rgba(23,179,163,.12);"><td>5</td><td class="mono">Fib(1)</td><td>1</td><td>1</td><td>1</td></tr>
-        <tr style="background:rgba(23,179,163,.12);"><td>6</td><td class="mono">Fib(0)</td><td>0</td><td>0</td><td>0</td></tr>
-        <tr style="background:rgba(242,181,60,.16);"><td class="mono">(4)</td><td class="mono">Fib(2)</td><td>2</td><td>1 + 0</td><td>1</td></tr>
-        <tr style="background:rgba(242,181,60,.16);"><td class="mono">(3)</td><td class="mono">Fib(3)</td><td>3</td><td>1 + 1</td><td>2</td></tr>
-        <tr style="background:rgba(242,181,60,.16);"><td class="mono">(2)</td><td class="mono">Fib(4)</td><td>4</td><td>2 + 1</td><td>3</td></tr>
-        <tr style="background:rgba(242,181,60,.16);"><td class="mono">(1)</td><td class="mono">Fib(5)</td><td>5</td><td>3 + 2</td><td><b>5</b></td></tr>
-      </table>
-    </div>
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.5em;">
-        <b>Five marks, and the scheme names them:</b><br>
-        ① the <b>Call number</b> column &nbsp; ② <b>Function call</b> + <b>Number</b> &nbsp;
-        ③ Result <b class="accent1">down to the base case — "Winding"</b> &nbsp;
-        ④ Result <b class="accent3">back up from it — "Unwinding"</b> &nbsp; ⑤ the <b>Return value</b> column.
-      </div>
-      <div class="rule accent2" style="font-size:.5em;">
-        <b>Two of the five marks are in the bottom half.</b> Winding and unwinding are marked
+<div class="rule accent2" style="font-size:.5em;">
+<b>Two of the five marks are in the bottom half.</b> Winding and unwinding are marked
         <b>separately</b> — a table that stops at the base case has done half the work and scores
         three. The <b class="mono">(4)</b> in brackets means <i>back inside call 4</i>.
       </div>
-    </div>
-  </div>
-  <div class="dig">🕳 this table is a polite lie ↓</div>
+</div>
+</div>
+<div class="dig">🕳 this table is a polite lie ↓</div>
 
-</section>
-
-<!-- H7 vertical: the hole -->
-<section data-background-color="#151B3C" class="dk">
-  <h3 style="font-size:.72em; margin:0 0 4px;">🕳 That table is a <span class="accent2">polite lie</span></h3>
-  <div class="two-col" style="gap:18px;">
-    <div>
-      <div class="rule accent2" style="margin-top:0; font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+</section><section class="dk" data-background-color="#151B3C" id="a03a-leaf-11">
+<h3 style="font-size:.72em; margin:0 0 4px;">🕳 That table is a <span class="accent2">polite lie</span></h3>
+<div class="two-col" style="gap:18px;">
+<div>
+<div class="rule accent2" style="margin-top:0; font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
         The published table has <b>10 rows</b>. Run <span class="mono">Fib(5)</span> honestly and the
         machine makes <b class="accent3">15 calls</b> — the widget counted them. Cambridge's table walks
         <b>one path</b> down and back up, and quietly reuses answers it never shows being computed.
       </div>
-      <div class="rule accent3" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
-        <b>Nothing is remembered between branches.</b> <span class="mono">Fib(2)</span> is worked out
+<div class="rule accent3" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Nothing is remembered between branches.</b> <span class="mono">Fib(2)</span> is worked out
         <b>three separate times</b> from scratch; <span class="mono">Fib(1)</span> <b>five times</b>.
         Each branch re-derives what the branch beside it already knew.
       </div>
-    </div>
-    <div>
-      <table class="mk" style="font-size:.5em; color:var(--ice);">
-        <tr><th style="background:rgba(255,255,255,.08); color:#fff;">to compute</th>
-            <th style="background:rgba(255,255,255,.08); color:#fff;">calls made</th></tr>
-        <tr><td class="mono">Fib(5)</td><td><b>15</b></td></tr>
-        <tr><td class="mono">Fib(10)</td><td><b>177</b></td></tr>
-        <tr><td class="mono">Fib(20)</td><td><b>21 891</b></td></tr>
-        <tr><td class="mono">Fib(30)</td><td><b>2 692 537</b></td></tr>
-        <tr><td class="mono">Fib(40)</td><td><b class="accent2">331 160 281</b></td></tr>
-      </table>
-      <p style="font-size:.46em; color:#98a0c0; margin:4px 0 0;">Ten more terms costs a hundred times the work. The 40th Fibonacci number is a <b>10-digit</b> answer that a laptop can compute instantly — and this way of computing it takes a third of a <b>billion</b> calls.</p>
-    </div>
-  </div>
-  <div class="rule accent1 fragment" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
-    <b>The fix is one line and it has a name: <span class="accent3">memoisation</span></b> — write each
+</div>
+<div>
+<table class="mk" style="font-size:.5em; color:var(--ice);">
+<tr><th style="background:rgba(255,255,255,.08); color:#fff;">to compute</th>
+<th style="background:rgba(255,255,255,.08); color:#fff;">calls made</th></tr>
+<tr><td class="mono">Fib(5)</td><td><b>15</b></td></tr>
+<tr><td class="mono">Fib(10)</td><td><b>177</b></td></tr>
+<tr><td class="mono">Fib(20)</td><td><b>21 891</b></td></tr>
+<tr><td class="mono">Fib(30)</td><td><b>2 692 537</b></td></tr>
+<tr><td class="mono">Fib(40)</td><td><b class="accent2">331 160 281</b></td></tr>
+</table>
+<p style="font-size:.46em; color:#98a0c0; margin:4px 0 0;">Ten more terms costs a hundred times the work. The 40th Fibonacci number is a <b>10-digit</b> answer that a laptop can compute instantly — and this way of computing it takes a third of a <b>billion</b> calls.</p>
+</div>
+</div>
+<div class="rule accent1 fragment" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>The fix is one line and it has a name: <span class="accent3">memoisation</span></b> — write each
     answer down the first time, look it up ever after. <span class="mono">Fib(30)</span> falls from
     2.7 million calls to <b>31 pieces of real work</b>. Recursion was never the problem;
     <b>forgetting</b> was.
   </div>
 
-</section>
-
-</section>
-
+</section></section>
+<!-- H8 the marked table + the hole -->
 <!-- H8 recursion on the tree + verticals -->
 <section>
-
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 2px;">Now the structure you built — <span class="accent2">searched recursively</span></h2>
-  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Named fields first, because the shape is the lesson. The exam's columns are on the right, and they are the same thing.</p>
-  <div class="two-col" style="gap:18px;">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.52em;"><span class="k">def</span> search(node, target):
+<section class="lt" data-background-color="#F4F6FB" id="a03a-leaf-12">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 2px;">Now the structure you built — <span class="accent2">searched recursively</span></h2>
+<p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Named fields first, because the shape is the lesson. The exam's columns are on the right, and they are the same thing.</p>
+<div class="two-col" style="gap:18px;">
+<div>
+<div class="ps" style="margin-top:0; font-size:.52em;"><span class="k">def</span> search(node, target):
     <span class="k">if</span> node <span class="k">is</span> <span class="v">None</span>:            <span class="c"># base case ①: not there</span>
-        <span class="k">return</span> <span class="v">None</span>
-    <span class="k">if</span> node.data == target:      <span class="c"># base case ②: found it</span>
-        <span class="k">return</span> node
+<span class="k">return</span> <span class="v">None</span>
+<span class="k">if</span> node.data == target:      <span class="c"># base case ②: found it</span>
+<span class="k">return</span> node
     <span class="k">if</span> target &lt; node.data:
         <span class="k">return</span> search(node.left,  target)
     <span class="k">return</span> search(node.right, target)</div>
-      <div class="rule accent1" style="font-size:.54em;">
-        <b>Two base cases and two general cases</b> — the features in the plural.
+<div class="rule accent1" style="font-size:.54em;">
+<b>Two base cases and two general cases</b> — the features in the plural.
         And notice: every branch says <b class="accent2">return</b> <i>search(…)</i>, never just
         <i>search(…)</i>. <b>The answer has to be handed back up.</b>
-      </div>
-    </div>
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.52em;"><span class="c"># the exam's form — same walk, columns for names</span>
+</div>
+</div>
+<div>
+<div class="ps" style="margin-top:0; font-size:.52em;"><span class="c"># the exam's form — same walk, columns for names</span>
 <span class="k">def</span> SearchValue(Root, ValueToFind):
     <span class="k">if</span> Root == -1:
         <span class="k">return</span> -1
@@ -678,213 +638,185 @@ print("factorial(0) =", factorial(0))</script></div>
     <span class="k">if</span> ArrayNodes[Root][1] &gt; ValueToFind:
         <span class="k">return</span> SearchValue(ArrayNodes[Root][0], ValueToFind)
     <span class="k">return</span> SearchValue(ArrayNodes[Root][2], ValueToFind)</div>
-      <div class="rule accent2" style="font-size:.54em;">
-        <b>Nov 2022 Paper 41 hands you this one half-finished</b> and asks for the code — recursion on a
+<div class="rule accent2" style="font-size:.54em;">
+<b>Nov 2022 Paper 41 hands you this one half-finished</b> and asks for the code — recursion on a
         real paper, one lesson before it was taught. <b class="accent3">It returns the index</b>, and
         <span class="mono">−1</span> means not there.
       </div>
-    </div>
-  </div>
-  <div class="dig">📐 the same tree, two signatures &nbsp;·&nbsp; 🕳 the oldest algorithm still running ↓</div>
+</div>
+</div>
+<div class="dig">📐 the same tree, two signatures  ·  🕳 the oldest algorithm still running ↓</div>
 
 </section>
-
 <!-- H8 vertical 1: two signatures -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p4">P4</span></div>
-  <h3 style="font-size:.7em; margin:0 0 4px;">📐 The same tree, <span class="accent2">two different signatures</span></h3>
-  <div class="two-col" style="gap:18px;">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="c"># Nov 2021 P41 — takes the INDEX</span>
+<section class="lt" data-background-color="#F4F6FB" id="a03a-leaf-13">
+<div class="badges"><span class="bg bg-p4">P4</span></div>
+<h3 style="font-size:.7em; margin:0 0 4px;">📐 The same tree, <span class="accent2">two different signatures</span></h3>
+<div class="two-col" style="gap:18px;">
+<div>
+<div class="ps" style="margin-top:0; font-size:.5em;"><span class="c"># Nov 2021 P41 — takes the INDEX</span>
 <span class="k">def</span> InOrder(Node):
     <span class="k">if</span> ArrayNodes[Node][0] != -1:
         InOrder(ArrayNodes[Node][0])
     print(ArrayNodes[Node][1])</div>
-      <p style="font-size:.44em; color:#8890b5; margin:2px 0 0;">Called as <span class="mono">InOrder(RootPointer)</span>.</p>
-    </div>
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.5em;"><span class="c"># Nov 2022 P41 — takes the ROW ITSELF</span>
+<p style="font-size:.44em; color:#8890b5; margin:2px 0 0;">Called as <span class="mono">InOrder(RootPointer)</span>.</p>
+</div>
+<div>
+<div class="ps" style="margin-top:0; font-size:.5em;"><span class="c"># Nov 2022 P41 — takes the ROW ITSELF</span>
 <span class="k">def</span> PostOrder(RootNode):
     <span class="k">if</span> RootNode[0] != -1:
         PostOrder(ArrayNodes[RootNode[0]])
     ...
     print(RootNode[1])</div>
-      <p style="font-size:.44em; color:#8890b5; margin:2px 0 0;">Called as <span class="mono">PostOrder(ArrayNodes[RootPointer])</span>.</p>
-    </div>
-  </div>
-  <div class="diverge" style="font-size:.54em;">
-    <span class="dh">📐 ONE YEAR APART, SAME TREE, SAME BOARD</span><br>
+<p style="font-size:.44em; color:#8890b5; margin:2px 0 0;">Called as <span class="mono">PostOrder(ArrayNodes[RootPointer])</span>.</p>
+</div>
+</div>
+<div class="diverge" style="font-size:.54em;">
+<span class="dh">📐 ONE YEAR APART, SAME TREE, SAME BOARD</span><br/>
     One passes <b>a number</b>; the other passes <b>a row</b>. Both are published; the Nov 2022 mark
     point accepts either — <i>"one parameter (root node <b>or</b> index of root node)"</i>. A candidate
     who memorised a signature meets the other one and freezes.
     <b class="accent2">Learn the shape: go left if there is a left, deal with me, go right if there is a right.</b>
     The parameter is a detail you read off the question.
   </div>
-  <div class="rule accent3" style="font-size:.53em;">
+<div class="rule accent3" style="font-size:.53em;">
     Traversal order is just <b>where the print sits</b> among the two calls.
     Left · <b>me</b> · right = <b>in-order</b> → sorted. Left · right · <b>me</b> = <b>post-order</b>.
     <b>Me</b> · left · right = <b>pre-order</b>. Three orders, one shape, one line moved.
   </div>
 
 </section>
-
 <!-- H8 vertical 2: gcd -->
-<section data-background-color="#151B3C" class="dk">
-  <h3 style="font-size:.7em; margin:0 0 4px;">🕳 The oldest algorithm still running — <span class="accent3">and it is recursive</span></h3>
-  <div class="two-col" style="gap:18px;">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">def</span> gcd(a, b):
+<section class="dk" data-background-color="#151B3C" id="a03a-leaf-14">
+<h3 style="font-size:.7em; margin:0 0 4px;">🕳 The oldest algorithm still running — <span class="accent3">and it is recursive</span></h3>
+<div class="two-col" style="gap:18px;">
+<div>
+<div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">def</span> gcd(a, b):
     <span class="k">if</span> b == 0:
         <span class="k">return</span> a
     <span class="k">return</span> gcd(b, a % b)</div>
-      <div class="rule accent3" style="font-size:.54em; background:rgba(255,255,255,.06); color:var(--ice);">
-        <b>Euclid, <i>Elements</i> Book 7, around 300 BCE.</b> Written as geometry — <i>keep taking the
+<div class="rule accent3" style="font-size:.54em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Euclid, <i>Elements</i> Book 7, around 300 BCE.</b> Written as geometry — <i>keep taking the
         smaller from the larger</i> — about 2 300 years before anything existed to run it on.
         Recursion as a way of thinking is older than the machine by two millennia.
       </div>
-    </div>
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.52em;">gcd(48, 18)
+</div>
+<div>
+<div class="ps" style="margin-top:0; font-size:.52em;">gcd(48, 18)
  → gcd(18, 12)      <span class="c"># 48 mod 18</span>
  → gcd(12,  6)      <span class="c"># 18 mod 12</span>
  → gcd( 6,  0)      <span class="c"># 12 mod 6</span>
- → <span class="v">6</span>                <span class="c"># base case</span></div>
-      <div class="rule accent2" style="font-size:.54em; background:rgba(255,255,255,.06); color:var(--ice);">
-        <b>Four frames.</b> <span class="mono">Fib(5)</span> needed fifteen calls for a smaller answer.
+ → <span class="v">6</span> <span class="c"># base case</span></div>
+<div class="rule accent2" style="font-size:.54em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Four frames.</b> <span class="mono">Fib(5)</span> needed fifteen calls for a smaller answer.
         The difference is how fast the argument shrinks: <span class="mono">−1</span> each time is slow,
         <b class="accent3">MOD is brutal</b> — and depth falls from <i>n</i> to about <i>log n</i>.
       </div>
-    </div>
-  </div>
-  <p class="center" style="font-size:.5em; color:#98a0c0; margin-top:6px;">Press <b>gcd(48, 18)</b> on the tracer two slides back and watch a stack that barely gets off the ground.</p>
+</div>
+</div>
+<p class="center" style="font-size:.5em; color:#98a0c0; margin-top:6px;">Press <b>gcd(48, 18)</b> on the tracer two slides back and watch a stack that barely gets off the ground.</p>
 
 </section>
-
 </section>
-
 <!-- H9 when is it worth it -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.8em; margin:0 0 6px;">When is recursion <span class="accent2">worth it</span>?</h2>
-  <table class="mk" style="font-size:.52em;">
-    <tr><th style="width:34%;">the job</th><th>use recursion?</th></tr>
-    <tr><td><b>walk a tree</b> · search it, print it in order</td><td style="color:#0d7a6e;"><b>yes</b> — the structure is defined in terms of itself, so the code that walks it should be too. A loop needs you to build a stack by hand.</td></tr>
-    <tr><td><b>divide and conquer</b> · binary search, merge sort</td><td style="color:#0d7a6e;"><b>yes</b> — "solve half, then the other half" <i>is</i> a recursive sentence.</td></tr>
-    <tr><td><b>count to ten</b> · total an array · anything linear</td><td style="color:#c0392b;"><b>no</b> — a loop is shorter, faster, and cannot run out of stack. Recursion here is showing off.</td></tr>
-    <tr><td><b>Fibonacci, naively</b></td><td style="color:#c0392b;"><b>no</b> — you saw the number. 331 million calls for a 10-digit answer.</td></tr>
-  </table>
-  <div class="rule accent3" style="font-size:.58em;">
-    <b>The rule of thumb worth writing down:</b> reach for recursion when <b>the data itself branches</b>
+<section class="lt" data-background-color="#F4F6FB" id="a03a-leaf-15">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.8em; margin:0 0 6px;">When is recursion <span class="accent2">worth it</span>?</h2>
+<table class="mk" style="font-size:.52em;">
+<tr><th style="width:34%;">the job</th><th>use recursion?</th></tr>
+<tr><td><b>walk a tree</b> · search it, print it in order</td><td style="color:#0d7a6e;"><b>yes</b> — the structure is defined in terms of itself, so the code that walks it should be too. A loop needs you to build a stack by hand.</td></tr>
+<tr><td><b>divide and conquer</b> · binary search, merge sort</td><td style="color:#0d7a6e;"><b>yes</b> — "solve half, then the other half" <i>is</i> a recursive sentence.</td></tr>
+<tr><td><b>count to ten</b> · total an array · anything linear</td><td style="color:#c0392b;"><b>no</b> — a loop is shorter, faster, and cannot run out of stack. Recursion here is showing off.</td></tr>
+<tr><td><b>Fibonacci, naively</b></td><td style="color:#c0392b;"><b>no</b> — you saw the number. 331 million calls for a 10-digit answer.</td></tr>
+</table>
+<div class="rule accent3" style="font-size:.58em;">
+<b>The rule of thumb worth writing down:</b> reach for recursion when <b>the data itself branches</b>
     — a tree, a folder inside a folder, a problem that splits in two. Reach for a loop when the data is
     <b>a straight line</b>.
   </div>
-  <div class="rule accent2 fragment" style="font-size:.56em;">
-    <b>And it is never free.</b> Every unfinished call is being held somewhere, in full — its
-    parameters, its variables, the line it must come back to. <b class="accent3">Fifteen of them were
-    alive at once on this slide's last example.</b> Held where?
-  </div>
+<div class="rule accent2 fragment" style="font-size:.56em;"><b>Count two different things.</b> Fib(5) makes 15 calls in total, with at most 5 Fibonacci calls active together. The branches run in turn. Each unfinished call retains its own state; completed calls no longer occupy an active frame.</div>
 
 </section>
-
 <!-- H10 game -->
-<section data-background-color="#F4F6FB" class="lt growslide">
-  <h2 style="font-size:.76em; margin:0 0 8px;">🎮 Winding and Unwinding</h2>
-  <div class="g-wrap">
-    <div class="g-head"><span id="g-stage" class="g-stage"></span><span id="g-prog" class="g-prog"></span><span id="g-score" class="g-score"></span><button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button></div>
-    <div id="g-q" class="g-q"></div>
-    <div id="g-body"></div>
-    <div id="g-say" class="g-say">&nbsp;</div>
-  </div>
+<section class="lt growslide" data-background-color="#F4F6FB" id="a03a-leaf-16">
+<h2 style="font-size:.76em; margin:0 0 8px;">🎮 Winding and Unwinding</h2>
+<div class="g-wrap">
+<div class="g-head"><span class="g-stage" id="g-stage"></span><span class="g-prog" id="g-prog"></span><span class="g-score" id="g-score"></span><button class="g-skip" id="g-back" title="back to the previous question">← back</button><button class="g-skip" id="g-skip" title="on to the next question, answered or not">next →</button></div>
+<div class="g-q" id="g-q"></div>
+<div id="g-body"></div>
+<div class="g-say" id="g-say"> </div>
+</div>
 
 </section>
-
 <!-- H11 the real thing -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p4">P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 3px;">The real thing</h2>
-  <p style="font-size:.44em; color:#98a0c0; margin:0 0 6px;">Nov 2022 Paper 41 Question 3 — the tree you built last lesson, then walked recursively this one. &nbsp;© UCLES</p>
-  <table class="mk" style="font-size:.5em;">
-    <tr><th>part</th><th>what it asks</th><th class="m">marks</th></tr>
-    <tr><td><b>3(a)</b></td><td>declare the 2D array and the two pointers</td><td class="m">4</td></tr>
-    <tr><td><b>3(b)</b></td><td>write <span class="mono">AddNode()</span> from the given pseudocode</td><td class="m">8</td></tr>
-    <tr><td><b>3(c)</b></td><td><b>complete and write the recursive <span class="mono">SearchValue()</span></b></td><td class="m">5</td></tr>
-    <tr><td><b>3(d)</b></td><td>write <span class="mono">PostOrder()</span> — recursive, from an outline in words</td><td class="m">7</td></tr>
-    <tr><td><b>3(e)</b></td><td>call them both from the main program and screenshot the output</td><td class="m">3+1</td></tr>
-  </table>
-  <div class="rule accent1" style="font-size:.56em;">
-    <b>Twenty-eight marks on one question</b>, and you can now write every line of it.
+<section class="lt" data-background-color="#F4F6FB" id="a03a-leaf-17">
+<div class="badges"><span class="bg bg-p4">P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 3px;">The real thing</h2>
+<p style="font-size:.44em; color:#98a0c0; margin:0 0 6px;">Nov 2022 Paper 41 Question 3 — the tree you built last lesson, then walked recursively this one.  © UCLES</p>
+<table class="mk" style="font-size:.5em;">
+<tr><th>part</th><th>what it asks</th><th class="m">marks</th></tr>
+<tr><td><b>3(a)</b></td><td>declare the 2D array and the two pointers</td><td class="m">4</td></tr>
+<tr><td><b>3(b)</b></td><td>write <span class="mono">AddNode()</span> from the given pseudocode</td><td class="m">8</td></tr>
+<tr><td><b>3(c)</b></td><td><b>complete and write the recursive <span class="mono">SearchValue()</span></b></td><td class="m">5</td></tr>
+<tr><td><b>3(d)</b></td><td>write <span class="mono">PostOrder()</span> — recursive, from an outline in words</td><td class="m">7</td></tr>
+<tr><td><b>3(e)</b></td><td>call them both from the main program and screenshot the output</td><td class="m">3+1</td></tr>
+</table>
+<div class="rule accent1" style="font-size:.56em;">
+<b>Twenty-eight marks on one question</b>, and you can now write every line of it.
     Last lesson bought you (a) and (b); this lesson buys (c) and (d).
     <b class="accent2">(d) is your homework.</b>
-  </div>
+</div>
 
 </section>
-
 <!-- H12 summary -->
-<section data-background-color="#151B3C" class="dk">
-  <h2 style="font-size:.82em; margin:0 0 8px;">What you can do now</h2>
-  <div class="two-col" style="gap:18px;">
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
-        <b>Say it for marks.</b> Base case · general case · calls itself · <b>moves toward</b> the base case.
+<section class="dk" data-background-color="#151B3C" id="a03a-leaf-18">
+<h2 style="font-size:.82em; margin:0 0 8px;">What you can do now</h2>
+<div class="two-col" style="gap:18px;">
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Say it for marks.</b> Base case · general case · calls itself · <b>moves toward</b> the base case.
         Four phrases, three marks, asked in seven of the last papers.
       </div>
-      <div class="rule accent3" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
-        <b>Trace it for marks.</b> Five columns, and <b>two halves</b> — wind down to the base case,
+<div class="rule accent3" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Trace it for marks.</b> Five columns, and <b>two halves</b> — wind down to the base case,
         unwind back up with the call number in brackets.
       </div>
-      <div class="rule accent2" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
-        <b>Write it.</b> On a tree, on a search, on anything whose shape contains a smaller copy of itself.
+<div class="rule accent2" style="font-size:.56em; background:rgba(255,255,255,.06); color:var(--ice);">
+<b>Write it.</b> On a tree, on a search, on anything whose shape contains a smaller copy of itself.
       </div>
-    </div>
-    <div>
-      <div class="rule navy" style="margin-top:0; font-size:.58em; background:rgba(255,255,255,.06); color:var(--ice); border-left-color:var(--accent3);">
-        <b>One thing was never explained.</b> While <span class="mono">Fib(5)</span> was running, fifteen
+</div>
+<div>
+<div class="rule navy" style="margin-top:0; font-size:.58em; background:rgba(255,255,255,.06); color:var(--ice); border-left-color:var(--accent3);">
+<b>One thing was never explained.</b> While <span class="mono">Fib(5)</span> was running, fifteen
         calls were made and <b>five were unfinished at once</b> — each holding its own <span class="mono">n</span>,
         its own half-done sum, and the line it had to come back to.
       </div>
-      <p class="center fragment" style="font-size:.62em; margin:12px 0 0; color:var(--ice);">
-        <b>Something has to hold all that.</b><br>
-        <span style="font-size:.8em; color:#98a0c0;">You built it in A2a. It has two operations.<br>You have known its name for three lessons.</span></p>
-      <p class="center fragment" style="font-size:.8em; margin:10px 0 0;"><b class="accent3">Next lesson: the stack, and what the compiler does with your recursion.</b></p>
-    </div>
-  </div>
-  <p class="center" style="font-size:.46em; color:#98a0c0; margin-top:10px;">🍦 <span class="mono">challenge_A03a_Recursion</span> — four functions, and a judge that reads your source to check you did not sneak a loop in.</p>
-
-</section>
-
-<!-- vocabulary -->
-<section data-background-color="#222B5A" class="dk">
-  <h3 style="font-size:.74em; margin:0 0 8px;">词汇 Vocabulary</h3>
-  <table class="mk" style="font-size:.52em; color:var(--ice);">
-    <tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
-    <tr><td>recursion</td><td>递归</td><td>a subroutine that calls itself on a <b>smaller</b> version of the same problem</td></tr>
-    <tr><td>base case</td><td>基础情况 / 基线条件</td><td>the input answered <b>outright</b>, with no recursive call — the stopping condition</td></tr>
-    <tr><td>general case</td><td>一般情况</td><td>the rule that calls itself, and <b>moves the state toward</b> the base case</td></tr>
-    <tr><td>winding</td><td>递推 (下行)</td><td>the calls going <b>down</b>, each one unfinished, waiting</td></tr>
-    <tr><td>unwinding</td><td>回溯 (回代)</td><td>the returns coming <b>back up</b> — the mark scheme's own word</td></tr>
-    <tr><td>stack overflow</td><td>栈溢出</td><td>what a missing or unreachable base case gets you</td></tr>
-    <tr><td>memoisation</td><td>记忆化</td><td>write each answer down once — turns 2.7 million calls into 31</td></tr>
-  </table>
-
-</section>
-
-</div></div>
-
-<div id="py-chip">🐍 waking Python…</div>
-<div id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</div>
-<div id="llmhelp">
-  <b>Live LLM marking is off.</b>
-  <p>The reader runs on this Mac, not inside the slides &mdash; which is why the API key never goes near a deck.</p>
-  <ol>
-    <li>In the <b>CS_Materials</b> folder, double-click<br><code>Start-LLM-Marking.command</code></li>
-    <li>A Terminal window opens and stays open. Come back here &mdash; the chip lights up on its own within five seconds. No reload.</li>
-  </ol>
-  <p class="tiny">Double-clicking <code>grade-server.py</code> does nothing: macOS opens <code>.py</code> files in an editor rather than running them. That is what the <code>.command</code> file is for.</p>
-  <button id="llmhelp-x">got it</button>
+<p class="center fragment" style="font-size:.62em; margin:12px 0 0; color:var(--ice);">
+<b>Something has to hold all that.</b><br/>
+<span style="font-size:.8em; color:#98a0c0;">You built it in A2a. It has two operations.<br/>You have known its name for three lessons.</span></p>
+<p class="center fragment" style="font-size:.8em; margin:10px 0 0;"><b class="accent3">Next lesson: the stack, and what the compiler does with your recursion.</b></p>
 </div>
-<div id="langsel"><div id="l-java" class="on">Java</div><div id="l-py">Python</div></div>
-<button id="fsbtn" title="fullscreen (or press F)">⛶</button>
+</div>
 
+</section>
+<!-- vocabulary -->
+<section class="dk" data-background-color="#222B5A" id="a03a-leaf-19">
+<h3 style="font-size:.74em; margin:0 0 8px;">词汇 Vocabulary</h3>
+<table class="mk" style="font-size:.52em; color:var(--ice);">
+<tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
+<tr><td>recursion</td><td>递归</td><td>a subroutine that calls itself on a <b>smaller</b> version of the same problem</td></tr>
+<tr><td>base case</td><td>基础情况 / 基线条件</td><td>the input answered <b>outright</b>, with no recursive call — the stopping condition</td></tr>
+<tr><td>general case</td><td>一般情况</td><td>the rule that calls itself, and <b>moves the state toward</b> the base case</td></tr>
+<tr><td>winding</td><td>递推 (下行)</td><td>the calls going <b>down</b>, each one unfinished, waiting</td></tr>
+<tr><td>unwinding</td><td>回溯 (回代)</td><td>the returns coming <b>back up</b> — the mark scheme's own word</td></tr>
+<tr><td>stack overflow</td><td>栈溢出</td><td>what a missing or unreachable base case gets you</td></tr>
+<tr><td>memoisation</td><td>记忆化</td><td>write each answer down once — turns 2.7 million calls into 31</td></tr>
+</table>
+
+</section>
+</div></div>
+<div id="py-chip">🐍 waking Python…</div>
+<button id="fsbtn" title="fullscreen (or press F)">⛶</button>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
@@ -919,7 +851,7 @@ function stopPy(){
 }
 function bootPython(){
   if(pyPromise) return pyPromise;
-  pyPromise = loadPyodide().then(function(py){
+  pyPromise = Promise.resolve().then(function(){ if(typeof loadPyodide!=="function") throw new Error("Python runtime download unavailable"); return loadPyodide(); }).then(function(py){
     py.runPython(
       "import builtins, js\n" +
       "async def __ainput(prompt=''):\n" +
@@ -975,60 +907,20 @@ function runPy(code, outEl, doneCb){
 
 /* ===== cells: Python runs live, Java replays a real build-time run ===== */
 function initPyCells(){
-  document.querySelectorAll('.pycell').forEach(function(cell){
-    var isJava = cell.classList.contains('java');
-    var srcEl  = cell.querySelector('.pysrc');
-    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
-    var capOut = cell.getAttribute('data-out') || '';
-    var isErr  = cell.getAttribute('data-err') === '1';
-    cell.innerHTML='';
-
-    var bar=document.createElement('div'); bar.className='pybar';
-    var dots=document.createElement('div'); dots.className='pydots';
-    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
-    bar.appendChild(dots);
-
-    var run=document.createElement('button'); run.className='pyrun';
-    run.textContent = isJava ? '▶ Run' : '⏳ waking…';
-    run.disabled = !isJava;
-    bar.appendChild(run);
-
-    if(!isJava){
-      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
-      stp.title='stop a program waiting for input';
-      stp.addEventListener('click', stopPy);
-      bar.appendChild(stp);
-    }
-    var st=document.createElement('span'); st.className='pystate' + (isJava?' cap':'');
-    st.textContent = isJava ? '☕ captured from a real run' : '🐍 editable · runs here';
-    bar.appendChild(st);
-
-    var ta=document.createElement('textarea'); ta.className='pyta';
-    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
-    if(isJava) ta.readOnly = true;
-    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
-
-    cell.appendChild(bar);
-    if(cell.classList.contains('side')){
-      var row=document.createElement('div'); row.className='pyrow';
-      row.appendChild(ta); row.appendChild(out);
-      out.style.display='block'; out.textContent='press ▶ Run';
-      cell.appendChild(row);
-    } else {
-      cell.appendChild(ta); cell.appendChild(out);
-    }
-
-    if(isJava){
-      run.addEventListener('click', function(){
-        out.style.display='block';
-        out.className='pyout cap' + (isErr?' err':'');
-        out.textContent = capOut;
-      });
-    } else {
-      run.addEventListener('click', function(){ runPy(ta.value, out); });
-    }
-  });
-  bootPython();
+ document.querySelectorAll('.pycell').forEach(function(cell){
+  var src=cell.querySelector('.pysrc'); var code=src?src.textContent.replace(/^\n/,'').replace(/\s+$/,''):'';
+  cell.innerHTML='';
+  var bar=document.createElement('div');bar.className='pybar';
+  var run=document.createElement('button');run.className='pyrun';run.textContent='loading Python';run.disabled=true;
+  var stop=document.createElement('button');stop.className='pylock';stop.textContent='stop input';stop.onclick=stopPy;
+  var label=document.createElement('span');label.className='pystate';label.textContent='Python · editable · fresh namespace';
+  bar.append(run,stop,label);
+  var ta=document.createElement('textarea');ta.className='pyta';ta.value=code;ta.rows=Math.max(2,code.split('\n').length);ta.spellcheck=false;
+  var out=document.createElement('pre');out.className='pyout';out.style.display='none';
+  cell.append(bar,ta,out);
+  run.onclick=function(){runPy(ta.value,out,function(){Reveal.layout();});};
+ });
+ bootPython().catch(function(e){document.getElementById('py-chip').textContent='Python unavailable — reload to retry';});
 }
 function autoSizePyTextareas(scope){
   (scope||document).querySelectorAll('.pyta').forEach(function(ta){
@@ -1038,16 +930,7 @@ function autoSizePyTextareas(scope){
   });
 }
 
-/* ===== the language switch ===== */
-function setLang(l){
-  document.body.setAttribute('data-lang', l);
-  document.getElementById('l-java').className = (l==='java') ? 'on' : '';
-  document.getElementById('l-py').className   = (l==='py')   ? 'on' : '';
-  try{ localStorage.setItem('a2lang', l); }catch(e){}
-  setTimeout(function(){ autoSizePyTextareas(document); }, 20);
-}
-document.getElementById('l-java').addEventListener('click', function(){ setLang('java'); });
-document.getElementById('l-py').addEventListener('click', function(){ setLang('py'); });
+
 document.getElementById('fsbtn').addEventListener('click', function(){
   var d=document.documentElement;
   if(document.fullscreenElement){ document.exitFullscreen(); }
@@ -1511,66 +1394,22 @@ function gEl(id){ return document.getElementById(id); }
    ═══════════════════════════════════════════════════════════════════════ */
 var LLM = { url:'http://127.0.0.1:8788', available:false, on:true, task:'A03a-boss' };
 
-function llmChip(){
-  var c = document.getElementById('llmchip');
-  if(!c) return;
-  if(!LLM.available){
-    /* it used to hide itself, which looks identical to "not wired up" -- and that
-       is exactly the wrong thing for the one person who can start the server */
-    c.className = 'off';
-    c.textContent = '\u26a1 no LLM \u2014 click for help';
-    c.title = 'Live marking is off. Click for the two steps that turn it on.';
-    return;
-  }
-  c.className = LLM.on ? 'on' : 'off';
-  c.textContent = LLM.on ? '\u26a1 LLM marking on' : '\u26a1 LLM marking off';
-  c.title = 'click to turn the second marker off';
+function llmChip(){ /* Classroom revision: external grading disabled. */
 }
 /* A tooltip used to be the ONLY place the deck said how to start the server,
    which is no help at all to someone who has already clicked and seen nothing
    happen. Say it on the screen, in the two steps that actually do it. */
-function llmHelp(show){
-  var h = document.getElementById('llmhelp');
-  if(h) h.style.display = show ? 'block' : 'none';
+function llmHelp(){ /* Classroom revision: external grading disabled. */
 }
-function llmDetect(cb){
-  var ctl = new AbortController();
-  var t = setTimeout(function(){ ctl.abort(); }, 1200);
-  fetch(LLM.url + '/ping', {signal: ctl.signal, cache: 'no-store'})
-    .then(function(r){ return r.json(); })
-    .then(function(j){ clearTimeout(t); LLM.available = !!(j && j.ok && j.key);
-                       llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
-    .catch(function(){ clearTimeout(t); LLM.available = false; llmChip(); if(cb) cb(); });
+function llmDetect(){ /* Classroom revision: external grading disabled. */
 }
 /* Detecting once, at load, was the real defect: the natural order is to open the
    deck, SEE that marking is off, and only then go and start the server -- by
    which time the one probe has long since failed. So keep looking. A refused
    connection to localhost costs nothing, and it stops as soon as it connects. */
-function llmWatch(){
-  setInterval(function(){
-    if(LLM.available || document.hidden) return;
-    llmDetect();
-  }, 5000);
+function llmWatch(){ /* Classroom revision: external grading disabled. */
 }
-function llmBind(){
-  var c = document.getElementById('llmchip');
-  if(!c || c.__bound) return;
-  c.__bound = true;
-  c.addEventListener('click', function(){
-    if(!LLM.available){
-      c.textContent = '\u26a1 looking for the server\u2026';
-      llmHelp(true);
-      llmDetect(function(){ if(!LLM.available) llmChip(); });
-      return;
-    }
-    LLM.on = !LLM.on; llmChip();
-  });
-  var x = document.getElementById('llmhelp-x');
-  if(x) x.addEventListener('click', function(){ llmHelp(false); });
-  /* start looking here, NOT inside Reveal's .then() -- anything that throws in
-     there (a CDN that did not answer, say) used to take the LLM down with it */
-  llmDetect();
-  llmWatch();
+function llmBind(){ /* Classroom revision: external grading disabled. */
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
 else llmBind();
@@ -1639,117 +1478,11 @@ function proseConsensus(regexRaw, llmAwarded, cap){
    Without this the deck says "press next → when you are ready" while the reader
    is still working, which is an invitation to throw its answer away — and that is
    exactly what happened the first time this was taught. */
-function gWaiting(on){
-  G.llmBusy = !!on;
-  var h = document.getElementById('g-nexthint');
-  if(!h){
-    /* the code boss's prompt is a plain sentence with no element of its own, so give
-       it one rather than letting the notice silently do nothing */
-    var say = document.getElementById('g-say');
-    if(!say) return;
-    h = document.createElement('div');
-    h.id = 'g-nexthint'; h.style.marginTop = '5px';
-    say.appendChild(h);
-  }
-  if(on){
-    if(h.getAttribute('data-orig') === null) h.setAttribute('data-orig', h.innerHTML);
-    h.style.opacity = '1';
-    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> '
-                + 'give it a few seconds \u2014 clicking now moves on without it.</span>';
-  } else {
-    var orig = h.getAttribute('data-orig');
-    h.style.opacity = '.65';
-    if(orig !== null){ h.innerHTML = orig; h.removeAttribute('data-orig'); }
-    else h.textContent = '';
-  }
+function gWaiting(){ /* Classroom revision: external grading disabled. */
 }
-function llmMarkProse(task, fn, answer, regexRaw, cap, host){
-  if(!LLM.available || !LLM.on || !host) return;
-  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
-                 + '(this one marks the idea, not the words)</span></p>';
-  var ctl = new AbortController();
-  /* a six-mark class is a big prompt and DeepSeek is sometimes busy; 45 s was
-     not enough rope, and giving up looked identical to the server being down */
-  var timedOut = false, t0 = Date.now();
-  var t = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
-  gWaiting(true);
-  fetch(LLM.url + '/mark', {
-    method:'POST', signal: ctl.signal,
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({task: task, fn: fn, lang:'py', code: answer})
-  }).then(function(r){ return r.json(); })
-    .then(function(j){
-      clearTimeout(t); gWaiting(false);
-      if(!j || j.error){
-        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">('
-                       + ((j && j.error) || 'no reply') + ')</span></p>';
-        return;
-      }
-      var rows = j.marks.map(function(m){
-        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
-             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
-      }).join('');
-      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it marked the idea, not the words</b></p>'
-                     + '<ul class="g-mp">' + rows + '</ul>'
-                     + proseConsensus(regexRaw, j.awarded, cap)
-                     + (j.missed ? '<p style="font-size:.48em; margin:4px 0 0;">' + j.missed + '</p>' : '');
-      /* the reader is the better marker on prose, so the running total follows it */
-      var better = Math.min(j.awarded, cap) - Math.min(regexRaw, cap);
-      if(better > 0){ gAward(better); var sc = document.getElementById('g-score');
-                      if(sc) sc.textContent = 'score ' + G.score; }
-    })
-    .catch(function(){
-      clearTimeout(t); gWaiting(false);
-      var __s = Math.round((Date.now() - t0) / 1000);
-      host.innerHTML = timedOut
-        ? '<p class="g-lbl">the reader gave up after ' + __s + ' s <span class="conf">'
-        + '(the model is busy, not broken \u2014 the markers on the left still stand. Press mark again to retry.)</span></p>'
-        : '<p class="g-lbl">could not reach the reader <span class="conf">'
-        + '(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
-    });
+function llmMarkProse(){ /* Classroom revision: external grading disabled. */
 }
-function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host){
-  if(!LLM.available || !LLM.on || !host) return;
-  var grid = host.closest ? host.closest('.g-grid') : null;
-  if(grid) grid.classList.add('three');
-  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
-                 + '(this one reads for meaning, not for patterns)</span></p>';
-  var ctl = new AbortController();
-  /* a six-mark class is a big prompt and DeepSeek is sometimes busy; 45 s was
-     not enough rope, and giving up looked identical to the server being down */
-  var timedOut = false, t0 = Date.now();
-  var t = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
-  gWaiting(true);
-  fetch(LLM.url + '/mark', {
-    method:'POST', signal: ctl.signal,
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({task: LLM.task, fn:'SearchValue', lang: lang, code: code})
-  }).then(function(r){ return r.json(); })
-    .then(function(j){
-      clearTimeout(t); gWaiting(false);
-      if(!j || j.error){
-        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">'
-                       + '(' + ((j && j.error) || 'no reply') + ')</span></p>';
-        return;
-      }
-      var rows = j.marks.map(function(m){
-        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
-             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
-      }).join('');
-      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it read your code, it did not run it</b></p>'
-                     + '<ul class="g-mp">' + rows + '</ul>'
-                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
-                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
-    })
-    .catch(function(){
-      clearTimeout(t); gWaiting(false);
-      var __s = Math.round((Date.now() - t0) / 1000);
-      host.innerHTML = timedOut
-        ? '<p class="g-lbl">the reader gave up after ' + __s + ' s <span class="conf">'
-        + '(the model is busy, not broken \u2014 the markers on the left still stand. Press mark again to retry.)</span></p>'
-        : '<p class="g-lbl">could not reach the reader <span class="conf">'
-        + '(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
-    });
+function llmMark(){ /* Classroom revision: external grading disabled. */
 }
 
 function behaviourHtml(raw, err){
@@ -1833,7 +1566,7 @@ function markOne(ans, mps, cap, quiet){
   }
   return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
 }
-function gDraw(){
+function foundationLegacyDraw(){
   var s=STAGES[G.i];
   /* which paper this stage is, because the ANSWER FORM changes with it and the
      form is worth all of the marks */
@@ -1934,7 +1667,7 @@ function gDraw(){
         if(el) el.innerHTML = behaviourHtml(raw, err);
         /* the third mechanic, and the only one that can read for MEANING. It runs
            last because the consensus needs the other two to have finished. */
-        llmMark(code, document.body.getAttribute('data-lang') === 'py' ? 'py' : 'java',
+        llmMark(code, 'py',
                 rawHits, ofPoints, raw, document.getElementById('g-llm'));
         if(err && err.indexOf('crash:') === 0){
           gSay('<b>' + total + ' on the mark points — and it did not run at all.</b> '
@@ -2032,7 +1765,7 @@ function gDraw(){
   }
 }
 window.gReplay = function(){
-  G.i = 0; G.score = 0; G.earned = {};
+  G.i = 0; G.score = 0; G.earned = {}; foundationReviews = {};
   var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
   var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
   gDraw();
@@ -2071,20 +1804,45 @@ function gNextOnce(){
   if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
 }
 function gFinish(){
-  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
-  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
-  gEl('g-stage').textContent='done';
-  gEl('g-q').innerHTML='';
-  gEl('g-prog').innerHTML='';
-  gEl('g-score').textContent='';
-  gEl('g-body').innerHTML=
-    '<div class="g-fin"><div class="big">'+G.score+'</div>'+
-    '<p style="margin:6px 0 0;">Every mark on that boss came from a real paper\u2019s question.</p>'+
-    '<p style="margin:6px 0 0; font-size:.9em; color:#5b6488;">The two that cost the most are the two the exam expects you to miss: '+
-    '<b>the unwinding half of the trace table</b> (two of its five marks live below the base case), and '+
-    '<b>writing RETURN in front of the recursive call</b> \u2014 a call whose answer is thrown away has walked the tree for nothing.</p>'+
-    '<button class="g-sub" onclick="G.i=0;G.score=0;var s=document.getElementById(\'g-skip\');if(s)s.style.display=\'\';gDraw();">play again</button></div>';
-  gSay('');
+ var sk=gEl('g-skip'),bk=gEl('g-back');if(sk)sk.style.display='none';if(bk)bk.style.display='none';
+ gEl('g-stage').textContent='Review complete';gEl('g-q').innerHTML='';gEl('g-prog').innerHTML='';gEl('g-score').textContent='';
+ var marks=Object.keys(foundationReviews).filter(function(k){return foundationReviews[k].reviewed;}).length;
+ gEl('g-body').innerHTML='<div class="g-fin"><p>Automatic checks: '+G.score+'</p><p>Human-reviewed written answers: '+marks+'. Their marks are recorded separately.</p><p>Revisit an unfinished task or explain one correction before leaving.</p><button class="g-sub" onclick="gReplay();">play again</button></div>';gSay('');
+}
+
+
+// Written explanations: commit first; meaning is reviewed by a person, never token-scored.
+var foundationReviews={};
+function gDraw(){
+ var s=STAGES[G.i];
+ if(!s.llmTask||s.boss||!s.mps||s.seq){foundationLegacyDraw();return;}
+ var ix=G.i;G.locked=false;var state=foundationReviews[ix]||(foundationReviews[ix]={answer:'',committed:false,selected:[],reviewed:false});
+ gEl('g-stage').textContent=s.name+' · P3 · human review';gEl('g-q').innerHTML=s.q;
+ gEl('g-score').textContent=G.score?'automatic checks '+G.score:'';gNavState();gProg();gSay('');
+ var host=gEl('g-body');host.innerHTML='';
+ var ta=document.createElement('textarea');ta.className='g-ta';ta.rows=3;ta.value=state.answer;ta.readOnly=state.committed;ta.setAttribute('aria-label','Written answer');
+ ta.oninput=function(){state.answer=ta.value;state.reviewed=false;};host.appendChild(ta);
+ var commit=document.createElement('button');commit.className='g-sub';commit.textContent=state.committed?'Edit answer':'Commit answer';
+ commit.onclick=function(){state.answer=ta.value;state.committed=!state.committed;state.reviewed=false;gDraw();};host.appendChild(commit);
+ var status=document.createElement('p');status.style.cssText='font-size:15px;margin:5px 0';status.textContent='No automatic prose score. Human marks stay separate from automatic checks.';host.appendChild(status);
+ if(!state.committed)return;
+ var details=document.createElement('details');details.className='foundation-rubric';
+ var summary=document.createElement('summary');summary.textContent='Optional self/teacher rubric · max '+s.total;details.appendChild(summary);
+ var content=document.createElement('div');content.style.cssText='max-height:145px;overflow:auto;font-size:16px;line-height:1.25';
+ s.mps.forEach(function(m,i){
+  var row=document.createElement('label');row.style.cssText='display:flex;gap:7px;margin:4px 0';
+  var box=document.createElement('input');box.type='checkbox';box.checked=!!state.selected[i];box.disabled=!state.answer.trim();
+  box.onchange=function(){state.selected[i]=box.checked;state.reviewed=false;showScore();};
+  var text=document.createElement('span');text.innerHTML=m.label+' ['+m.pts+']'+(m.grp?' · group '+m.grp:'');row.append(box,text);content.appendChild(row);
+ });
+ if(s.groupCaps){var caps=document.createElement('p');caps.textContent='Group caps: '+Object.entries(s.groupCaps).map(function(x){return x[0]+' max '+x[1];}).join('; ')+'; overall max '+s.total;content.prepend(caps);}
+ var save=document.createElement('button');save.className='g-sub';save.textContent='Record self/teacher mark';save.disabled=!state.answer.trim();save.onclick=function(){state.reviewed=true;showScore();};content.appendChild(save);
+ var result=document.createElement('p');content.appendChild(result);
+ function showScore(){var groups={},points=0;s.mps.forEach(function(m,i){if(!state.selected[i])return;if(m.grp&&s.groupCaps)groups[m.grp]=(groups[m.grp]||0)+m.pts;else points+=m.pts;});Object.keys(groups).forEach(function(k){points+=Math.min(groups[k],s.groupCaps[k]);});points=Math.min(s.total,points);result.textContent=!state.answer.trim()?'Not attempted · 0 / '+s.total:state.reviewed?'Recorded self/teacher mark '+points+' / '+s.total:'Awaiting self/teacher review';result.dataset.mode='human';result.dataset.score=state.reviewed?String(points):'pending';}
+ showScore();details.appendChild(content);host.appendChild(details);
+ var model=document.createElement('details');model.className='foundation-rubric';model.innerHTML='<summary>Optional model answer — compare meaning</summary>';
+ var answer=document.createElement('p');answer.style.cssText='font-size:16px;max-height:95px;overflow:auto;white-space:pre-wrap';answer.textContent=s.model||'';model.appendChild(answer);host.appendChild(model);
+ host.querySelectorAll('details').forEach(function(x){x.ontoggle=function(){Reveal.layout();};});Reveal.layout();
 }
 
 Reveal.initialize({
@@ -2096,7 +1854,6 @@ Reveal.initialize({
   makeTrace('traceviz', ['fact','fib','gcd']);
   llmDetect();
   gDraw();
-  try{ var L=localStorage.getItem('a2lang'); if(L) setLang(L); }catch(e){}
   var ob=document.getElementById('obj-btn');
   if(ob) ob.addEventListener('click', function(){
     var o=document.getElementById('obj');

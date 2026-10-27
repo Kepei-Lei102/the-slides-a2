@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>When a Node Has Two Pointers — Binary Trees</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css" rel="stylesheet"/>
 <style>
 :root{
   --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
@@ -67,23 +68,7 @@
 #py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
 #py-chip.ready{color:#5FD6C9;}
 
-/* ===== the Java lane: captured, not live ===== */
-.pycell.java .pyrun{background:#8a6100;} .pycell.java .pyrun:hover{background:#a87700;}
-.pystate.cap{color:#e0b050;}
-.pyout.cap{color:#e8c98a;}
-.pyout.err{color:#ff9d95;}
 
-/* ===== the language switch ===== */
-#langsel{position:fixed; top:14px; right:16px; z-index:99; display:flex; border:2px solid #6b74a8;
-  border-radius:9px; overflow:hidden; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
-#langsel div{padding:5px 15px; background:rgba(20,26,60,.72); color:#98a0c0; transition:.12s;}
-#langsel div.on{background:var(--accent1); color:#fff;}
-#fsbtn{position:fixed; top:14px; right:calc(16px + 152px); z-index:99; background:rgba(20,26,60,.72);
-  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
-  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
-#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
-body[data-lang="java"] .lane[data-lang="py"]{display:none;}
-body[data-lang="py"] .lane[data-lang="java"]{display:none;}
 
 /* ===== 🧾 outside the exam hall ===== */
 .toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
@@ -278,204 +263,161 @@ body[data-lang="py"] .lane[data-lang="java"]{display:none;}
   padding:2px 10px; font-weight:bold; cursor:pointer; font-size:.95em; margin:0 5px; font-family:'Calibri','Segoe UI',sans-serif;}
 .g-pick:hover{background:rgba(23,179,163,.28);}
 .g-pick.on{background:var(--accent1); color:#fff;}
-</style></head>
-<body data-lang="java">
-<div class="reveal"><div class="slides">
 
+/* Reviewed classroom route: main task first; references below. */
+.foundation-task p,.foundation-task li{font-size:24px;line-height:1.4;}
+.foundation-task h2{font-size:36px;}
+.foundation-task .rule{font-size:22px;}
+.foundation-rubric{font-size:17px;margin:5px 0;text-align:left;}
+.foundation-rubric summary{cursor:pointer;font-weight:bold;}
+.pyout{max-height:150px;overflow:auto;}
+.pyta{max-height:420px;overflow:auto;}
+.growslide #g-body{max-height:470px;overflow:auto;}
+#llmchip,#llmhelp{display:none!important;}
+</style><meta content="disabled-human-review" name="classroom-submissions"/></head>
+<body data-lang="py">
+<div class="reveal"><div class="slides">
 <!-- H1 -->
 <section>
-<section data-background-color="#151B3C" class="dk center">
-  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
-  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 4 · 9618 §19.1</p>
-  <h1 style="font-size:1.5em; margin:0 0 6px;">When a Node Has<br>Two Pointers</h1>
-  <p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">binary trees 二叉树 · dictionaries · graphs</p>
-  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+<section class="dk center" data-background-color="#151B3C" id="a02c-leaf-01">
+<div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+<p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 4 · 9618 §19.1</p>
+<h1 style="font-size:1.5em; margin:0 0 6px;">When a Node Has<br/>Two Pointers</h1>
+<p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">binary trees 二叉树 · dictionaries · graphs</p>
+<p style="margin-top:16px;"><button class="g-sub" onclick="Reveal.down()" style="font-size:.5em;">🎯 what you will be able to do</button></p>
 
 </section>
-  <section data-background-color="#151B3C" class="dk">
-    <div class="bar" style="background:var(--accent3);"></div>
-    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
-    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> <b class="accent1">Insert into</b> and <b class="accent1">search</b> a binary tree held in a 2D array, and <b class="accent1">read a traversal off it</b></div>
-    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">2.</strong> For any structure this unit has built, give the one-sentence <b class="accent3">justification</b> the exam pays for</div>
+<section class="dk" data-background-color="#151B3C" id="a02c-leaf-02">
+<div class="bar" style="background:var(--accent3);"></div>
+<h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+<div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> <b class="accent1">Insert into</b> and <b class="accent1">search</b> a binary tree held in a 2D array, and <b class="accent1">read a traversal off it</b></div>
+<div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">2.</strong> For any structure this unit has built, give the one-sentence <b class="accent3">justification</b> the exam pays for</div>
 
 </section>
-</section>
-
+<section class="lt foundation-task" data-background-color="#F4F6FB" data-reference="evidence" id="a02c-frequency-evidence"><h2>What the historical corpus asks us to practise</h2><ul><li>P3: ADT: binary tree — 4/25 papers; complete/draw 75%, write code 25%</li><li>P4: Binary tree (initialise, insert, search) — 7/24 papers; write code 100%</li></ul><p class="rule fragment">Maintained normalized corpus, 2021–2026; duplicate variants removed. Use these response shapes for practice. This is not a forecast or permission to omit syllabus content.</p>
+</section></section>
 <!-- H2 HOOK -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.88em; margin:0 0 8px;">The two structures you own have <span class="accent2">opposite</span> weaknesses</h2>
-  <table class="mk" style="font-size:.56em; color:var(--ice);">
-    <tr><th style="background:rgba(255,255,255,.08); color:#fff;"></th>
-        <th style="background:rgba(255,255,255,.08); color:#fff;">find a value</th>
-        <th style="background:rgba(255,255,255,.08); color:#fff;">insert a value</th></tr>
-    <tr><td><b>sorted array</b></td><td style="color:#5FD6C9;"><b>fast</b> — halve, halve, halve: 20 items in 5 looks, a million in 20</td><td style="color:#ff9d95;"><b>slow</b> — shuffle everything up to make room</td></tr>
-    <tr><td><b>linked list</b></td><td style="color:#ff9d95;"><b>slow</b> — ask every node in turn; there is no middle to jump to</td><td style="color:#5FD6C9;"><b>fast</b> — two pointer writes, nothing moves</td></tr>
-  </table>
-  <div class="rule accent3 fragment" style="font-size:.62em;">
+<section class="dk" data-background-color="#151B3C" id="a02c-leaf-03">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.88em; margin:0 0 8px;">The two structures you own have <span class="accent2">opposite</span> weaknesses</h2>
+<table class="mk" style="font-size:.56em; color:var(--ice);">
+<tr><th style="background:rgba(255,255,255,.08); color:#fff;"></th>
+<th style="background:rgba(255,255,255,.08); color:#fff;">find a value</th>
+<th style="background:rgba(255,255,255,.08); color:#fff;">insert a value</th></tr>
+<tr><td><b>sorted array</b></td><td style="color:#5FD6C9;"><b>fast</b> — halve, halve, halve: 20 items in 5 looks, a million in 20</td><td style="color:#ff9d95;"><b>slow</b> — shuffle everything up to make room</td></tr>
+<tr><td><b>linked list</b></td><td style="color:#ff9d95;"><b>slow</b> — ask every node in turn; there is no middle to jump to</td><td style="color:#5FD6C9;"><b>fast</b> — two pointer writes, nothing moves</td></tr>
+</table>
+<div class="rule accent3 fragment" style="font-size:.62em;">
     Halving needs to <b>jump to the middle</b>; cheap insertion needs <b>nothing to move</b>.
     One structure per column — and somebody is going to ask for <b>both at once</b>.
   </div>
-  <p class="center fragment" style="font-size:.74em; margin-top:12px;"><b>The binary tree refuses to choose.</b><br>
-  <span style="font-size:.66em; color:#98a0c0;">Halving to find, two writes to insert — and the price appears at the end of the lesson.</span></p>
+<p class="center fragment" style="font-size:.74em; margin-top:12px;"><b>The binary tree refuses to choose.</b><br/>
+<span style="font-size:.66em; color:#98a0c0;">Halving to find, two writes to insert — and the price appears at the end of the lesson.</span></p>
 
 </section>
-
 <!-- H3 -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 4px;">Give the node a <span class="accent2">second pointer</span></h2>
-  <p style="font-size:.46em; color:#8890b5; margin:0 0 6px;">One field more than the linked list's node. Written the way you would actually write it — <b>names, not column numbers</b>.</p>
-  <div class="two-col">
-    <div>
-      <div class="lane" data-lang="py">
-      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">class</span> Node:
+<section class="lt" data-background-color="#F4F6FB" id="a02c-leaf-04">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 4px;">Give the node a <span class="accent2">second pointer</span></h2>
+<p style="font-size:.46em; color:#8890b5; margin:0 0 6px;">One field more than the linked list's node. Written the way you would actually write it — <b>names, not column numbers</b>.</p>
+<div class="two-col">
+<div>
+<div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">class</span> Node:
     <span class="k">def</span> __init__(self, data):
-        self.left  = <span class="v">None</span>   <span class="c"># the smaller side</span>
+        self.left  = <span class="v">None</span> <span class="c"># the smaller side</span>
         self.data  = data
-        self.right = <span class="v">None</span>   <span class="c"># the larger side</span></div>
-      </div>
-      <div class="lane" data-lang="java">
-      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">class</span> Node {
-    Node left;    <span class="c">// the smaller side</span>
-    <span class="k">int</span>  data;
-    Node right;   <span class="c">// the larger side</span>
-}</div>
-      </div>
-      <div class="rule accent1" style="font-size:.56em;">
-        <b>Three fields, two of them pointing at more nodes.</b> That is the whole new idea —
+        self.right = <span class="v">None</span> <span class="c"># the larger side</span></div>
+<div class="rule accent1" style="font-size:.56em;">
+<b>Three fields, two of them pointing at more nodes.</b> That is the whole new idea —
         the linked list's node with one extra arrow, and the arrows now have <b>directions that mean something</b>:
         smaller to the left, larger to the right.
       </div>
-    </div>
-    <div>
-      <table class="mk" style="font-size:.5em;">
-        <tr><th style="text-align:left;">what you would write</th><th style="text-align:left;">what the exam writes</th></tr>
-        <tr><td class="mono">node.left</td><td class="mono">ArrayNodes[n, 0]</td></tr>
-        <tr><td class="mono">node.data</td><td class="mono">ArrayNodes[n, 1]</td></tr>
-        <tr><td class="mono">node.right</td><td class="mono">ArrayNodes[n, 2]</td></tr>
-      </table>
-      <div class="rule accent2" style="font-size:.56em;">
-        <b>The exam's array is this record with the names filed off.</b> Same object, worse handwriting —
+</div>
+<div>
+<table class="mk" style="font-size:.5em;">
+<tr><th style="text-align:left;">what you would write</th><th style="text-align:left;">what the exam writes</th></tr>
+<tr><td class="mono">node.left</td><td class="mono">ArrayNodes[n, 0]</td></tr>
+<tr><td class="mono">node.data</td><td class="mono">ArrayNodes[n, 1]</td></tr>
+<tr><td class="mono">node.right</td><td class="mono">ArrayNodes[n, 2]</td></tr>
+</table>
+<div class="rule accent2" style="font-size:.56em;">
+<b>The exam's array is this record with the names filed off.</b> Same object, worse handwriting —
         a row is a node, a "pointer" is a row number, and the field names become <b>0, 1, 2</b>.
         Learn the shape here; type the columns in the exam.
       </div>
-      <div class="rule accent3" style="font-size:.53em;">
+<div class="rule accent3" style="font-size:.53em;">
         🧾 <b>And Cambridge writes it both ways.</b> Nov 2024 Paper 31 asks about
         <span class="mono">BinTree[NowPtr].LeftPtr</span> — named fields, on a real paper — while every
         Paper 4 tree question uses the numbered columns. <b>Two costumes, one structure.</b>
-      </div>
-    </div>
-  </div>
+</div>
+</div>
+</div>
 
 </section>
-
 <!-- H3b the exam's storage -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 6px;">The same node, <span class="accent2">as the exam stores it</span></h2>
-  <div class="two-col">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">DECLARE</span> ArrayNodes : <span class="k">ARRAY</span>[0:19, 0:2] <span class="k">OF INTEGER</span>
+<section class="lt" data-background-color="#F4F6FB" id="a02c-leaf-05">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 6px;">The same node, <span class="accent2">as the exam stores it</span></h2>
+<div class="two-col">
+<div>
+<div class="ps" style="margin-top:0; font-size:.55em;"><span class="k">DECLARE</span> ArrayNodes : <span class="k">ARRAY</span>[0:19, 0:2] <span class="k">OF INTEGER</span>
 <span class="c">// [n, 0] LeftPointer   — index of the smaller side</span>
 <span class="c">// [n, 1] Data</span>
 <span class="c">// [n, 2] RightPointer  — index of the larger side</span>
-
-<span class="k">DECLARE</span> RootPointer : <span class="k">INTEGER</span>   <span class="c">// -1 = empty tree</span>
-<span class="k">DECLARE</span> FreeNode    : <span class="k">INTEGER</span>   <span class="c">// next unused row</span></div>
-      <p style="font-size:.46em; color:#8890b5; margin:3px 0 0; line-height:1.5;">Cambridge's own declaration, from Nov 2022 Paper 41. The names vary by paper —
+<span class="k">DECLARE</span> RootPointer : <span class="k">INTEGER</span> <span class="c">// -1 = empty tree</span>
+<span class="k">DECLARE</span> FreeNode    : <span class="k">INTEGER</span> <span class="c">// next unused row</span></div>
+<p style="font-size:.46em; color:#8890b5; margin:3px 0 0; line-height:1.5;">Cambridge's own declaration, from Nov 2022 Paper 41. The names vary by paper —
       <span class="mono">RootPtr</span>, <span class="mono">FirstNode</span>, <span class="mono">FreePtr</span> — the shape never does.</p>
-    </div>
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.56em;">
+</div>
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.56em;">
         Same trick as the linked list, one column wider: <b>a row of the array is a node</b>, a
         "pointer" is an index, and <b class="accent2">−1</b> is the value that cannot be one.
         Empty tree? <span class="mono">RootPointer = −1</span>. No child? <b>−1</b>. Fourth time this unit — say it before the slide does.
       </div>
-      <div class="diverge" style="font-size:.52em;">
-        <span class="dh">📐 WHERE DID THE FREE LIST GO?</span><br>
-        The linked list threaded its spare nodes into a second chain, because deleting handed nodes back.
-        <b>The exam's tree never deletes</b> — the syllabus asks for delete on stacks, queues and linked
-        lists only — so nothing is ever handed back, and <span class="mono">FreeNode</span> collapses into a
-        plain counter: <b>the next unused row, plus one after every insert.</b> Simpler on purpose, and the
-        papers say so out loud: <i>"nodes cannot be deleted from this tree."</i>
-      </div>
-    </div>
-  </div>
+<div class="diverge" style="font-size:.52em;"><b>MODEL ASSUMPTION — no deletion in this task.</b><br/>A bump pointer can name the next unused row because no slot is returned. A tree that supports deletion needs a policy for reclaiming and reusing storage. Read the question’s stated operations and null convention.</div>
+</div>
+</div>
 
 </section>
-
 <!-- H4 the rule -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 8px;">One rule makes it work — <span class="accent2">at every node</span></h2>
-  <div class="two-col">
-    <div class="card" style="border-top:4px solid var(--accent1);">
-      <p style="font-size:.6em; line-height:1.6; margin:0;"><b class="accent1">Smaller → left. Larger → right.</b><br>
+<section class="lt" data-background-color="#F4F6FB" id="a02c-leaf-06">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 8px;">One rule makes it work — <span class="accent2">at every node</span></h2>
+<div class="two-col">
+<div class="card" style="border-top:4px solid var(--accent1);">
+<p style="font-size:.6em; line-height:1.6; margin:0;"><b class="accent1">Smaller → left. Larger → right.</b><br/>
       Not just at the root — <b>at every node, all the way down</b>. The rule is not a property the tree has;
       <b>the rule is the tree.</b> Break it at one node and the structure is just circles and arrows.</p>
-    </div>
-    <div class="card" style="border-top:4px solid var(--accent3);">
-      <p style="font-size:.6em; line-height:1.6; margin:0;"><b style="color:#B8860B;">And equal?</b><br>
+</div>
+<div class="card" style="border-top:4px solid var(--accent3);">
+<p style="font-size:.6em; line-height:1.6; margin:0;"><b style="color:#B8860B;">And equal?</b><br/>
       Cambridge's own pseudocode tests <span class="mono">IF NodeData &lt; Data</span> and sends everything
       else right — so <b>equal goes right</b>. A convention, not a law; state it and follow it, because the
       marker follows the paper's.</p>
-    </div>
-  </div>
-  <div class="rule accent2 fragment" style="font-size:.62em;">
+</div>
+</div>
+<div class="rule accent2 fragment" style="font-size:.62em;">
     Read the rule again and notice what it buys: standing at any node, one comparison tells you which
     <b>half of everything below</b> to abandon. <b>That is binary search, built into the furniture.</b>
-  </div>
+</div>
 
 </section>
-
 <!-- H5 widget -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 2px;">Grow one — <span class="accent2">and watch the table fill</span></h2>
-  <p style="font-size:.46em; color:#8890b5; margin:0 0 5px;">Type a number and insert it. The highlight walks the comparisons; the table is what the exam sees.</p>
-  <div class="lt-wrap" id="treeviz"></div>
+<section class="lt" data-background-color="#F4F6FB" id="a02c-leaf-07">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 2px;">Grow one — <span class="accent2">and watch the table fill</span></h2>
+<p style="font-size:.46em; color:#8890b5; margin:0 0 5px;">Type a number and insert it. The highlight walks the comparisons; the table is what the exam sees.</p>
+<div class="lt-wrap" id="treeviz"></div>
 
 </section>
-
 <!-- H6 insert code -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 2px;">The insert, written out — <span class="accent3">the walk you just watched</span></h2>
-  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Nov 2021 Paper 41 asks for exactly this, for eight marks. The marked step: you attach a node by writing <b>the parent's</b> pointer.</p>
-  <div class="lane" data-lang="java">
-  <div class="pycell java side xtight" data-out="Index  Left  Data  Right
-  0      1    15     2
-  1      3     8     4
-  2     -1    19    -1
-  3     -1     3    -1
-  4     -1    10    -1
-RootPointer=0  FreeNode=5"><script type="text/plain" class="pysrc">static boolean AddNode(int NodeData) {
-    if (FreeNode > SIZE - 1) return false;        // tree full
-    ArrayNodes[FreeNode][0] = -1;                 // a leaf, until someone hangs off it
-    ArrayNodes[FreeNode][1] = NodeData;
-    ArrayNodes[FreeNode][2] = -1;
-    if (RootPointer == -1) {                      // the empty tree: this IS the root
-        RootPointer = 0;
-    } else {
-        int Current = RootPointer;
-        boolean Placed = false;
-        while (!Placed) {
-            if (NodeData < ArrayNodes[Current][1]) {        // smaller -> go left
-                if (ArrayNodes[Current][0] == -1) { ArrayNodes[Current][0] = FreeNode; Placed = true; }
-                else { Current = ArrayNodes[Current][0]; }
-            } else {                                        // larger or equal -> go right
-                if (ArrayNodes[Current][2] == -1) { ArrayNodes[Current][2] = FreeNode; Placed = true; }
-                else { Current = ArrayNodes[Current][2]; }
-            }
-        }
-    }
-    FreeNode = FreeNode + 1;                      // a counter, not a chain
-    return true;
-}</script></div>
-  </div>
-  <div class="lane" data-lang="py">
-  <div class="pycell side xtight"><script type="text/plain" class="pysrc">SIZE = 20                                        # INTEGER
+<section><section class="lt foundation-task" data-background-color="#F4F6FB" id="a02c-insert-means-attaching-not-just-storing"><h2>Insert means attaching, not just storing</h2><p>Start with root 15, left child 8 and right child 19. Node 8 has children 3 and 10. Array rows store [left index, data, right index]; −1 means null.</p><p>Insert 12. Draw the search path. If the free row is 5, state its three fields and identify the exact parent field that must become 5.</p><p class="rule fragment">Check: the path is 15 → 8 → 10; attach at 10’s right pointer. Then derive the general algorithm, including empty/full cases. Full code ↓.</p>
+</section><section class="dk" data-background-color="#151B3C" data-reference="optional-working" id="a02c-leaf-08">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 2px;">The insert, written out — <span class="accent3">the walk you just watched</span></h2>
+<p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Nov 2021 Paper 41 asks for exactly this, for eight marks. The marked step: you attach a node by writing <b>the parent's</b> pointer.</p>
+<div class="pycell side xtight"><script class="pysrc" type="text/plain">SIZE = 20                                        # INTEGER
 ArrayNodes = [[-1,-1,-1] for i in range(SIZE)]   # ARRAY[0:19, 0:2] OF INTEGER
 RootPointer = -1                                 # INTEGER
 FreeNode = 0                                     # INTEGER
@@ -514,31 +456,16 @@ print("Index  Left  Data  Right")
 for i in range(FreeNode):
     print("  %d     %2d    %2d    %2d" % (i, ArrayNodes[i][0], ArrayNodes[i][1], ArrayNodes[i][2]))
 print("RootPointer=%d  FreeNode=%d" % (RootPointer, FreeNode))</script></div>
-  </div>
 
-</section>
-
+</section></section>
 <!-- H7 search + degenerate hole -->
-<section>
-
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 2px;">Finding is <span class="accent3">halving</span> — built into the shape</h2>
-  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Binary search from AS needed a sorted array and index arithmetic. Here the comparisons ARE the structure.</p>
-  <div class="lane" data-lang="java">
-  <div class="pycell java side tight" data-out="SearchTree(10) -> index 4
-SearchTree(99) -> -1   (not there)"><script type="text/plain" class="pysrc">static int SearchTree(int Item) {
-    int Now = RootPointer;
-    while (Now != -1) {
-        if (ArrayNodes[Now][1] == Item) return Now;
-        if (Item < ArrayNodes[Now][1]) Now = ArrayNodes[Now][0];
-        else                           Now = ArrayNodes[Now][2];
-    }
-    return -1;                       // fell off the tree: not there
-}</script></div>
-  </div>
-  <div class="lane" data-lang="py">
-  <div class="pycell side tight"><script type="text/plain" class="pysrc">ArrayNodes = [[1,15,2],[3,8,4],[-1,19,-1],[-1,3,-1],[-1,10,-1]]
+<section><section class="lt foundation-task" data-background-color="#F4F6FB" id="a02c-find-a-value-by-keeping-the-right-subtree"><h2>Find a value by keeping the right subtree</h2><p>The tree has root 15, children 8 and 19; node 8 has children 3 and 10. Trace a search for 10, then a search for 12.</p><p>At each node, state the comparison, retained subtree, and stopping condition. Return a row index when found and −1 when absent.</p><p class="rule fragment">Check: 10 takes the path 15→8→10. The missing target stops at a null link. Balance and full working ↓.</p>
+</section>
+<section class="dk" data-background-color="#151B3C" data-reference="optional-working" id="a02c-leaf-09">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 2px;">Finding discards a subtree — height sets the cost</h2>
+<p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Binary search from AS needed a sorted array and index arithmetic. Here the comparisons ARE the structure.</p>
+<div class="pycell side tight"><script class="pysrc" type="text/plain">ArrayNodes = [[1,15,2],[3,8,4],[-1,19,-1],[-1,3,-1],[-1,10,-1]]
 RootPointer = 0                          # the tree from the last slide
 
 def SearchTree(Item):
@@ -554,23 +481,17 @@ def SearchTree(Item):
 
 print("SearchTree(10) -> index", SearchTree(10))
 print("SearchTree(99) ->", SearchTree(99), "  (not there)")</script></div>
-  </div>
-  <div class="rule accent1" style="font-size:.56em; margin-top:5px;">
-    Every comparison discards <b>an entire subtree</b>. A million values, about twenty questions —
-    <b>the AS binary-search promise, kept by furniture instead of arithmetic.</b> And "return −1 when it
-    is not there" is the sentinel again, working its fifth job of the unit.
-  </div>
-  <div class="dig">🕳 unless the tree was built wrong ↓</div>
+<div class="rule accent1" style="font-size:.56em; margin-top:5px;"><b>Assumption on the main route:</b> about twenty comparisons for a million nodes requires a shallow, balanced tree. A legal unbalanced BST can need n comparisons. Each step discards one subtree; it does not promise half the nodes.</div>
+<div class="dig">🕳 unless the tree was built wrong ↓</div>
 
 </section>
-
 <!-- H7 vertical: degenerate -->
-<section data-background-color="#222B5A" class="dk">
-  <h3 style="font-size:.72em; margin:0 0 4px;">🕳 The tree that is secretly a list</h3>
-  <p style="font-size:.48em; color:#98a0c0; margin:0 0 6px;">Insert <b>1, 2, 3, 4, 5, 6, 7</b> — in order — and look at what the rule builds.</p>
-  <div class="two-col" style="gap:18px;">
-    <div>
-      <div class="ps" style="margin-top:0; font-size:.52em;">Index  Left  Data  Right
+<section class="dk" data-background-color="#222B5A" id="a02c-leaf-10">
+<h3 style="font-size:.72em; margin:0 0 4px;">🕳 The tree that is secretly a list</h3>
+<p style="font-size:.48em; color:#98a0c0; margin:0 0 6px;">Insert <b>1, 2, 3, 4, 5, 6, 7</b> — in order — and look at what the rule builds.</p>
+<div class="two-col" style="gap:18px;">
+<div>
+<div class="ps" style="margin-top:0; font-size:.52em;">Index  Left  Data  Right
   0     -1     1     1
   1     -1     2     2
   2     -1     3     3
@@ -578,50 +499,32 @@ print("SearchTree(99) ->", SearchTree(99), "  (not there)")</script></div>
   4     -1     5     5
   5     -1     6     6
   6     -1     7    -1</div>
-      <p style="font-size:.46em; color:#98a0c0; margin:3px 0 0;">Every left pointer −1. Every node hangs right. <b>Height 7, for 7 nodes.</b></p>
-    </div>
-    <div>
-      <div class="rule accent2" style="margin-top:0; font-size:.56em;">
+<p style="font-size:.46em; color:#98a0c0; margin:3px 0 0;">Every left pointer −1. Every node hangs right. <b>Height 7, for 7 nodes.</b></p>
+</div>
+<div>
+<div class="rule accent2" style="margin-top:0; font-size:.56em;">
         Each value was larger than everything before it, so the rule sent every one <b>right</b> —
         and built <b>a linked list wearing a tree costume</b>. Searching it asks every node in turn: O(n),
         the exact thing the tree existed to escape.
       </div>
-      <div class="rule accent3" style="font-size:.56em;">
-        <b>The tree's advantage depends on the order the data arrived in.</b> You met this exact sentence
+<div class="rule accent3" style="font-size:.56em;">
+<b>The tree's advantage depends on the order the data arrived in.</b> You met this exact sentence
         at AS: insertion sort is fast on nearly-sorted data and slow on reversed data — same lesson,
         one structure later. Random order → roughly balanced → halving. Sorted order → a stick.
       </div>
-    </div>
-  </div>
-  <div class="toll" style="font-size:.52em;">
-    <span class="th">🧾 OUTSIDE THE EXAM HALL</span>
-    Real systems cannot choose their arrival order, so real trees <b>rebalance themselves</b> as they grow —
-    the AVL and red-black trees inside every database index and every <span class="mono">TreeMap</span>.
-    <span class="yes">The problem on this slide is why they exist.</span>
-    <span class="no">9618 never asks about them</span> — it asks you to know the problem, which you now do.
-  </div>
+</div>
+</div>
+<div class="toll" style="font-size:.52em;"><b>IMPLEMENTATIONS</b><br/>Self-balancing BSTs maintain logarithmic height. Database indexes often use B-tree relatives; other systems use plain trees, hashes or arrays. The repair depends on the workload.</div>
 
 </section>
 </section>
-
-
 <!-- H8 traversal -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 2px;">Walk it in order — <span class="accent2">and the data comes out sorted</span></h2>
-  <p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Left side first, then the node, then the right side — at every node. Three lines.</p>
-  <div class="lane" data-lang="java">
-  <div class="pycell java side tight" data-out="in-order: 3  8  10  15  19
-<- SORTED.
-Nobody sorted anything."><script type="text/plain" class="pysrc">static void InOrder(int node) {
-    if (node == -1) return;             // the base case: fell off the tree
-    InOrder(ArrayNodes[node][0]);       // everything smaller, first
-    System.out.print(ArrayNodes[node][1] + "  ");
-    InOrder(ArrayNodes[node][2]);       // everything larger, after
-}</script></div>
-  </div>
-  <div class="lane" data-lang="py">
-  <div class="pycell side tight"><script type="text/plain" class="pysrc">ArrayNodes = [[1,15,2],[3,8,4],[-1,19,-1],[-1,3,-1],[-1,10,-1]]
+<section><section class="lt foundation-task" data-background-color="#F4F6FB" id="a02c-choose-the-visit-order-before-writing-recursion"><h2>Choose the visit order before writing recursion</h2><p>Use root15, left8, right19; node8 has left3 and right10. Walk left subtree, node, then right subtree.</p><p>Write the five outputs. Explain why this order is sorted when the BST invariant holds. Where does an empty-child check belong?</p><p class="rule fragment">Check: 3,8,10,15,19. The traversal code is below; the explanation depends on the ordering invariant.</p>
+</section><section class="dk" data-background-color="#151B3C" data-reference="optional-working" id="a02c-leaf-11">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 2px;">Walk it in order — <span class="accent2">and the data comes out sorted</span></h2>
+<p style="font-size:.44em; color:#98a0c0; margin:0 0 5px;">Left side first, then the node, then the right side — at every node. Three lines.</p>
+<div class="pycell side tight"><script class="pysrc" type="text/plain">ArrayNodes = [[1,15,2],[3,8,4],[-1,19,-1],[-1,3,-1],[-1,10,-1]]
 RootPointer = 0                          # the same tree again
 
 def InOrder(node):
@@ -633,217 +536,192 @@ def InOrder(node):
 
 InOrder(RootPointer)
 print("<- SORTED. Nobody sorted anything.")</script></div>
-  </div>
-  <div class="two-col" style="margin-top:5px; gap:16px;">
-    <div class="rule accent3" style="margin-top:0; font-size:.55em;">
-      <b>Look at line 4.</b> <span class="mono">InOrder</span> calls <span class="mono">InOrder</span>.
+<div class="two-col" style="margin-top:5px; gap:16px;">
+<div class="rule accent3" style="margin-top:0; font-size:.55em;">
+<b>Look at line 4.</b> <span class="mono">InOrder</span> calls <span class="mono">InOrder</span>.
       The function uses itself, twice, and the machine does not object. <b>Nobody has explained why that
       is allowed</b> — and this deck is not going to. Two lessons.
     </div>
-    <div class="rule accent1" style="margin-top:0; font-size:.55em;">
+<div class="rule accent1" style="margin-top:0; font-size:.55em;">
       🧾 Three orders exist and the exam uses them: <b>in-order</b> (left · node · right — sorted output),
       <b>pre-order</b> (node first), <b>post-order</b> (node last — asked on Nov 2022 Paper 41). Same three
       lines; only the <span class="mono">print</span> moves.
     </div>
-  </div>
+</div>
 
-</section>
-
+</section></section>
 <!-- H9 dictionary -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 6px;">The dictionary — <span class="accent2">ADTs built from ADTs</span></h2>
-  <div class="two-col">
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.58em;">
+<section class="lt" data-background-color="#F4F6FB" id="a02c-leaf-12">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 6px;">The dictionary — <span class="accent2">ADTs built from ADTs</span></h2>
+<div class="two-col">
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.58em;">
         A <b>key → value</b> store: look up by <i>name</i>, not by position. <span class="mono">"Amir" → 71</span>.
         The syllabus verb is exact: <b>describe it, and demonstrate how it can be implemented from
         built-in types or other ADTs</b> — two parallel arrays and a linear search of the keys is a
         complete, honest answer.
       </div>
-      <div class="ps" style="font-size:.52em;"><span class="k">FUNCTION</span> Lookup(Key : <span class="k">STRING</span>) <span class="k">RETURNS INTEGER</span>
-    <span class="k">FOR</span> i <span class="v">←</span> 0 <span class="k">TO</span> Count - 1
+<div class="ps" style="font-size:.52em;"><span class="k">FUNCTION</span> Lookup(Key : <span class="k">STRING</span>) <span class="k">RETURNS INTEGER</span>
+<span class="k">FOR</span> i <span class="v">←</span> 0 <span class="k">TO</span> Count - 1
         <span class="k">IF</span> Keys[i] = Key <span class="k">THEN</span>
-            <span class="k">RETURN</span> Values[i]
+<span class="k">RETURN</span> Values[i]
         <span class="k">ENDIF</span>
-    <span class="k">NEXT</span> i
+<span class="k">NEXT</span> i
     <span class="k">RETURN</span> -1
 <span class="k">ENDFUNCTION</span></div>
-    </div>
-    <div>
-      <div class="rule accent3" style="margin-top:0; font-size:.56em;">
-        <b>And the fast version is the hash idea</b> — feed the key to a function that computes
+</div>
+<div>
+<div class="rule accent3" style="margin-top:0; font-size:.56em;">
+<b>And the fast version is the hash idea</b> — feed the key to a function that computes
         <i>where it lives</i>, and the search disappears: one calculation instead of a walk.
         That is the machinery behind Python's <span class="mono">dict</span> and Java's
         <span class="mono">HashMap</span> — both of which are <b>banned in this unit's homework</b>,
         because using a dictionary to build a dictionary answers a different question.
       </div>
-      <div class="toll" style="font-size:.52em;">
-        <span class="th">🧾 HOW OFTEN THIS IS ASKED</span>
-        Across every released Paper 3 and Paper 4 from 2021 to 2025, the dictionary has
-        <b>never yet been examined</b>. It is on the syllabus, so it is fair game — and a first
-        appearance lands exactly on the cohort that skipped it.
-      </div>
-    </div>
-  </div>
+<div class="toll" style="font-size:.52em;"><b>SYLLABUS COVERAGE</b><br/>Dictionary and graph features remain taught and practised. Historical frequency does not remove a syllabus requirement or predict its next appearance.</div>
+</div>
+</div>
 
 </section>
-
 <!-- H10 graph -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p3">P3</span></div>
-  <h2 style="font-size:.84em; margin:0 0 6px;">The graph — <span class="accent2">key features only, by decree</span></h2>
-  <div class="two-col">
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.57em;">
-        <b>Nodes, and the connections between them</b> — where the connections matter more than any order.
+<section class="lt" data-background-color="#F4F6FB" id="a02c-leaf-13">
+<div class="badges"><span class="bg bg-p3">P3</span></div>
+<h2 style="font-size:.84em; margin:0 0 6px;">The graph — <span class="accent2">key features only, by decree</span></h2>
+<div class="two-col">
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.57em;">
+<b>Nodes, and the connections between them</b> — where the connections matter more than any order.
         <b>Directed</b> or not (one-way streets vs handshakes), <b>weighted</b> or not (does each edge carry
         a cost?). A tree is a graph with rules; a graph is what is left when you delete the rules.
       </div>
-      <div class="rule accent3" style="font-size:.57em;">
+<div class="rule accent3" style="font-size:.57em;">
         What it is <b>for</b>: anything that is genuinely a network — roads, friendships, flight routes,
         the web's links, your class timetable's clash constraints. The exam's verb is
         <b>justify its use for a given situation</b>: name the entities as nodes, the relationships as
         edges, and say why order alone cannot carry the information.
       </div>
-    </div>
-    <div>
-      <div class="diverge" style="margin-top:0; font-size:.54em;">
-        <span class="dh">📐 THE SYLLABUS'S OWN CARVE-OUT</span><br>
+</div>
+<div>
+<div class="diverge" style="margin-top:0; font-size:.54em;">
+<span class="dh">📐 THE SYLLABUS'S OWN CARVE-OUT</span><br/>
         Its exact sentence: <i>"Candidates will <b>not</b> be required to write code for a graph
         structure."</i> The only structure in the unit with a no-code guarantee — so revision time goes
         to features and justification, not implementation.
       </div>
-      <div class="rule navy" style="font-size:.54em;">
+<div class="rule navy" style="font-size:.54em;">
         And the payoff is queued: at the end of the year a graph gets <b>searched</b> — shortest routes,
         A-star, the algorithms inside every map app. The structure arrives now; the verbs arrive then.
       </div>
-      <div class="toll" style="font-size:.5em;">
-        <span class="th">🧾 HOW OFTEN THIS IS ASKED</span>
-        Like the dictionary: <b>never yet</b>, in five years of released papers. On the syllabus,
-        so know the features and the justify-sentence — that is the whole ask.
-      </div>
-    </div>
-  </div>
+<div class="toll" style="font-size:.5em;"><b>SYLLABUS COVERAGE</b><br/>Dictionary and graph features remain taught and practised. Historical frequency does not remove a syllabus requirement or predict its next appearance.</div>
+</div>
+</div>
 
 </section>
-
 <!-- H11 family table -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.82em; margin:0 0 4px;">The whole family — <span class="accent2">one sentence each</span></h2>
-  <p style="font-size:.46em; color:#8890b5; margin:0 0 6px;"><i>"Justify its use for a given situation"</i> is the examined verb, and a justification is one sentence naming the property that fits.</p>
-  <table class="mk" style="font-size:.5em;">
-    <tr><th style="width:15%;">structure</th><th>strong at</th><th>weak at</th><th>the justification sentence</th></tr>
-    <tr><td><b>stack</b></td><td>last-in-first-out, O(1) both ends of one end</td><td>reaching anything below the top</td><td>"the most recent item must be dealt with first" — undo, back button, calls</td></tr>
-    <tr><td><b>queue</b></td><td>first-in-first-out, fairness</td><td>reaching the middle</td><td>"items must be handled in arrival order" — printers, buffers, schedulers</td></tr>
-    <tr><td><b>linked list</b></td><td>insert/delete anywhere, two writes</td><td>no index — finding is O(n)</td><td>"the data changes constantly and never needs jumping into" </td></tr>
-    <tr><td><b>binary tree</b></td><td>find AND insert in O(log n), sorted for free</td><td>arrival order can degrade it to O(n)</td><td>"the data must stay searchable while it grows"</td></tr>
-    <tr><td><b>dictionary</b></td><td>lookup by key, not position</td><td>no order at all</td><td>"items are found by name, never by position"</td></tr>
-    <tr><td><b>graph</b></td><td>relationships between items</td><td>no order, no hierarchy, code not asked</td><td>"the connections carry the information" — routes, networks</td></tr>
-  </table>
-  <div class="rule accent1 fragment" style="font-size:.56em;">
+<section class="lt" data-background-color="#F4F6FB" id="a02c-leaf-14">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.82em; margin:0 0 4px;">The whole family — <span class="accent2">one sentence each</span></h2>
+<p style="font-size:.46em; color:#8890b5; margin:0 0 6px;"><i>"Justify its use for a given situation"</i> is the examined verb, and a justification is one sentence naming the property that fits.</p>
+<table class="mk" style="font-size:.5em;">
+<tr><th style="width:15%;">structure</th><th>strong at</th><th>weak at</th><th>the justification sentence</th></tr>
+<tr><td><b>stack</b></td><td>last-in-first-out, O(1) both ends of one end</td><td>reaching anything below the top</td><td>"the most recent item must be dealt with first" — undo, back button, calls</td></tr>
+<tr><td><b>queue</b></td><td>first-in-first-out, fairness</td><td>reaching the middle</td><td>"items must be handled in arrival order" — printers, buffers, schedulers</td></tr>
+<tr><td><b>linked list</b></td><td>insert/delete anywhere, two writes</td><td>no index — finding is O(n)</td><td>"the data changes constantly and never needs jumping into" </td></tr>
+<tr><td><b>binary tree</b></td><td>find AND insert in O(log n), sorted for free</td><td>arrival order can degrade it to O(n)</td><td>"the data must stay searchable while it grows"</td></tr>
+<tr><td><b>dictionary</b></td><td>lookup by key, not position</td><td>no order at all</td><td>"items are found by name, never by position"</td></tr>
+<tr><td><b>graph</b></td><td>relationships between items</td><td>no order, no hierarchy, code not asked</td><td>"the connections carry the information" — routes, networks</td></tr>
+</table>
+<div class="rule accent1 fragment" style="font-size:.56em;">
     Every row is the same move: <b>name the property, match it to the scenario.</b> A justification that
     does not name a property — <i>"a tree is more efficient"</i> — scores nothing on any paper.
   </div>
 
 </section>
-
 <!-- H12 game -->
-<section data-background-color="#151B3C" class="dk growslide">
-  <h2 style="font-size:.76em; margin:0 0 8px;">🎮 Grow a Tree</h2>
-  <div class="g-wrap" id="gw">
-    <div class="g-top">
-      <span class="g-stage" id="g-stage">Stage 1</span>
-      <span class="g-score" id="g-score"></span>
-      <div class="g-prog" id="g-prog"></div>
-      <button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button>
-    </div>
-    <div class="g-q" id="g-q"></div>
-    <div id="g-body"></div>
-    <div class="g-say" id="g-say">&nbsp;</div>
-  </div>
+<section class="dk growslide" data-background-color="#151B3C" id="a02c-leaf-15">
+<h2 style="font-size:.76em; margin:0 0 8px;">🎮 Grow a Tree</h2>
+<div class="g-wrap" id="gw">
+<div class="g-top">
+<span class="g-stage" id="g-stage">Stage 1</span>
+<span class="g-score" id="g-score"></span>
+<div class="g-prog" id="g-prog"></div>
+<button class="g-skip" id="g-back" title="back to the previous question">← back</button><button class="g-skip" id="g-skip" title="on to the next question, answered or not">next →</button>
+</div>
+<div class="g-q" id="g-q"></div>
+<div id="g-body"></div>
+<div class="g-say" id="g-say"> </div>
+</div>
 
 </section>
-
 <!-- H13 the real thing -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 3px;">The real thing</h2>
-  <p style="font-size:.46em; color:#8890b5; margin:0 0 6px;">The tree is the most-examined structure in the unit's archive — and it arrives in three costumes. © UCLES</p>
-  <table class="mk" style="font-size:.5em;">
-    <tr><th style="width:22%;">paper</th><th>what it asks</th><th style="width:8%;">marks</th></tr>
-    <tr><td><b>Nov 2024 P31 Q11</b></td><td>the same tree three ways: draw the <b>linked nodes</b> → fill the <b>2D array</b> (with <span class="mono">RootPtr</span> and <span class="mono">FreePtr</span>) → complete a search over a <b>1D array of records</b></td><td class="m">4+4+5</td></tr>
-    <tr><td><b>Nov 2021 P41 Q3</b></td><td>declare the 2D array · write <span class="mono">AddNode()</span> from given pseudocode · print in array order</td><td class="m">4+8+3</td></tr>
-    <tr><td><b>Nov 2022 P41 Q3</b></td><td>declare + preload the array · write a <b>recursive</b> <span class="mono">SearchValue()</span> from a gap-fill · a <b>post-order</b> traversal</td><td class="m">3+2+5+…</td></tr>
-    <tr><td><b>June 2024 P42 Q2</b></td><td>the whole tree again — as <b>classes</b>: a <span class="mono">Node</span> with getters and setters, a <span class="mono">TreeClass</span> holding an array of Node objects, <span class="mono">InsertNode</span>, <span class="mono">OutputTree</span></td><td class="m">25</td></tr>
-  </table>
-  <div class="rule accent2" style="font-size:.56em;">
-    <b>Third time this unit: the container changes, the structure does not.</b> And look at the last row —
+<section class="lt" data-background-color="#F4F6FB" id="a02c-leaf-16">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 3px;">The real thing</h2>
+<p style="font-size:.46em; color:#8890b5; margin:0 0 6px;">The tree is the most-examined structure in the unit's archive — and it arrives in three costumes. © UCLES</p>
+<table class="mk" style="font-size:.5em;">
+<tr><th style="width:22%;">paper</th><th>what it asks</th><th style="width:8%;">marks</th></tr>
+<tr><td><b>Nov 2024 P31 Q11</b></td><td>the same tree three ways: draw the <b>linked nodes</b> → fill the <b>2D array</b> (with <span class="mono">RootPtr</span> and <span class="mono">FreePtr</span>) → complete a search over a <b>1D array of records</b></td><td class="m">4+4+5</td></tr>
+<tr><td><b>Nov 2021 P41 Q3</b></td><td>declare the 2D array · write <span class="mono">AddNode()</span> from given pseudocode · print in array order</td><td class="m">4+8+3</td></tr>
+<tr><td><b>Nov 2022 P41 Q3</b></td><td>declare + preload the array · write a <b>recursive</b> <span class="mono">SearchValue()</span> from a gap-fill · a <b>post-order</b> traversal</td><td class="m">3+2+5+…</td></tr>
+<tr><td><b>June 2024 P42 Q2</b></td><td>the whole tree again — as <b>classes</b>: a <span class="mono">Node</span> with getters and setters, a <span class="mono">TreeClass</span> holding an array of Node objects, <span class="mono">InsertNode</span>, <span class="mono">OutputTree</span></td><td class="m">25</td></tr>
+</table>
+<div class="rule accent2" style="font-size:.56em;">
+<b>Third time this unit: the container changes, the structure does not.</b> And look at the last row —
     Cambridge rebuilt this very lesson with objects, for twenty-five marks. <b>That rebuild is a lesson on
     this course's map</b>, and when it arrives you will already know everything except the costume.
   </div>
 
 </section>
-
 <!-- H14 summary -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
-  <h2 style="font-size:.82em; margin:0 0 8px;">What you can build now</h2>
-  <div class="two-col">
-    <div class="rule accent1" style="margin-top:0; font-size:.58em;">
-      <b>Insert</b> — walk the comparisons, attach by writing <b>the parent's</b> pointer, count
-      <span class="mono">FreeNode</span> up.<br>
-      <b>Search</b> — the same walk, abandoning half the tree per question.<br>
-      <b>Traverse</b> — left, node, right, and the data falls out sorted.
+<section class="dk" data-background-color="#151B3C" id="a02c-leaf-17">
+<div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+<h2 style="font-size:.82em; margin:0 0 8px;">What you can build now</h2>
+<div class="two-col">
+<div class="rule accent1" style="margin-top:0; font-size:.58em;">
+<b>Insert</b> — walk the comparisons, attach by writing <b>the parent's</b> pointer, count
+      <span class="mono">FreeNode</span> up.<br/>
+<b>Search</b> — the same walk, abandoning half the tree per question.<br/>
+<b>Traverse</b> — left, node, right, and the data falls out sorted.
     </div>
-    <div class="rule accent3" style="margin-top:0; font-size:.58em;">
+<div class="rule accent3" style="margin-top:0; font-size:.58em;">
       The unit's one idea, complete: <b>every structure was an array plus a few indices</b>, and
       <b class="accent2">−1</b> meant "nothing here" in all of them — because a sentinel must come from
       outside the legal values.
     </div>
-  </div>
-  <div class="rule navy" style="font-size:.6em;">
+</div>
+<div class="rule navy" style="font-size:.6em;">
     Stack, queue, linked list, tree — you built all four. <b>The next question is which to reach for</b>,
     and you now own the one-sentence answer for each: name the property, match the scenario.
   </div>
-  <div class="rule accent2 fragment" style="font-size:.62em;">
-    <b>And one debt is still open.</b> Three lines walked an entire tree and handed you sorted data —
+<div class="rule accent2 fragment" style="font-size:.62em;">
+<b>And one debt is still open.</b> Three lines walked an entire tree and handed you sorted data —
     because <span class="mono">InOrder</span> called <span class="mono">InOrder</span>.
     A function used itself, twice, and it worked. <b>Nobody has said why that is allowed,
     how the machine keeps track, or what it costs.</b>
-  </div>
-  <p class="center fragment" style="font-size:.72em; margin-top:12px;"><b>Next lesson: the function<br>that calls itself.</b></p>
-  <p class="center" style="font-size:.46em; color:#98a0c0; margin-top:8px;">🍦 <span class="mono">challenge_A02c_BinaryTree</span> — 200 random trees, and every in-order walk must come out sorted.<br>🍨 And at the bottom of the file, a third scoop for the brave: <b>the tree that refuses to become a stick</b>.</p>
+</div>
+<p class="center fragment" style="font-size:.72em; margin-top:12px;"><b>Next lesson: the function<br/>that calls itself.</b></p>
 
 </section>
-
 <!-- vocabulary -->
-<section data-background-color="#222B5A" class="dk">
-  <h3 style="font-size:.74em; margin:0 0 8px;">词汇 Vocabulary</h3>
-  <table class="mk" style="font-size:.52em; color:var(--ice);">
-    <tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
-    <tr><td>binary tree</td><td>二叉树</td><td>every node holds <b>two</b> pointers: smaller-left, larger-right, at every node</td></tr>
-    <tr><td>root</td><td>根节点</td><td>the entry point — <span class="mono">RootPointer</span>, −1 when the tree is empty</td></tr>
-    <tr><td>leaf</td><td>叶节点</td><td>a node with both pointers −1</td></tr>
-    <tr><td>subtree</td><td>子树</td><td>any node and everything below it — a tree in its own right</td></tr>
-    <tr><td>traversal</td><td>遍历</td><td>visiting every node — <b>in-order</b> 中序 comes out <b>sorted</b></td></tr>
-    <tr><td>dictionary</td><td>字典</td><td><b>key → value</b>: found by name, never by position</td></tr>
-    <tr><td>graph</td><td>图</td><td>nodes + edges; directed 有向 / weighted 带权 — <b>no code required</b></td></tr>
-    <tr><td>edge</td><td>边</td><td>one connection in a graph; where the information lives</td></tr>
-  </table>
+<section class="dk" data-background-color="#222B5A" id="a02c-leaf-18">
+<h3 style="font-size:.74em; margin:0 0 8px;">词汇 Vocabulary</h3>
+<table class="mk" style="font-size:.52em; color:var(--ice);">
+<tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
+<tr><td>binary tree</td><td>二叉树</td><td>every node holds <b>two</b> pointers: smaller-left, larger-right, at every node</td></tr>
+<tr><td>root</td><td>根节点</td><td>the entry point — <span class="mono">RootPointer</span>, −1 when the tree is empty</td></tr>
+<tr><td>leaf</td><td>叶节点</td><td>a node with both pointers −1</td></tr>
+<tr><td>subtree</td><td>子树</td><td>any node and everything below it — a tree in its own right</td></tr>
+<tr><td>traversal</td><td>遍历</td><td>visiting every node — <b>in-order</b> 中序 comes out <b>sorted</b></td></tr>
+<tr><td>dictionary</td><td>字典</td><td><b>key → value</b>: found by name, never by position</td></tr>
+<tr><td>graph</td><td>图</td><td>nodes + edges; directed 有向 / weighted 带权 — <b>no code required</b></td></tr>
+<tr><td>edge</td><td>边</td><td>one connection in a graph; where the information lives</td></tr>
+</table>
 
 </section>
-
 </div></div>
-<button id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</button>
-<div id="llmhelp"><span class="x" id="llmhelp-x">✕</span><b>Live marking needs the marking server.</b><br>
-Two steps, on the teacher's Mac:<br>1. open the <b>CS_Materials</b> folder<br>2. double-click <b>Start-LLM-Marking.command</b><br>
-This chip lights up by itself a few seconds after the server starts — no reload needed. Without it, the pattern marks and the machine column still work; the reader adds the marker that reads for <i>meaning</i>.</div>
 <div id="py-chip">🐍 waking Python…</div>
-<div id="langsel"><div id="l-java" class="on">Java</div><div id="l-py">Python</div></div>
 <button id="fsbtn" title="fullscreen (or press F)">⛶</button>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
@@ -878,7 +756,7 @@ function stopPy(){
 }
 function bootPython(){
   if(pyPromise) return pyPromise;
-  pyPromise = loadPyodide().then(function(py){
+  pyPromise = Promise.resolve().then(function(){ if(typeof loadPyodide!=="function") throw new Error("Python runtime download unavailable"); return loadPyodide(); }).then(function(py){
     py.runPython(
       "import builtins, js\n" +
       "async def __ainput(prompt=''):\n" +
@@ -934,60 +812,20 @@ function runPy(code, outEl, doneCb){
 
 /* ===== cells: Python runs live, Java replays a real build-time run ===== */
 function initPyCells(){
-  document.querySelectorAll('.pycell').forEach(function(cell){
-    var isJava = cell.classList.contains('java');
-    var srcEl  = cell.querySelector('.pysrc');
-    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
-    var capOut = cell.getAttribute('data-out') || '';
-    var isErr  = cell.getAttribute('data-err') === '1';
-    cell.innerHTML='';
-
-    var bar=document.createElement('div'); bar.className='pybar';
-    var dots=document.createElement('div'); dots.className='pydots';
-    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
-    bar.appendChild(dots);
-
-    var run=document.createElement('button'); run.className='pyrun';
-    run.textContent = isJava ? '▶ Run' : '⏳ waking…';
-    run.disabled = !isJava;
-    bar.appendChild(run);
-
-    if(!isJava){
-      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
-      stp.title='stop a program waiting for input';
-      stp.addEventListener('click', stopPy);
-      bar.appendChild(stp);
-    }
-    var st=document.createElement('span'); st.className='pystate' + (isJava?' cap':'');
-    st.textContent = isJava ? '☕ captured from a real run' : '🐍 editable · runs here';
-    bar.appendChild(st);
-
-    var ta=document.createElement('textarea'); ta.className='pyta';
-    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
-    if(isJava) ta.readOnly = true;
-    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
-
-    cell.appendChild(bar);
-    if(cell.classList.contains('side')){
-      var row=document.createElement('div'); row.className='pyrow';
-      row.appendChild(ta); row.appendChild(out);
-      out.style.display='block'; out.textContent='press ▶ Run';
-      cell.appendChild(row);
-    } else {
-      cell.appendChild(ta); cell.appendChild(out);
-    }
-
-    if(isJava){
-      run.addEventListener('click', function(){
-        out.style.display='block';
-        out.className='pyout cap' + (isErr?' err':'');
-        out.textContent = capOut;
-      });
-    } else {
-      run.addEventListener('click', function(){ runPy(ta.value, out); });
-    }
-  });
-  bootPython();
+ document.querySelectorAll('.pycell').forEach(function(cell){
+  var src=cell.querySelector('.pysrc'); var code=src?src.textContent.replace(/^\n/,'').replace(/\s+$/,''):'';
+  cell.innerHTML='';
+  var bar=document.createElement('div');bar.className='pybar';
+  var run=document.createElement('button');run.className='pyrun';run.textContent='loading Python';run.disabled=true;
+  var stop=document.createElement('button');stop.className='pylock';stop.textContent='stop input';stop.onclick=stopPy;
+  var label=document.createElement('span');label.className='pystate';label.textContent='Python · editable · fresh namespace';
+  bar.append(run,stop,label);
+  var ta=document.createElement('textarea');ta.className='pyta';ta.value=code;ta.rows=Math.max(2,code.split('\n').length);ta.spellcheck=false;
+  var out=document.createElement('pre');out.className='pyout';out.style.display='none';
+  cell.append(bar,ta,out);
+  run.onclick=function(){runPy(ta.value,out,function(){Reveal.layout();});};
+ });
+ bootPython().catch(function(e){document.getElementById('py-chip').textContent='Python unavailable — reload to retry';});
 }
 function autoSizePyTextareas(scope){
   (scope||document).querySelectorAll('.pyta').forEach(function(ta){
@@ -997,16 +835,7 @@ function autoSizePyTextareas(scope){
   });
 }
 
-/* ===== the language switch ===== */
-function setLang(l){
-  document.body.setAttribute('data-lang', l);
-  document.getElementById('l-java').className = (l==='java') ? 'on' : '';
-  document.getElementById('l-py').className   = (l==='py')   ? 'on' : '';
-  try{ localStorage.setItem('a2lang', l); }catch(e){}
-  setTimeout(function(){ autoSizePyTextareas(document); }, 20);
-}
-document.getElementById('l-java').addEventListener('click', function(){ setLang('java'); });
-document.getElementById('l-py').addEventListener('click', function(){ setLang('py'); });
+
 document.getElementById('fsbtn').addEventListener('click', function(){
   var d=document.documentElement;
   if(document.fullscreenElement){ document.exitFullscreen(); }
@@ -1440,7 +1269,7 @@ function markOne(ans, mps, cap, quiet){
   }
   return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
 }
-function gDraw(){
+function foundationLegacyDraw(){
   var s=STAGES[G.i];
   /* which paper this stage is, because the ANSWER FORM changes with it and the
      form is worth all of the marks */
@@ -1533,7 +1362,7 @@ function gDraw(){
       bossBehaviour(code, function(raw, err){
         var el = document.getElementById('g-beh');
         if(el) el.innerHTML = behaviourHtml(raw, err);
-        llmMark(code, document.body.getAttribute('data-lang') === 'py' ? 'py' : 'java',
+        llmMark(code, 'py',
                 total, s.total, raw, document.getElementById('g-llm'), 'A02c', 'AddNode');
         if(err && err.indexOf('crash:') === 0){
           gSay('<b>' + total + ' on the mark points — and it did not run at all.</b> '
@@ -1646,7 +1475,7 @@ function gSkip(){
    (An inline handler resolves names GLOBALLY, so a function declared inside the
    Reveal.initialize().then() closure would never be found from the attribute.) */
 window.gReplay = function(){
-  G.i = 0; G.score = 0; G.earned = {};
+  G.i = 0; G.score = 0; G.earned = {}; foundationReviews = {};
   var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
   var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
   gDraw();
@@ -1666,49 +1495,25 @@ function gNextOnce(){
   if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
 }
 function gFinish(){
-  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
-  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
-  gEl('g-stage').textContent='done';
-  gEl('g-q').innerHTML='';
-  gEl('g-prog').innerHTML='';
-  gEl('g-score').textContent='';
-  gEl('g-body').innerHTML=
-    '<div class="g-fin"><div class="big">'+G.score+'</div>'+
-    '<p style="margin:6px 0 0;">Every mark on that boss came from a real paper\u2019s question.</p>'+
-    '<p style="margin:6px 0 0; font-size:.9em; color:#5b6488;">The two that cost the most are the two the exam expects you to miss: '+
-    '<b>the empty-tree case</b> (the first value must become the root), and '+
-    '<b>attaching by writing the PARENT\u2019s pointer</b> \u2014 a node stored but never pointed at is not in the tree.</p>'+
-    '<button class="g-sub" onclick="gReplay()">play again</button></div>';
-  gSay('');
+ var sk=gEl('g-skip'),bk=gEl('g-back');if(sk)sk.style.display='none';if(bk)bk.style.display='none';
+ gEl('g-stage').textContent='Review complete';gEl('g-q').innerHTML='';gEl('g-prog').innerHTML='';gEl('g-score').textContent='';
+ var marks=Object.keys(foundationReviews).filter(function(k){return foundationReviews[k].reviewed;}).length;
+ gEl('g-body').innerHTML='<div class="g-fin"><p>Automatic checks: '+G.score+'</p><p>Human-reviewed written answers: '+marks+'. Their marks are recorded separately.</p><p>Revisit an unfinished task or explain one correction before leaving.</p><button class="g-sub" onclick="gReplay();">play again</button></div>';gSay('');
 }
 
 /* ═══ LIVE LLM MARKING — ported 2026-08-24. The key is never in this file:
    grade-server.py holds it in .env on the teacher's Mac and marks on request;
    the absence of the process is the off-switch. ═══ */
 var LLM = { url:'http://127.0.0.1:8788', available:false, on:true };
-function llmChip(){
-  var c = document.getElementById('llmchip'); if(!c) return;
-  if(!LLM.available){ c.className='off'; c.textContent='⚡ no LLM — click for help'; return; }
-  c.className = LLM.on ? 'on' : 'off';
-  c.textContent = LLM.on ? '⚡ LLM marking on' : '⚡ LLM marking off';
+function llmChip(){ /* Classroom revision: external grading disabled. */
 }
-function llmHelp(show){ var h = document.getElementById('llmhelp'); if(h) h.style.display = show ? 'block' : 'none'; }
-function llmDetect(cb){
-  var ctl = new AbortController(); var tm = setTimeout(function(){ ctl.abort(); }, 1200);
-  fetch(LLM.url + '/ping', {signal: ctl.signal, cache:'no-store'})
-    .then(function(r){ return r.json(); })
-    .then(function(j){ clearTimeout(tm); LLM.available = !!(j && j.ok && j.key); llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
-    .catch(function(){ clearTimeout(tm); LLM.available = false; llmChip(); if(cb) cb(); });
+function llmHelp(){ /* Classroom revision: external grading disabled. */
 }
-function llmWatch(){ setInterval(function(){ if(LLM.available || document.hidden) return; llmDetect(); }, 5000); }
-function llmBind(){
-  var c = document.getElementById('llmchip'); if(!c || c.__bound) return; c.__bound = true;
-  c.addEventListener('click', function(){
-    if(!LLM.available){ c.textContent='⚡ looking for the server…'; llmHelp(true); llmDetect(); return; }
-    LLM.on = !LLM.on; llmChip();
-  });
-  var x = document.getElementById('llmhelp-x'); if(x) x.addEventListener('click', function(){ llmHelp(false); });
-  llmDetect(); llmWatch();
+function llmDetect(){ /* Classroom revision: external grading disabled. */
+}
+function llmWatch(){ /* Classroom revision: external grading disabled. */
+}
+function llmBind(){ /* Classroom revision: external grading disabled. */
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
 else llmBind();
@@ -1762,48 +1567,44 @@ function consensusHtml(regexRaw, llmAwarded, ofPoints, behaviour){
   return '<div class="g-cons split">' + rows + ' \u2014 <b>all three agree, and none of them are happy.</b> '
        + 'Start from the first \u2717 on the left.</div>';
 }
-function gWaiting(on){
-  G.llmBusy = !!on;
-  var say = gEl('g-say'); if(!say) return;
-  var h = document.getElementById('g-nexthint');
-  if(!h){ h = document.createElement('div'); h.id = 'g-nexthint'; h.style.marginTop = '5px'; say.appendChild(h); }
-  if(on){
-    h.style.opacity = '1';
-    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> give it a few seconds \u2014 clicking now moves on without it.</span>';
-  } else { h.style.opacity = '.65'; h.textContent = ''; }
+function gWaiting(){ /* Classroom revision: external grading disabled. */
 }
-function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host, task, fn){
-  if(!LLM.available || !LLM.on || !host) return;
-  var grid = host.closest ? host.closest('.g-grid') : null;
-  if(grid) grid.classList.add('three');
-  host.innerHTML = '<p class="g-lbl">a second marker is reading it\u2026 <span class="conf">(this one reads for meaning, not for patterns)</span></p>';
-  var ctl = new AbortController();
-  var timedOut = false, t0 = Date.now();
-  var tm = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
-  gWaiting(true);
-  fetch(LLM.url + '/mark', {
-    method:'POST', signal: ctl.signal, headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({task: task, fn: fn, lang: lang, code: code})
-  }).then(function(r){ return r.json(); })
-    .then(function(j){
-      clearTimeout(tm); gWaiting(false);
-      if(!j || j.error){ host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">(' + ((j && j.error) || 'no reply') + ')</span></p>'; return; }
-      var rows = j.marks.map(function(m){
-        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'\u2713':'\u2717') + '</span> '
-             + m.point + (m.why ? ' <span class="conf">\u2014 ' + m.why + '</span>' : '') + '</li>';
-      }).join('');
-      host.innerHTML = '<p class="g-lbl">what a second marker says \u2014 <b>it read your code, it did not run it</b></p>'
-                     + '<ul class="g-mp">' + rows + '</ul>'
-                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
-                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
-    })
-    .catch(function(){
-      clearTimeout(tm); gWaiting(false);
-      var secs = Math.round((Date.now() - t0) / 1000);
-      host.innerHTML = timedOut
-        ? '<p class="g-lbl">the reader gave up after ' + secs + ' s <span class="conf">(the model is busy, not broken \u2014 the other columns stand. Press mark again to retry.)</span></p>'
-        : '<p class="g-lbl">could not reach the reader <span class="conf">(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
-    });
+function llmMark(){ /* Classroom revision: external grading disabled. */
+}
+
+
+// Written explanations: commit first; meaning is reviewed by a person, never token-scored.
+var foundationReviews={};
+function gDraw(){
+ var s=STAGES[G.i];
+ if(!s.llmTask||s.boss||!s.mps||s.seq){foundationLegacyDraw();return;}
+ var ix=G.i;G.locked=false;var state=foundationReviews[ix]||(foundationReviews[ix]={answer:'',committed:false,selected:[],reviewed:false});
+ gEl('g-stage').textContent=s.name+' · P3 · human review';gEl('g-q').innerHTML=s.q;
+ gEl('g-score').textContent=G.score?'automatic checks '+G.score:'';gNavState();gProg();gSay('');
+ var host=gEl('g-body');host.innerHTML='';
+ var ta=document.createElement('textarea');ta.className='g-ta';ta.rows=3;ta.value=state.answer;ta.readOnly=state.committed;ta.setAttribute('aria-label','Written answer');
+ ta.oninput=function(){state.answer=ta.value;state.reviewed=false;};host.appendChild(ta);
+ var commit=document.createElement('button');commit.className='g-sub';commit.textContent=state.committed?'Edit answer':'Commit answer';
+ commit.onclick=function(){state.answer=ta.value;state.committed=!state.committed;state.reviewed=false;gDraw();};host.appendChild(commit);
+ var status=document.createElement('p');status.style.cssText='font-size:15px;margin:5px 0';status.textContent='No automatic prose score. Human marks stay separate from automatic checks.';host.appendChild(status);
+ if(!state.committed)return;
+ var details=document.createElement('details');details.className='foundation-rubric';
+ var summary=document.createElement('summary');summary.textContent='Optional self/teacher rubric · max '+s.total;details.appendChild(summary);
+ var content=document.createElement('div');content.style.cssText='max-height:145px;overflow:auto;font-size:16px;line-height:1.25';
+ s.mps.forEach(function(m,i){
+  var row=document.createElement('label');row.style.cssText='display:flex;gap:7px;margin:4px 0';
+  var box=document.createElement('input');box.type='checkbox';box.checked=!!state.selected[i];box.disabled=!state.answer.trim();
+  box.onchange=function(){state.selected[i]=box.checked;state.reviewed=false;showScore();};
+  var text=document.createElement('span');text.innerHTML=m.label+' ['+m.pts+']'+(m.grp?' · group '+m.grp:'');row.append(box,text);content.appendChild(row);
+ });
+ if(s.groupCaps){var caps=document.createElement('p');caps.textContent='Group caps: '+Object.entries(s.groupCaps).map(function(x){return x[0]+' max '+x[1];}).join('; ')+'; overall max '+s.total;content.prepend(caps);}
+ var save=document.createElement('button');save.className='g-sub';save.textContent='Record self/teacher mark';save.disabled=!state.answer.trim();save.onclick=function(){state.reviewed=true;showScore();};content.appendChild(save);
+ var result=document.createElement('p');content.appendChild(result);
+ function showScore(){var groups={},points=0;s.mps.forEach(function(m,i){if(!state.selected[i])return;if(m.grp&&s.groupCaps)groups[m.grp]=(groups[m.grp]||0)+m.pts;else points+=m.pts;});Object.keys(groups).forEach(function(k){points+=Math.min(groups[k],s.groupCaps[k]);});points=Math.min(s.total,points);result.textContent=!state.answer.trim()?'Not attempted · 0 / '+s.total:state.reviewed?'Recorded self/teacher mark '+points+' / '+s.total:'Awaiting self/teacher review';result.dataset.mode='human';result.dataset.score=state.reviewed?String(points):'pending';}
+ showScore();details.appendChild(content);host.appendChild(details);
+ var model=document.createElement('details');model.className='foundation-rubric';model.innerHTML='<summary>Optional model answer — compare meaning</summary>';
+ var answer=document.createElement('p');answer.style.cssText='font-size:16px;max-height:95px;overflow:auto;white-space:pre-wrap';answer.textContent=s.model||'';model.appendChild(answer);host.appendChild(model);
+ host.querySelectorAll('details').forEach(function(x){x.ontoggle=function(){Reveal.layout();};});Reveal.layout();
 }
 
 Reveal.initialize({
@@ -1814,7 +1615,6 @@ Reveal.initialize({
   initPyCells();
   makeTree('treeviz');
   gDraw();
-  try{ var L=localStorage.getItem('a2lang'); if(L) setLang(L); }catch(e){}
   var ob=document.getElementById('obj-btn');
   if(ob) ob.addEventListener('click', function(){
     var o=document.getElementById('obj');

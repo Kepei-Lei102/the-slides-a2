@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A04b · The Notation That Survives — Big O, time and space</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<style>
+:root{
+  --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
+  --accent3:#F2B53C; --navy:#222B5A; --ice:#E8EEF9; --white:#fff;
+}
+.reveal{font-family:'Calibri','Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif; font-size:26px;}
+.reveal h1,.reveal h2,.reveal h3{font-family:'Georgia','Times New Roman','PingFang SC','Microsoft YaHei',serif; text-transform:none; letter-spacing:-.02em;}
+.reveal section{text-align:left;}
+.dk{color:var(--ice);} .dk h1,.dk h2,.dk h3{color:var(--white);}
+.lt{color:var(--navy);} .lt h2,.lt h3{color:var(--navy);}
+.bar{position:absolute; top:0; left:0; right:0; height:5px;}
+.card{background:var(--white); border-radius:10px; padding:16px 20px; box-shadow:0 4px 12px rgba(0,0,0,.07); text-align:left;}
+.rule{background:var(--white); border-radius:8px; padding:11px 16px; box-shadow:0 3px 10px rgba(0,0,0,.05); border-left:5px solid var(--accent1); margin:10px 0; text-align:left; font-size:.74em;}
+.rule.accent2{border-left-color:var(--accent2);} .rule.accent3{border-left-color:var(--accent3);} .rule.navy{border-left-color:var(--navy);}
+.dk .rule{background:rgba(255,255,255,.06); color:var(--ice);}
+.two-col{display:flex; gap:26px; align-items:flex-start;} .two-col>*{flex:1; min-width:0;}
+.three-col{display:flex; gap:16px;} .three-col>*{flex:1; min-width:0;}
+.smaller{font-size:.7em;} .center{text-align:center;}
+.accent1{color:var(--accent1);} .accent2{color:var(--accent2);} .accent3{color:var(--accent3);}
+.mono{font-family:'Courier New',monospace; font-weight:bold;}
+
+.badges{position:absolute; top:-14px; right:0; display:flex; gap:6px; z-index:5;}
+.bg{font-size:.44em; font-weight:bold; letter-spacing:.03em; padding:3px 12px; border-radius:20px; font-family:'Calibri','Segoe UI',sans-serif;}
+.bg-p3{background:rgba(240,101,91,.14); color:#c0392b; border:1.5px solid var(--accent2);}
+.bg-p34{background:rgba(23,179,163,.15); color:#0d7a6e; border:1.5px solid var(--accent1);}
+.bg-p4{background:rgba(242,181,60,.18); color:#8a5c00; border:1.5px solid var(--accent3);}
+.dk .bg-p3{color:#ff9d95;} .dk .bg-p34{color:#5FD6C9;} .dk .bg-p4{color:#F2B53C;}
+
+.dig{position:absolute; bottom:-34px; left:50%; transform:translateX(-50%); font-size:.5em; color:#98a0c0; animation:bob 2s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(5px);}}
+#obj-btn{background:rgba(255,255,255,.08); color:var(--ice); border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:5px 14px; cursor:pointer; font-size:.42em; opacity:.55;}
+#obj-btn:hover{opacity:1;}
+
+/* ===== py-cell: live Python ===== */
+.pycell{background:var(--navy); border-radius:12px; padding:10px 12px 12px; box-shadow:0 4px 14px rgba(0,0,0,.14); text-align:left;}
+.pycell .pybar{display:flex; gap:8px; align-items:center; margin-bottom:6px;}
+.pycell .pydots{display:flex; gap:5px;}
+.pycell .pydots i{width:9px; height:9px; border-radius:50%; display:block;}
+.pyta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.45; padding:10px 12px; resize:none; outline:none; display:block;}
+.pyta[readonly]{color:#aeb8dd;}
+.pyta:focus{box-shadow:0 0 0 2px var(--accent1);}
+.pyrun{background:var(--accent1); color:#fff; border:none; border-radius:7px; padding:4px 16px; font-size:.5em; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.pyrun:hover{background:#12907f;} .pyrun:disabled{background:#5a6394; cursor:wait;}
+.pylock{background:transparent; color:#98a0c0; border:1.5px solid #454e82; border-radius:7px; padding:3px 9px; font-size:.5em; font-weight:bold; cursor:pointer;}
+.pylock:hover{color:var(--accent3); border-color:var(--accent3);}
+.pyout{background:#0d1230; color:#5FD6C9; border-radius:8px; font-family:'Courier New',monospace; font-weight:bold;
+  font-size:.54em; line-height:1.45; padding:9px 12px; margin:8px 0 0; min-height:1.4em; white-space:pre-wrap; text-align:left;}
+.pyout .crash{color:var(--accent2);}
+.pyin-lbl{color:#5FD6C9;}
+.pyin{background:#1b234d; border:2px solid var(--accent1); border-radius:6px; color:var(--ice);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:1em; padding:1px 8px; width:130px; outline:none;}
+.pystate{font-size:.44em; color:#98a0c0; margin-left:auto;}
+.pycell.tight .pyta{font-size:.485em; line-height:1.34;}
+.pycell.tight .pyout{font-size:.485em; line-height:1.34;}
+.pycell.xtight .pyta{font-size:.43em; line-height:1.3;}
+.pycell.xtight .pyout{font-size:.43em; line-height:1.3;}
+.pycell.side .pyrow{display:flex; gap:10px; align-items:stretch;}
+.pycell.side .pyrow .pyta{flex:1; min-width:0;}
+.pycell.side .pyrow .pyout{margin:0; flex:0 0 auto; min-width:190px;}
+#py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
+#py-chip.ready{color:#5FD6C9;}
+
+
+
+#fsbtn{position:fixed; top:14px; right:16px; z-index:99; background:rgba(20,26,60,.72);
+  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
+  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
+#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
+
+/* ===== 🧾 outside the exam hall ===== */
+.toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
+.toll .th{display:inline-block; font-weight:bold; font-size:.86em; letter-spacing:.05em; color:#8a6100; margin-bottom:3px;}
+.toll .yes{color:#0d7a6e; font-weight:bold;} .toll .no{color:#c0392b; font-weight:bold;}
+
+/* ===== 📐 the divergence box ===== */
+.diverge{background:#f7f5ff; border:2px dashed #b3a6e8; border-radius:10px; padding:10px 15px; text-align:left; font-size:.55em; line-height:1.5; color:var(--navy); margin:9px 0;}
+.diverge .dh{display:inline-block; font-weight:bold; font-size:.85em; letter-spacing:.04em; color:#6d4fd0; margin-bottom:3px;}
+
+/* ===== pseudocode block ===== */
+.ps{background:#f4f6fb; border:1px solid #d9deed; border-left:4px solid var(--accent3); border-radius:8px;
+  padding:10px 14px; font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.5;
+  color:var(--navy); white-space:pre; margin:8px 0; overflow-x:auto;}
+.dk .ps{background:rgba(255,255,255,.07); color:var(--ice); border-color:rgba(255,255,255,.16); border-left-color:var(--accent3);}
+.ps .k{color:#6d4fd0;} .dk .ps .k{color:#c0aef5;}
+.ps .v{color:#c0392b;} .dk .ps .v{color:#ff9d95;}
+.ps .c{color:#8890b5; font-weight:normal;}
+
+/* ===== marks table ===== */
+.mk{border-collapse:collapse; font-size:.5em; width:100%;}
+.mk td,.mk th{border:1px solid #ccd3e8; padding:4px 9px; text-align:left; vertical-align:top;}
+.mk th{background:#eef2fb; font-weight:bold; color:var(--navy);}
+.mk td.m{text-align:center; font-weight:bold; color:var(--accent2); white-space:nowrap;}
+.mk code{font-family:'Courier New',monospace; font-weight:bold; color:#6d4fd0;}
+
+/* ===== 🎮 game ===== */
+.g-wrap{background:var(--white); border-radius:12px; padding:14px 18px; box-shadow:0 5px 18px rgba(0,0,0,.09); color:var(--navy);}
+.g-top,.g-head{display:flex; align-items:center; gap:14px; margin-bottom:9px;}
+/* a teacher must be able to move on without answering */
+.g-skip{margin-left:8px; background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;
+  border-radius:7px; padding:2px 11px; font-size:.44em; font-weight:bold; cursor:pointer;
+  font-family:'Calibri','Segoe UI',sans-serif;}
+.g-skip:hover{color:var(--accent1); border-color:var(--accent1);}
+.g-opts .g-b{min-width:0;}
+.g-stage{font-size:.56em; font-weight:bold; color:var(--navy); background:rgba(242,181,60,.18); border:2px solid var(--accent3); border-radius:22px; padding:3px 20px;}
+.pbadge{display:inline-block; font-size:.82em; letter-spacing:.04em; padding:1px 9px; border-radius:14px; margin-left:5px; border:1.5px solid;}
+.pbadge.p3{background:rgba(240,101,91,.13); color:#c0392b; border-color:var(--accent2);}
+.pbadge.p4{background:rgba(23,179,163,.15); color:#0d7a6e; border-color:var(--accent1);}
+.formwarn{background:#fdeeec; border:2px solid var(--accent2); border-radius:9px; padding:8px 13px; margin:7px 0 0;
+  font-size:.92em; line-height:1.5; color:var(--navy);}
+.formwarn b{color:#c0392b;}
+.g-prog{display:flex; gap:6px; margin-left:auto;}
+.g-prog i{width:9px; height:9px; border-radius:50%; background:#d3d9ec; display:block; transition:.2s;}
+.g-prog i.done{background:var(--accent1);} .g-prog i.cur{background:var(--accent3); transform:scale(1.35);}
+.g-score{font-size:.52em; font-weight:bold; color:var(--accent2); font-family:'Courier New',monospace;}
+.g-q{font-size:.58em; line-height:1.5; margin-bottom:8px;}
+.g-q b{color:var(--accent2);}
+.g-opts{display:flex; flex-wrap:wrap; gap:8px;}
+.g-b{background:#f4f6fb; border:2px solid #ccd3e8; border-radius:9px; padding:7px 14px; font-size:.54em;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; color:var(--navy); text-align:left; line-height:1.4;}
+.g-b:hover{border-color:var(--accent1);}
+.g-b.no{border-color:var(--accent2); background:#fdeeec; animation:shake .35s;}
+.g-b.yes{border-color:var(--accent1); background:#e6f7f4;}
+.g-b .mono{display:block; font-size:.92em;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.g-ta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.54em; line-height:1.5; padding:9px 12px; resize:none; outline:none;}
+.g-ta:focus{box-shadow:0 0 0 2px var(--accent3);}
+.g-sub{background:var(--accent3); color:#4a3500; border:none; border-radius:8px; padding:5px 20px; font-size:.52em;
+  font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; margin-top:7px;}
+.g-sub:hover{background:#e0a52c;}
+.g-say{font-size:.54em; min-height:1.5em; margin-top:7px; line-height:1.5;}
+.g-say.ok{color:#0d7a6e; font-weight:bold;} .g-say.bad{color:var(--accent2); font-weight:bold;}
+/* .g-mp nested inside .g-say compounds two em reductions down to ~7px — reset it */
+.g-say .g-mp{font-size:.92em; font-weight:normal; color:var(--navy);}
+.g-say .g-mp .y{color:#0d7a6e;} .g-say .g-mp .n{color:var(--accent2);}
+/* the game panel is white even on a dark slide, so .dk .ps must not win inside it */
+.dk .g-wrap .ps{background:#f4f6fb; color:var(--navy); border-color:#d9deed; border-left-color:var(--accent3);}
+.dk .g-wrap .ps .k{color:#6d4fd0;} .dk .g-wrap .ps .v{color:#c0392b;}
+.g-say .ps{font-weight:bold;}
+.g-mp{list-style:none; padding:0; margin:6px 0 0; font-size:.48em; line-height:1.55;}
+.g-mp li{padding-left:2px;} .g-mp .y{color:#0d7a6e; font-weight:bold;} .g-mp .n{color:var(--accent2); font-weight:bold;}
+/* minmax(0,…) or one long line inside a column sets that column's width and
+   squeezes the other one taller — measured at 848px on a 720 stage */
+.g-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px 20px;}
+/* a MODEL ANSWER for a written question is prose, not code: let it wrap */
+.g-model{background:#f4f6fb; border:1px solid #d9deed; border-left:4px solid var(--accent1);
+  border-radius:8px; padding:8px 12px; font-size:.5em; line-height:1.5; color:var(--navy);
+  white-space:pre-wrap; margin:0;}
+.g-lbl{font-size:.5em; color:#5b6488; margin:5px 0 3px;}
+.g-res .g-tot{font-size:1.1em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace; text-align:center; margin:2px 0 4px;}
+.g-fin{text-align:center; font-size:.62em; line-height:1.6;}
+.g-fin .big{font-size:1.5em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace;}
+/* a small node table inside a game question */
+.qt{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.86em; margin:5px 0 0;}
+.qt td,.qt th{border:1px solid #ccd3e8; padding:1px 11px; text-align:center;}
+.qt th{background:#eef2fb; font-size:.85em; color:#5b6488;}
+.qt td.f{color:#b3bad2;}
+
+/* ===== the step-through trace — one line runs, one cell lights up ===== */
+.tr2{display:flex; gap:20px; align-items:flex-start;}
+.tr2 .tcode{flex:1.15; min-width:0;} .tr2 .tstate{flex:1; min-width:0;}
+.tline{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; line-height:1.5;
+  padding:3px 11px; border-radius:6px; color:#8f98c2; white-space:pre; transition:.15s;}
+.tline.cur{background:rgba(242,181,60,.24); color:#fff3d6;}
+.tline.done{color:#5FD6C9; opacity:.72;}
+.tnote{font-size:.5em; min-height:3.6em; margin-top:8px; line-height:1.55; color:#c3cae6;}
+.tnote b{color:var(--accent3);} .tnote .warn{color:#ff9d95; font-weight:bold;}
+.tbtns{display:flex; gap:8px; margin-top:6px; align-items:center;}
+.treads{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; margin-top:6px; color:#8ff0e4; min-height:1.4em;}
+.treads .lp{color:#ff9d95;}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+
+/* ===== the node table widget ===== */
+.lt-wrap{background:var(--white); border-radius:12px; padding:12px 16px; box-shadow:0 4px 14px rgba(0,0,0,.08); color:var(--navy);}
+.dk .lt-wrap{background:rgba(255,255,255,.07); color:var(--ice);}
+.ltab{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.62em; width:100%;}
+.ltab th{background:#eef2fb; color:#5b6488; padding:3px 8px; font-size:.88em; border:1px solid #ccd3e8;}
+.dk .ltab th{background:rgba(255,255,255,.08); color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.ltab td{border:1px solid #ccd3e8; padding:3px 8px; text-align:center; transition:.15s;}
+.dk .ltab td{border-color:rgba(255,255,255,.18);}
+.ltab tr.free td{color:#b3bad2; background:#fbfcff;}
+.dk .ltab tr.free td{color:#6d7699; background:rgba(255,255,255,.02);}
+.ltab tr.used td{color:var(--navy); background:rgba(23,179,163,.10);}
+.dk .ltab tr.used td{color:#d8f5f1; background:rgba(23,179,163,.16);}
+.ltab tr.hit td{background:rgba(242,181,60,.42); color:#4a3500;}
+.dk .ltab tr.hit td{background:rgba(242,181,60,.38); color:#fff3d6;}
+.ltab tr.fhit td{background:rgba(109,79,208,.28);}
+.ltab td.ix{color:#98a0c0; background:transparent;}
+.dk .ltab td.ix{color:#7b85ab;}
+.ptrchip{display:inline-block; font-family:'Courier New',monospace; font-weight:bold; font-size:.58em;
+  border-radius:16px; padding:3px 14px; margin:0 7px 7px 0; border:2px solid;}
+.ptrchip.fn{border-color:var(--accent2); color:#c0392b; background:rgba(240,101,91,.10);}
+.ptrchip.fe{border-color:#6d4fd0; color:#6d4fd0; background:rgba(109,79,208,.09);}
+.dk .ptrchip.fn{color:#ff9d95;} .dk .ptrchip.fe{color:#c0aef5;}
+.vzc{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;}
+.vzb{background:var(--navy); color:#fff; border:none; border-radius:8px; padding:6px 15px; font-size:.52em; font-weight:bold;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.vzb:hover{background:var(--accent1);} .vzb:disabled{background:#c6cde4; cursor:default;}
+.vzb.alt{background:#6d4fd0;} .vzb.alt:hover{background:#8467e0;}
+.vzb.gh{background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;}
+.dk .vzb.gh{border-color:rgba(255,255,255,.25);}
+/* ===== the trace stepper: source | call stack | the exam's table ===== */
+.trw{display:flex; gap:12px; align-items:stretch;}
+.trsrc{flex:0 0 30%; min-width:0;}
+.trstack{flex:0 0 22%; min-width:0; display:flex; flex-direction:column-reverse; justify-content:flex-start; gap:3px;
+  border-left:2px dashed #ccd3e8; padding-left:9px; min-height:150px;}
+.dk .trstack{border-left-color:rgba(255,255,255,.2);}
+.trtab{flex:1; min-width:0; max-height:196px; overflow-y:auto;}
+.trcode{font-family:'Courier New',monospace; font-weight:bold; font-size:.44em; line-height:1.5; white-space:pre;
+  background:#f4f6fb; border:1px solid #d9deed; border-radius:8px; padding:7px 9px;}
+.dk .trcode{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.16);}
+.trcode span.ln{display:block; padding:0 4px; border-radius:3px;}
+.trcode span.ln.on{background:rgba(242,181,60,.38);}
+.frm{font-family:'Courier New',monospace; font-weight:bold; font-size:.42em; border-radius:6px; padding:3px 7px;
+  border:2px solid var(--accent1); background:rgba(23,179,163,.12); color:var(--navy); transition:.15s;}
+.dk .frm{color:var(--ice);}
+.frm.top{border-color:var(--accent3); background:rgba(242,181,60,.26);}
+.frm.popping{border-color:var(--accent2); background:rgba(240,101,91,.2);}
+.frm small{display:block; font-size:.8em; font-weight:normal; color:#8890b5;}
+.trt{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.42em; width:100%;}
+.trt th{background:#eef2fb; color:#5b6488; padding:2px 6px; border:1px solid #ccd3e8; position:sticky; top:0;}
+.dk .trt th{background:#2b3566; color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.trt td{border:1px solid #ccd3e8; padding:2px 6px; text-align:center;}
+.dk .trt td{border-color:rgba(255,255,255,.18);}
+.trt tr.wind td{background:rgba(23,179,163,.13);}
+.trt tr.unwind td{background:rgba(242,181,60,.20);}
+.trt tr.new td{outline:2px solid var(--accent2); outline-offset:-2px;}
+/* ===== live LLM marking (teacher's machine only; see grade-server.py) ===== */
+#llmchip{position:fixed; top:52px; right:16px; z-index:99; font-size:13px; font-weight:bold;
+  padding:4px 12px; border-radius:20px; cursor:pointer; border:2px solid #6b74a8;
+  background:rgba(20,26,60,.72); color:#98a0c0; font-family:'Calibri','Segoe UI',sans-serif;}
+#llmchip.on{border-color:var(--accent1); color:#5FD6C9;}
+#llmchip.off{opacity:.5;}
+#llmchip.absent{display:none;}
+#llmhelp{position:fixed; top:84px; right:16px; z-index:100; display:none; width:342px;
+  background:rgba(20,26,60,.97); border:2px solid var(--accent3); border-radius:10px;
+  padding:14px 16px; font-size:13px; line-height:1.45; color:#c9cee6; text-align:left;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);}
+#llmhelp b{color:#F2B53C;}
+#llmhelp p{margin:6px 0;}
+#llmhelp ol{margin:6px 0 6px 18px; padding:0;}
+#llmhelp li{margin:7px 0;}
+#llmhelp code{background:rgba(0,0,0,.35); padding:1px 5px; border-radius:4px;
+  color:#5FD6C9; font-size:12px;}
+#llmhelp .tiny{font-size:11.5px; opacity:.78; margin-top:9px;}
+#llmhelp button{margin-top:9px; background:var(--accent1); color:#0d1230; border:0;
+  border-radius:6px; padding:5px 14px; font-weight:bold; cursor:pointer;}
+.g-llm{margin-top:6px;}
+/* The reader's column only exists on the teacher's machine, so a two-column
+   panel that fits in review can be 142px off the stage in the classroom. It
+   gets its own column the moment it has anything in it. */
+.g-llm:empty{display:none;}
+/* minmax(0,…) or a long line in the student's own code widens column 1 past its
+   share and squeezes the other two taller — 724px on a 720 stage in A3a. */
+.g-grid.three{grid-template-columns:minmax(0,.86fr) minmax(0,1.07fr) minmax(0,1.07fr); gap:6px 14px;}
+.g-grid.three .g-ans{max-height:250px;}
+.g-llm .conf{font-size:.82em; opacity:.7; font-style:italic;}
+.g-cons{margin-top:7px; border-radius:9px; padding:7px 12px; font-size:.5em; line-height:1.5;
+  border:2px solid; text-align:left;}
+.g-cons.agree{border-color:var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e;}
+.g-cons.split{border-color:var(--accent3); background:rgba(242,181,60,.14); color:#8a5c00;}
+.g-cons b{font-family:'Courier New',monospace;}
+.trlegend{display:flex; gap:14px; font-size:.42em; align-items:center; margin-top:5px; color:#8890b5;}
+.trlegend i{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:4px; vertical-align:-1px;}
+.trcount{font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; margin-left:auto; color:var(--accent2);}
+.vzmsg{font-size:.54em; min-height:3.2em; margin-top:8px; font-weight:bold; line-height:1.5;}
+.vzmsg.ok{color:#0d7a6e;} .vzmsg.bad{color:var(--accent2);} .vzmsg.nt{color:#6d4fd0;}
+.dk .vzmsg.ok{color:#5FD6C9;} .dk .vzmsg.bad{color:#ff9d95;} .dk .vzmsg.nt{color:#c0aef5;}
+.reads{font-family:'Courier New',monospace; font-weight:bold; font-size:.64em; margin-top:9px;}
+.reads b{color:var(--accent1);}
+
+/* THE GAME SLIDE GROWS AFTER REVEAL HAS LAID IT OUT, and Reveal centres a slide
+   only ONCE, at slide-change time. Stage 1 is short, so Reveal pinned top:232px
+   — and the boss then grew downward off the bottom of the 720 stage (measured
+   at 799px, i.e. 79px of the panel below the visible area). scrollHeight said
+   "fits" the whole time, because scrollHeight is not where the slide SITS.
+   min-height cannot fix it: Reveal's own stylesheet sets
+   `.reveal.center .slides section { min-height: 0 !important }`.
+   So anchor the top instead — a stylesheet !important beats Reveal's inline
+   top. The panel now sits high, does not jump between stages, and has ~50px of
+   headroom below its tallest state. Any slide whose content expands WITHOUT a
+   slide change needs this class. */
+.reveal .slides section.growslide{top:40px !important;}
+
+/* the student's own code stays on screen beside the feedback, so a tick and the
+   line that earned it can be read on the same screen */
+.g-ans{background:#1b234d; color:var(--ice); border-radius:8px; font-family:'Courier New',monospace;
+  font-weight:bold; font-size:.5em; line-height:1.45; padding:9px 12px; margin:0; white-space:pre;
+  overflow:auto; max-height:300px; text-align:left;}
+.g-ans:empty::before{content:'(you did not write anything)'; color:#7b85ab; font-weight:normal;}
+
+/* ===== the tree canvas — geometry in SVG, every label in HTML ===== */
+.tcv{position:relative; width:100%; height:270px;}
+.tcv svg{position:absolute; inset:0; width:100%; height:100%;}
+.tnode{position:absolute; transform:translate(-50%,-50%); background:var(--white); border:2.5px solid var(--accent1);
+  border-radius:50%; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.6em; color:var(--navy); transition:.2s;}
+.dk .tnode{background:#1b234d; color:var(--ice);}
+.tnode.hot{border-color:var(--accent3); background:rgba(242,181,60,.3); transform:translate(-50%,-50%) scale(1.18);}
+.tnode.new{border-color:var(--accent2);}
+.tnode .ix{position:absolute; top:-15px; right:-9px; font-size:.72em; color:#98a0c0; font-family:'Courier New',monospace;}
+.tmsg{font-size:.52em; min-height:2.9em; font-weight:bold; line-height:1.45; margin-top:4px;}
+.tmsg.ok{color:#0d7a6e;} .dk .tmsg.ok{color:#5FD6C9;}
+.tmsg.bad{color:var(--accent2);} .dk .tmsg.bad{color:#ff9d95;}
+.tmsg.nt{color:#6d4fd0;} .dk .tmsg.nt{color:#c0aef5;}
+.tio{font-family:'Courier New',monospace; font-weight:bold; font-size:.52em; margin-top:3px; color:#0d7a6e; min-height:1.4em;}
+.dk .tio{color:#8ff0e4;}
+.tin{background:#fff; border:2px solid var(--accent1); border-radius:6px; color:var(--navy);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; padding:3px 8px; width:64px; outline:none;}
+.dk .tin{background:#1b234d; color:var(--ice);}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+
+/* ===== the frame inspector — A3b's centrepiece =====
+   A3a's stepper showed a frame as a box with an argument in it. This one OPENS
+   the box, because "return address and the values of the local variables" is
+   the marked answer and a student has to see the three parts separately. */
+.fiw{display:flex; gap:14px; align-items:stretch;}
+.fisrc{flex:0 0 38%; min-width:0;}
+.fistk{flex:1; min-width:0; display:flex; flex-direction:column-reverse; justify-content:flex-start;
+  gap:4px; border-left:2px dashed #ccd3e8; padding-left:11px; min-height:210px; max-height:250px; overflow-y:auto;}
+.dk .fistk{border-left-color:rgba(255,255,255,.2);}
+.fifr{font-family:'Courier New',monospace; font-weight:bold; font-size:.4em; border-radius:6px;
+  border:2px solid var(--accent1); background:rgba(23,179,163,.10); color:var(--navy); padding:2px 7px; transition:.15s;}
+.dk .fifr{color:var(--ice);}
+.fifr.top{border-color:var(--accent3); background:rgba(242,181,60,.24);}
+.fifr.popping{border-color:var(--accent2); background:rgba(240,101,91,.22);}
+.fifr.stranded{border-color:#b3bad2; background:repeating-linear-gradient(45deg,#f4f6fb,#f4f6fb 5px,#e6e9f4 5px,#e6e9f4 10px); color:#8890b5;}
+.fifr .fra{color:#6d4fd0;} .dk .fifr .fra{color:#c0aef5;}
+.fifr .frp{color:#0d7a6e;} .dk .fifr .frp{color:#5FD6C9;}
+.fifr .frl{color:#c0392b;} .dk .fifr .frl{color:#ff9d95;}
+.fifr b{font-weight:bold;}
+.fitag{font-size:.86em; color:#8890b5; font-weight:normal;}
+.fimet{margin-top:7px;}
+.fibar{height:15px; border-radius:8px; background:#e6e9f4; overflow:hidden; border:1px solid #ccd3e8;}
+.dk .fibar{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.2);}
+.fibar i{display:block; height:100%; width:0; background:linear-gradient(90deg,#17B3A3,#F2B53C); transition:width .18s;}
+.fibar.full i{background:linear-gradient(90deg,#F2B53C,#F0655B);}
+.fimlbl{display:flex; font-size:.42em; color:#8890b5; margin-top:3px; font-family:'Courier New',monospace; font-weight:bold;}
+.fimlbl .r{margin-left:auto;}
+.fijump{font-family:'Courier New',monospace; font-weight:bold; font-size:.44em; color:#8890b5;
+  margin-top:5px; min-height:1.5em;}
+.fijump .jj{color:var(--accent2); letter-spacing:.05em;}
+.fijump b{color:var(--navy);} .dk .fijump b{color:var(--ice);}
+.fireg{font-family:'Courier New',monospace; font-weight:bold; font-size:.46em; color:#8890b5;
+  border:1.5px solid #ccd3e8; border-radius:14px; padding:2px 11px; margin-left:6px;}
+.fireg.hot{border-color:var(--accent1); color:#0d7a6e; background:rgba(23,179,163,.12);}
+.dk .fireg.hot{color:#5FD6C9;}
+.fisw{display:inline-flex; align-items:center; gap:6px; font-size:.46em; color:#5b6488; font-weight:bold; margin-left:4px;}
+.dk .fisw{color:#aeb8dd;}
+
+/* ===== the search race — A4a's centrepiece ===== */
+.rcw{display:flex; gap:16px; align-items:flex-start;}
+.rccol{flex:1; min-width:0;}
+.rcarr{display:flex; flex-wrap:wrap; gap:2px; margin:4px 0 0;}
+.rcc{width:20px; height:20px; border-radius:4px; background:#eef2fb; border:1px solid #d9deed;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.32em; color:#8890b5;
+  display:flex; align-items:center; justify-content:center; transition:.12s;}
+.dk .rcc{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16);}
+.rcc.win{background:rgba(23,179,163,.14); border-color:#9fd5cc; color:var(--navy);}
+.dk .rcc.win{color:#d8f5f1;}
+.rcc.look{background:rgba(242,181,60,.5); border-color:var(--accent3); color:#4a3500; transform:scale(1.18);}
+.rcc.dead{opacity:.28;}
+.rcc.hit{background:rgba(23,179,163,.75); border-color:#0d7a6e; color:#fff;}
+.rclab{font-size:.44em; font-weight:bold; color:#5b6488; margin-top:6px;}
+.dk .rclab{color:#aeb8dd;}
+.rcnum{font-family:'Courier New',monospace; font-weight:bold; font-size:.62em;}
+.rcnum.lin{color:var(--accent2);} .rcnum.bin{color:#0d7a6e;}
+.dk .rcnum.bin{color:#5FD6C9;}
+.rcbar{height:11px; border-radius:6px; background:#e6e9f4; overflow:hidden; border:1px solid #ccd3e8; margin-top:3px;}
+.dk .rcbar{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.2);}
+.rcbar i{display:block; height:100%; width:0; transition:width .12s;}
+.rcbar.lin i{background:var(--accent2);} .rcbar.bin i{background:var(--accent1);}
+.rcsel{font-size:.46em; font-weight:bold; color:#5b6488; display:inline-flex; align-items:center; gap:5px;}
+.dk .rcsel{color:#aeb8dd;}
+.rcsel select{font-family:'Calibri','Segoe UI',sans-serif; font-size:1em; font-weight:bold; padding:2px 6px;
+  border-radius:6px; border:1.5px solid #ccd3e8; background:#fff; color:var(--navy);}
+/* the three-sort scoreboard */
+.sb{border-collapse:collapse; font-size:.5em; width:100%; font-family:'Courier New',monospace; font-weight:bold;}
+.sb th{background:#eef2fb; color:#5b6488; padding:3px 8px; border:1px solid #ccd3e8; font-size:.92em;}
+.dk .sb th{background:rgba(255,255,255,.08); color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.sb td{border:1px solid #ccd3e8; padding:3px 8px; text-align:center;}
+.dk .sb td{border-color:rgba(255,255,255,.18);}
+.sb td.nm{text-align:left; color:var(--navy);} .dk .sb td.nm{color:var(--ice);}
+.sb tr.win td{background:rgba(23,179,163,.14);}
+.sb .big{color:var(--accent2);} .sb .small{color:#0d7a6e;}
+.dk .sb .small{color:#5FD6C9;}
+
+/* ===== the crossing widget ===== */
+.xw{max-width:1000px; margin:2px auto 0;}
+.xrow{display:flex; align-items:center; gap:11px; font-size:.5em; margin-bottom:12px;}
+.xlbl{color:#98a0c0; font-weight:bold;}
+.xsl{flex:1 1 auto; accent-color:#17B3A3; height:16px;}
+.xnv{min-width:92px; font-family:'JetBrains Mono',monospace; font-weight:bold; color:#F2B53C; font-size:1.15em;}
+.xbtn{background:rgba(23,179,163,.16); border:1.5px solid #17B3A3; color:#5FD6C9; border-radius:6px;
+  padding:3px 10px; font-size:.9em; font-weight:bold; cursor:pointer; font-family:inherit;}
+.xbtn.alt{background:rgba(242,181,60,.14); border-color:#F2B53C; color:#F2B53C;}
+.xbars{display:flex; flex-direction:column; gap:13px;}
+.xb{display:flex; align-items:center; gap:11px; font-size:.46em;}
+.xbn{flex:0 0 250px; color:#c9cee6; text-align:right;}
+.xtrack{flex:1 1 auto; height:30px; background:rgba(255,255,255,.06); border-radius:5px; overflow:hidden;}
+.xfill{height:100%; border-radius:5px; transition:width .12s linear;}
+.xfill.a{background:linear-gradient(90deg,rgba(240,101,91,.55),#F0655B);}
+.xfill.b{background:linear-gradient(90deg,rgba(23,179,163,.55),#17B3A3);}
+.xv{flex:0 0 152px; font-family:'JetBrains Mono',monospace; font-weight:bold; color:#c9cee6;}
+.xverdict{margin-top:14px; font-size:.5em; padding:10px 14px; border-radius:8px; line-height:1.4;}
+.xverdict.awin{background:rgba(240,101,91,.12); border-left:3px solid #F0655B; color:#ffd7d3;}
+.xverdict.bwin{background:rgba(23,179,163,.12); border-left:3px solid #17B3A3; color:#c6f2ec;}
+.xverdict.even{background:rgba(242,181,60,.14); border-left:3px solid #F2B53C; color:#ffeec2;}
+.xverdict .xnote{display:block; opacity:.82; font-size:.92em; margin-top:2px;}
+/* A04b classroom pilot: readable dark cards and bounded optional human rubric. */
+.dk .card{background:rgba(255,255,255,.06); color:var(--ice);}
+.a04b-rubric{font-size:.5em; line-height:1.45; max-height:215px; overflow:auto; padding:0 8px 0 0;}
+.a04b-rubric p{margin:5px 0;}
+.g-grid .g-model{margin-top:8px;}
+/* Pilot classroom pages use explicit projection sizes, not compounded em reductions. */
+.reveal .slides section.a04b-pilot h2{font-size:40px !important; line-height:1.15; margin:0 0 12px !important;}
+.reveal .slides section.a04b-pilot p{font-size:26px !important; line-height:1.3;}
+.reveal .slides section.a04b-pilot .rule{font-size:26px !important; line-height:1.3; padding:12px 16px;}
+.reveal .slides section.a04b-pilot .ps{font-size:22px !important; line-height:1.3; padding:12px 16px;}
+.reveal .slides section.a04b-pilot table{font-size:22px !important; line-height:1.3;}
+.reveal .slides section.a04b-pilot td,.reveal .slides section.a04b-pilot th{padding:6px 10px;}
+.reveal .slides section.a04b-pilot .two-col{gap:24px !important;}
+</style><meta name="classroom-submissions" content="disabled-human-review"></head><body data-lang="py">
+<div class="reveal"><div class="slides">
+
+<!-- H1 -->
+<section>
+<section data-background-color="#151B3C" class="dk center" id="a04b-title">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A04b · A2 · 9618 §19.1e</p>
+  <h1 style="font-size:1.45em; margin:0;">The Notation That <span class="accent1">Survives</span></h1>
+  <p style="font-size:.62em; color:#c9cee6; margin:8px 0 0;">Big O · time and space · <em>from counted work to growth, then to an exam answer</em></p>
+  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+  <p style="font-size:.42em; color:#98a0c0;">→ next idea · ↓ optional detail · write on paper before checking</p>
+
+</section>
+  <section data-background-color="#151B3C" class="dk" id="a04b-objectives">
+    <div class="bar" style="background:var(--accent3);"></div>
+    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> state the Big O of a linear search, a binary search and the sorts you have written;</div>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">2.</strong> derive growth from counts — single, nested, halving and sequential loops;</div>
+    <div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">3.</strong> match the command word: <em>state, explain growth, compare methods or compare costs</em>;</div>
+    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">4.</strong> compare time and extra memory, and explain when constants change the practical winner.</div>
+
+</section>
+</section>
+
+<!-- H2 the hook -->
+<section data-background-color="#151B3C" class="dk" id="a04b-hook">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.8em; margin:0 0 4px;">Your own numbers, from last lesson</h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 6px;">Forty items. You measured these; nobody claimed them.</p>
+  <table class="sb" style="font-size:.52em; margin:0 auto;">
+    <tr><th></th><th>shuffled</th><th>nearly sorted</th></tr>
+    <tr><td class="nm">bubble</td><td>1 560</td><td>1 560</td></tr>
+    <tr class="win"><td class="nm">selection</td><td class="small">780</td><td class="small">780</td></tr>
+    <tr><td class="nm">insertion</td><td>400</td><td class="small">41</td></tr>
+  </table>
+  <div class="rule accent2" style="font-size:.54em; margin-top:10px;">
+    In these runs, selection used <b>half as many comparisons</b> as this bubble implementation. What survives when n grows?
+  </div>
+  <div class="fragment" style="margin-top:8px;">
+    <div class="rule accent3" style="font-size:.54em;">
+      Now scale these implementations to <b>a million items</b>. Bubble: about 10<sup>12</sup> comparisons.
+      Selection: about 5 &times; 10<sup>11</sup>. <b class="accent2">Both grow quadratically; both now do enormous work.</b>
+      <br>The factor-of-two advantage can persist. It does not change either algorithm’s growth class.
+    </div>
+  </div>
+
+</section>
+
+<!-- H3 a better algorithm beats a faster computer -->
+<section data-background-color="#151B3C" class="dk" id="a04b-speedup">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 4px;">A better algorithm beats a <span class="accent1">faster computer</span></h2>
+  <p style="font-size:.44em; color:#98a0c0; margin:0 0 8px;">A model: T(n) = counted operations ÷ rate. n = 1 000 000; rate = 10⁹ operations per second.</p>
+  <div class="two-col" style="gap:18px;">
+    <div class="card" style="border-color:rgba(23,179,163,.4);">
+      <div style="font-size:.5em; color:#5FD6C9; font-weight:bold;">a sort that costs <span class="mono">n log n</span></div>
+      <div style="font-size:.44em; color:#c9cee6; margin-top:3px;">about <b>20 million</b> operations</div>
+      <div style="font-size:1.05em; color:#17B3A3; font-weight:bold; margin-top:6px;">0.02 s</div>
+      <div style="font-size:.4em; color:#8890b5;">a fiftieth of a second</div>
+    </div>
+    <div class="card" style="border-color:rgba(240,101,91,.4);">
+      <div style="font-size:.5em; color:#F0655B; font-weight:bold;">a sort that costs <span class="mono">n²</span></div>
+      <div style="font-size:.44em; color:#c9cee6; margin-top:3px;">about <b>1 000 000 million</b> operations</div>
+      <div style="font-size:1.05em; color:#F0655B; font-weight:bold; margin-top:6px;">17 min</div>
+      <div style="font-size:.4em; color:#8890b5;">on the same machine</div>
+    </div>
+  </div>
+  <div class="rule accent1" style="font-size:.52em; margin-top:10px;">
+    <b>Derive on paper:</b> make this quadratic model run on a computer <b>1 000× faster</b>, then double n.
+    What are the two new times? <span class="fragment"><b class="accent3">Check: 1 second, then 4 seconds.</b></span>
+    <br>A fixed speedup changes the multiplier; quadratic work still grows by 4× when n doubles.
+  </div>
+
+</section>
+
+<!-- H4 throw away the details -->
+<section data-background-color="#F4F6FB" class="lt" id="a04b-definition">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 2px;">Throw the details away — and say <span class="accent2">which</span> details</h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">Suppose an algorithm does exactly <span class="mono">3n² + 5n + 200</span> operations. Watch what happens to the terms.</p>
+  <table class="qt" style="font-size:.52em; margin:0 auto;">
+    <tr><th>n</th><th class="mono">3n²</th><th class="mono">5n</th><th class="mono">200</th><th>share taken by 3n²</th></tr>
+    <tr><td>10</td><td>300</td><td>50</td><td>200</td><td>55 %</td></tr>
+    <tr><td>100</td><td>30 000</td><td>500</td><td>200</td><td>98 %</td></tr>
+    <tr class="win"><td>10 000</td><td>300 000 000</td><td>50 000</td><td>200</td><td class="small">99.98 %</td></tr>
+  </table>
+  <div class="rule accent1" style="font-size:.52em; margin-top:8px;">
+    Relative to n², the lower terms shrink: <span class="mono">f(n)/n² = 3 + 5/n + 200/n² → 3</span>.
+    A fixed multiplier does not change the growth class. <b class="accent2">Constants can come from the algorithm and its implementation, as well as the machine.</b>
+    They matter for actual work and elapsed time; Big O suppresses them when describing growth.
+  </div>
+  <div style="font-size:.5em; text-align:center; margin-top:7px; color:var(--navy);">
+    <span class="mono" style="font-size:1.15em;">f(n) = 3n² + 5n + 200 is <b style="color:#0d7a6e;">O(n²)</b></span>
+  </div>
+
+</section>
+
+<!-- H5 the hierarchy + feel it -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt" id="a04b-hierarchy">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 2px;">Growth models — <span class="accent2">what does doubling n do?</span></h2>
+  <table class="qt" style="font-size:.5em; margin:2px auto 0;">
+    <tr><th>Big O</th><th>name</th><th>model work at 2n →</th><th>where you have met it</th></tr>
+    <tr><td class="mono">O(1)</td><td>constant</td><td><b>no change</b></td><td>reading <span class="mono">A[i]</span></td></tr>
+    <tr class="win"><td class="mono">O(log n)</td><td>logarithmic</td><td><b>one more step</b></td><td class="small">your binary search</td></tr>
+    <tr class="win"><td class="mono">O(n)</td><td>linear</td><td><b>doubles</b></td><td class="small">your linear search</td></tr>
+    <tr><td class="mono">O(n log n)</td><td>linearithmic</td><td>a bit more than doubles</td><td>merge sort — optional extension</td></tr>
+    <tr><td class="mono">O(n²)</td><td>quadratic</td><td><b>quadruples</b></td><td>these sorts, worst case</td></tr>
+    <tr><td class="mono">O(2ⁿ)</td><td>exponential</td><td><b>squares</b></td><td>trying all subsets</td></tr>
+  </table>
+  <div class="rule accent1" style="font-size:.52em; margin-top:8px;">
+    <b>Explain the third column before naming the order.</b> These are simple growth models, not exact guarantees from an O-bound.
+    For a halving process, doubling n adds about one step; it does not double the work.
+  </div>
+
+</section>
+
+<section data-background-color="#F4F6FB" class="lt" id="a04b-growth-table">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">Feel it — <span class="accent2">operations needed, by size</span></h2>
+  <table class="qt" style="font-size:.5em; margin:0 auto;">
+    <tr><th>n</th><th class="mono">log₂ n</th><th class="mono">n</th><th class="mono">n log₂ n</th><th class="mono">n²</th><th class="mono">2ⁿ</th></tr>
+    <tr><td>10</td><td class="small">3</td><td>10</td><td>33</td><td>100</td><td>1 024</td></tr>
+    <tr><td>100</td><td class="small">7</td><td>100</td><td>664</td><td>10 000</td><td>a 31-digit number</td></tr>
+    <tr><td>1 000</td><td class="small">10</td><td>1 000</td><td>9 965</td><td>1 000 000</td><td>hopeless</td></tr>
+    <tr class="win"><td>1 000 000</td><td class="small">20</td><td>1 000 000</td><td>20 000 000</td><td class="big">1 000 000 000 000</td><td>hopeless</td></tr>
+  </table>
+  <p style="font-size:.44em; color:#8890b5; margin:5px 0 0; text-align:center;">
+    Read the bottom row across. A million items: <b>20 comparisons</b> for a binary search, <b>a million million</b> for a quadratic sort.
+  </p>
+  <!-- the SVG is 518x331, so HEIGHT is what binds; capping it low was what kept the
+       picture small while the slide sat half empty -->
+  <img src="big-o-growth-curves.svg" style="max-width:96%; max-height:432px; display:block; margin:4px auto 0;">
+
+</section>
+
+</section>
+
+<!-- H6 the crossing (widget) -->
+<section>
+
+<section data-background-color="#151B3C" class="dk" id="a04b-crossing">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.74em; margin:0 0 2px;">🎮 The crossing — <span class="accent3">where the "worse" algorithm wins</span></h2>
+  <p style="font-size:.42em; color:#98a0c0; margin:0 0 4px;">
+    <b>A</b> models a quadratic sort: <span class="mono">O(n²)</span> with a <b>tiny</b> constant. &nbsp;·&nbsp;
+    <b>B</b> models an n log n sort: <span class="mono">O(n log n)</span> with a <b>fat</b> one. Move n and watch.</p>
+  <div id="crossviz"></div>
+
+</section>
+
+<section data-background-color="#F4F6FB" class="lt" id="a04b-constants">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 3px;">Two things that are now false</h2>
+  <div class="two-col" style="gap:16px;">
+    <div class="card" style="border-color:rgba(240,101,91,.35);">
+      <div style="font-size:.5em; color:#F0655B; font-weight:bold;">✗ "a lower Big O is always faster"</div>
+      <div style="font-size:.44em; margin-top:4px; color:var(--navy);">Only <b>eventually</b>. Below the crossing the quadratic
+      wins, and it wins by a factor of six at n = 10. Big O ranks <b>scaling</b>, not speed.</div>
+    </div>
+    <div class="card" style="border-color:rgba(240,101,91,.35);">
+      <div style="font-size:.5em; color:#F0655B; font-weight:bold;">✗ "constants never matter"</div>
+      <div style="font-size:.44em; margin-top:4px; color:var(--navy);">They are dropped from the <b>notation</b>, not from the
+      world. Below the crossing the constants decide <b>everything</b>.</div>
+    </div>
+  </div>
+  <div class="rule accent1" style="font-size:.52em; margin-top:9px;">
+    <b>And this is not a classroom curiosity.</b> Hybrid sorting implementations can combine an <span class="mono">O(n log n)</span> strategy with
+    <b>insertion sorting on small runs</b>. Their cutoffs depend on implementation and measurement; this widget is a cost model, not a benchmark.
+  </div>
+  <div style="font-size:.46em; color:#5b6488; margin-top:7px; text-align:center;">
+    The question is never "which algorithm is best?" It is <b class="accent2">"how big is n, really?"</b>
+  </div>
+
+</section>
+
+</section>
+
+<!-- H7 count first; down for optional working and measurement -->
+<section>
+<section data-background-color="#F4F6FB" class="lt a04b-pilot" id="a04b-count">
+  <div class="badges"><span class="bg bg-p3">Concept model</span></div>
+  <h2 style="font-size:.78em; margin:0 0 2px;">Count first. <span class="accent2">Then name the growth.</span></h2>
+  <p style="font-size:.48em; margin:3px 0 7px;">Let n = len(A) ≥ 1. Count body executions at n = 8 and n = 16; derive a formula in n and a tight growth order. Each body costs constant time.</p>
+  <div class="two-col" style="gap:18px;">
+    <div><div class="ps" style="font-size:.48em;"><span class="c"># A — one pass</span>
+for x in A:
+    count += 1
+
+<span class="c"># B — nested passes</span>
+for x in A:
+    for y in A:
+        count += 1</div></div>
+    <div><div class="ps" style="font-size:.48em;"><span class="c"># C — halving</span>
+i = len(A)
+while i &gt; 1:
+    i = i // 2
+
+<span class="c"># D — sequential passes</span>
+for x in A: count += 1
+for x in A: count += 1</div></div>
+  </div>
+  <div class="rule accent3 fragment" style="font-size:.5em;"><b>Check, 8 → 16:</b> A: 8 → 16 · B: 64 → 256 · C: 3 → 4 · D: 16 → 32. Explain why C adds one and D only doubles.</div>
+  <p style="font-size:.44em;"><a href="#/a04b-count-working">↓ optional full working</a> · → next idea</p>
+
+</section>
+<section data-background-color="#F4F6FB" class="lt a04b-pilot" id="a04b-count-working">
+  <div class="badges"><span class="bg bg-p3">Optional working</span></div>
+  <h2 style="font-size:.78em; margin:0 0 8px;">Count first — full working</h2>
+  <table class="qt" style="font-size:.56em; width:100%;">
+    <tr><th>snippet</th><th>count as a function of n</th><th>reason</th><th>tight order</th></tr>
+    <tr><td>A</td><td>n</td><td>one visit to each item</td><td>O(n)</td></tr>
+    <tr><td>B</td><td>n × n = n²</td><td>n inner visits for each outer visit</td><td>O(n²)</td></tr>
+    <tr><td>C</td><td>⌊log₂ n⌋</td><td>after k halvings: ⌊n/2ᵏ⌋; stop at 1</td><td>O(log n)</td></tr>
+    <tr><td>D</td><td>n + n = 2n</td><td>finish one pass, then start the other</td><td>O(n)</td></tr>
+  </table>
+  <div class="rule" style="font-size:.54em; margin-top:12px;"><b>Sequential work adds; nested work sums the inner counts.</b> Multiplication works for B because every inner loop has length n. Check the actual bounds: a loop fixed at 100 iterations is O(1) in n.</div>
+  <p style="font-size:.46em;"><a href="#/a04b-count">↑ question</a> · ↓ optional measurement · → exam forms</p>
+
+</section>
+<section data-background-color="#F4F6FB" class="lt" id="a04b-ratio">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">Optional measurement — <span class="accent2">test a growth hypothesis</span></h2>
+  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">Each function counts its own operations. Run it at 1 000 and at 2 000, and divide.</p>
+
+
+  <div class="pycell tight"><script type="text/plain" class="pysrc">def one_pass(A):
+    count = 0
+    for x in A:
+        count = count + 1
+    return count
+
+def nested(A):
+    count = 0
+    for x in A:
+        for y in A:
+            count = count + 1
+    return count
+
+def halving(A):
+    count = 0
+    i = len(A)
+    while i > 1:
+        i = i // 2
+        count = count + 1
+    return count
+
+print("%-10s %9s %9s %7s" % ("", "n=1000", "n=2000", "ratio"))
+for f in (one_pass, nested, halving):
+    a = f(list(range(1000)))
+    b = f(list(range(2000)))
+    print("%-10s %9d %9d %7.2f" % (f.__name__, a, b, b / a))</script></div>
+  <div class="rule accent3" style="font-size:.5em; margin-top:6px;">
+    <b>Ratios are evidence, not proof.</b> Here 2, 4 and 10/9 fit the counts we derived.
+    Test more sizes, then justify the growth from the code. A function can change behaviour beyond every size you measured.
+  </div>
+
+</section>
+
+</section>
+
+<!-- H8 fresh task on main path; forms and full answer optional -->
+<section>
+<section data-background-color="#F4F6FB" class="lt a04b-pilot" id="a04b-exam-task">
+  <div class="badges"><span class="bg bg-p3">Authored exam-form task</span></div>
+  <h2 style="font-size:.78em; margin:0 0 7px;">Write the growth, not just the symbol</h2>
+  <div class="rule" style="font-size:.59em;"><b>A sorted catalogue contains n distinct records.</b> A program uses iterative binary search or linear search. Compare their <b>worst-case search time as n increases</b>, using Big O notation. Exclude sorting time. <b>[3]</b></div>
+  <p style="font-size:.52em; margin:14px 0;">Write a concise answer on paper. Include both algorithms, their growth relationships and a comparison. Keep this question visible while you derive it.</p>
+  <div class="rule accent3 fragment" style="font-size:.53em;"><b>Short check:</b> have you linked each algorithm to both a symbol and a growth statement, then compared their rates?</div>
+  <p style="font-size:.46em;"><a href="#/a04b-answer-comparison">↓ optional answer comparison and rubric</a> · → cases and space</p>
+
+</section>
+<section data-background-color="#222B5A" class="dk a04b-pilot" id="a04b-exam-forms">
+  <div class="badges"><span class="bg bg-p3">Exam requirements · P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 8px;">Read the <span class="accent3">question form</span></h2>
+  <table class="sb" style="font-size:.55em; width:100%;">
+    <tr><th>form</th><th>what your answer must supply</th><th>where it goes wrong</th></tr>
+    <tr><td>State a complexity</td><td>correct O(…) for the specified case</td><td>a description with no value</td></tr>
+    <tr><td>Explain growth</td><td>link input size to how the cost grows</td><td>“it is fast” with no relationship</td></tr>
+    <tr><td>Compare time complexity</td><td>both orders, both growths, relative growth</td><td>methods alone; symbols alone</td></tr>
+    <tr><td>Compare methods</td><td>steps and preconditions requested by the stem</td><td>answering only with growth symbols</td></tr>
+    <tr><td>Compare time and space</td><td>name what is counted and how memory scales</td><td>omitting the memory model</td></tr>
+  </table>
+  <div class="rule accent3" style="font-size:.52em; margin-top:12px;">The syllabus includes <b>time and space</b>. Practise the reasoning as well as the notation. Past question forms show how answers earn credit; they do not predict the next paper.</div>
+  <p style="font-size:.45em;"><a href="#/a04b-exam-task">↑ authored task</a> · ↓ answer comparison · → cases and space</p>
+
+</section>
+<section data-background-color="#F4F6FB" class="lt a04b-pilot" id="a04b-answer-comparison">
+  <div class="badges"><span class="bg bg-p3">Optional answer comparison</span></div>
+  <h2 style="font-size:.76em; margin:0 0 6px;">Same question. <span class="accent2">Three kinds of evidence.</span></h2>
+  <table class="qt" style="font-size:.51em; width:100%;">
+    <tr><th>response</th><th>what it earns under our [3] rubric</th></tr>
+    <tr><td><b>Symbols only:</b> “Linear O(n); binary O(log₂ n).”</td><td>1/3: both values; no growth explanation or comparison</td></tr>
+    <tr><td><b>Mechanism only:</b> “Linear checks each record in turn; binary checks the middle and discards a half.”</td><td>0/3 here: describes methods, does not state growth rates</td></tr>
+    <tr><td><b>Growth + symbols:</b> “Worst case: linear O(n), binary O(log₂ n). Work grows linearly for linear search and logarithmically for binary search as n grows, so binary search work increases less rapidly.”</td><td>3/3: values + both growths + relative growth</td></tr>
+  </table>
+  <div class="rule accent3" style="font-size:.5em; margin-top:10px;"><b>Authored rubric: Max 3.</b> MP1 both values [1]; MP2 both growth relationships [1]; MP3 binary grows less rapidly [1]. Accept equivalent meanings; repetition earns no extra credit. Method descriptions can earn marks on a <em>method</em> question.</div>
+  <p style="font-size:.44em;"><a href="#/a04b-exam-task">↑ task</a> · → cases and space</p>
+
+</section>
+</section>
+
+<!-- H9 best worst average -->
+<section data-background-color="#F4F6FB" class="lt" id="a04b-cases">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 2px;">Big O is <span class="accent2">not</span> "the worst case"</h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">It is an upper bound on <b>whichever case you point it at</b> — so you must say which one.</p>
+  <table class="qt" style="font-size:.5em; margin:0 auto;">
+    <tr><th>algorithm</th><th>best</th><th>worst</th><th>average</th><th>what makes it best</th></tr>
+    <tr><td class="nm">linear search</td><td class="mono small">O(1)</td><td class="mono">O(n)</td><td class="mono">O(n)</td><td>the target is first</td></tr>
+    <tr><td class="nm">binary search</td><td class="mono small">O(1)</td><td class="mono">O(log n)</td><td class="mono">O(log n)</td><td>the target is the mid-point</td></tr>
+    <tr class="win"><td class="nm">bubble sort <b>with a flag</b></td><td class="mono small">O(n)</td><td class="mono">O(n²)</td><td class="mono">O(n²)</td><td class="small">already sorted — one pass, no swaps</td></tr>
+    <tr><td class="nm">insertion sort</td><td class="mono small">O(n)</td><td class="mono">O(n²)</td><td class="mono">O(n²)</td><td class="small">already sorted — nothing moves back</td></tr>
+  </table>
+  <div class="rule accent1" style="font-size:.52em; margin-top:8px;">
+    <b>You measured that third row yourself.</b> Last lesson the flagged bubble sort did <b>39</b> comparisons on
+    already-sorted data where the plain one did <b>1 560</b>. Thirty-nine is <span class="mono">n − 1</span> on forty items —
+    a single pass that finds nothing to swap. <b class="accent2">That is what <span class="mono">O(n)</span> best case means, in numbers you have already seen.</b>
+  </div>
+  <div style="font-size:.46em; color:#5b6488; margin-top:6px; text-align:center;">
+    State the case, or use the case already specified in the question: <b>“O(n²) in the worst case.”</b>
+  </div>
+
+</section>
+
+<!-- H10 space is core syllabus; work optional -->
+<section>
+<section data-background-color="#F4F6FB" class="lt a04b-pilot" id="a04b-space">
+  <div class="badges"><span class="bg bg-p3">Concept + exam scope</span></div>
+  <h2 style="font-size:.78em; margin:0 0 7px;">Space — <span class="accent2">what grows in memory?</span></h2>
+  <p style="font-size:.51em; margin:4px 0 12px;">9618 §19.1 includes time <b>and space</b> complexity. Here count <b>extra (auxiliary) space</b>, excluding the input array; one fixed-size value occupies constant space.</p>
+  <div class="two-col" style="gap:20px;">
+    <div class="rule" style="font-size:.55em; margin-top:0;"><b>A · Scan and total</b><br>Read the n input values once. Keep only a running total and an index. Do not copy the array.</div>
+    <div class="rule accent2" style="font-size:.55em; margin-top:0;"><b>B · Copy and scan</b><br>Make a new array containing all n input values, then total them in one pass.</div>
+  </div>
+  <p style="font-size:.53em;">On paper: give the time and extra-space order of A and B. If n doubles, what happens to each memory requirement?</p>
+  <div class="rule accent3 fragment" style="font-size:.51em;"><b>Check:</b> both take O(n) time. Extra space: A O(1), B O(n). Counting the stored input as well gives O(n) total space for both.</div>
+  <p style="font-size:.45em;"><a href="#/a04b-space-working">↓ optional working and a trade-off</a> · → structure costs</p>
+
+</section>
+<section data-background-color="#F4F6FB" class="lt a04b-pilot" id="a04b-space-working">
+  <div class="badges"><span class="bg bg-p3">Optional working</span></div>
+  <h2 style="font-size:.78em; margin:0 0 8px;">Space — full working</h2>
+  <div class="rule" style="font-size:.57em;"><b>A:</b> n reads and additions → O(n) time. A fixed number of counters and totals → O(1) extra space, unchanged when n doubles.</div>
+  <div class="rule accent2" style="font-size:.57em;"><b>B:</b> n copies + n additions → 2n work → O(n) time. n new slots plus fixed counters → O(n) extra space; doubling n doubles the dominant extra storage.</div>
+  <div class="rule accent3" style="font-size:.55em;"><b>A real trade:</b> a hash table uses O(n) storage to support expected O(1) lookup under suitable hashing and load. That is an expected-case claim; worst-case lookup can be O(n). State the model and case.</div>
+  <p style="font-size:.46em;"><a href="#/a04b-space">↑ question</a> · → structure costs</p>
+
+</section>
+</section>
+
+<!-- H11 race the four structures -->
+<section>
+
+<section data-background-color="#151B3C" class="dk" id="a04b-structures">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">Race the four structures <span class="accent3">you built yourself</span></h2>
+  <p style="font-size:.42em; color:#98a0c0; margin:0 0 4px;">Everything in this table you have written, in the last four lessons. Now it has a language.</p>
+  <table class="sb" style="font-size:.48em; margin:0 auto;">
+    <tr><th>structure</th><th>find an item</th><th>insert an item</th><th>the honest note</th></tr>
+    <tr><td class="nm">array — by <b>index</b></td><td class="mono small">O(1)</td><td class="mono">O(n)</td><td>instant if you know <em>where</em></td></tr>
+    <tr><td class="nm">array — by <b>value</b></td><td class="mono">O(n)</td><td class="mono">O(n)</td><td>this is your linear search</td></tr>
+    <tr><td class="nm">array — <b>sorted</b>, by value</td><td class="mono small">O(log n)</td><td class="mono">O(n)</td><td class="small">binary search — but insertion shuffles everything up</td></tr>
+    <tr class="win"><td class="nm">linked list</td><td class="mono">O(n)</td><td class="mono small">O(1)</td><td class="small">slow to find, instant to insert <em>once you are there</em></td></tr>
+    <tr><td class="nm">binary search tree</td><td class="mono small">O(log n)</td><td class="mono small">O(log n)</td><td>…if it stays balanced</td></tr>
+  </table>
+  <div class="rule accent1" style="font-size:.5em; margin-top:8px;">
+    <b>Two rows explain a whole term's work.</b> The array is <span class="mono">O(1)</span> to <em>read</em> and
+    <span class="mono">O(n)</span> to <em>search</em> — different questions, different answers, same structure.
+    And the linked list is the slowest thing here to find and the fastest to insert, which is
+    <b class="accent2">the entire reason it exists</b>: you built it for the jobs where you already have the pointer.
+  </div>
+  <div class="fragment" style="font-size:.46em; color:#F2B53C; margin-top:6px; text-align:center;">
+    And the last row's "if" is doing a lot of work. Insert 1, 2, 3, 4, 5 into a binary search tree in that order and
+    you get… a linked list. <b>O(n).</b>
+  </div>
+  <p style="font-size:.44em;"><a href="#/a04b-database">↓ optional real-world extensions</a> · <a href="#/a04b-game">→ exam practice</a></p>
+
+</section>
+
+<section data-background-color="#F4F6FB" class="lt" id="a04b-database">
+  <div class="badges"><span class="bg bg-hole">🕳 beyond the exam</span></div>
+  <h2 style="font-size:.74em; margin:0 0 2px;">Real-world extension — <span class="accent2">a B+ tree index</span></h2>
+  <p style="font-size:.42em; color:#8890b5; margin:0 0 5px;">A common database index combines a <b>balanced tree</b> with <b>linked leaves</b>. Implementations vary.</p>
+  <div class="two-col" style="gap:15px;">
+    <div>
+      <div class="rule accent1" style="font-size:.46em; margin-top:0;">
+        <b>Why not just a sorted array?</b> Look at that row again: sorted array is
+        <span class="mono">O(log n)</span> to find and <span class="mono">O(n)</span> to <b>insert</b>, because
+        everything after the new row has to shuffle up. <b class="accent2">A database inserts all day.</b>
+        The array's find is perfect and its insert is fatal.
+      </div>
+      <div class="rule accent3" style="font-size:.46em;">
+        <b>So the index is a tree</b> — a <b>B+ tree</b>, a balanced search tree, with a fan-out in the hundreds
+        rather than two. Ten million rows come out about <b>three levels deep</b>. Find <em>and</em> insert
+        are both <span class="mono">O(log n)</span>, and the balancing is not optional here, it is the product.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent2" style="font-size:.46em; margin-top:0;">
+        <b>And its leaves are chained into a linked list</b> — deliberately. That is what makes
+        <em>"every order between March and June"</em> fast: find the first one down the tree, then <b>walk
+        sideways</b> instead of searching again. Your linked list's <span class="mono">O(1)</span>
+        once-you-are-there, bought on purpose.
+      </div>
+      <div class="rule accent1" style="font-size:.46em;">
+        <b>Then the row itself</b> is reached by a direct pointer to its page — much closer to
+        <span class="mono">A[i]</span> than to following a chain.
+      </div>
+    </div>
+  </div>
+  <div style="font-size:.46em; color:var(--navy); margin-top:7px; text-align:center;">
+    <b>Tree to find it · linked leaves to scan a range · a pointer to read it.</b>
+    <span style="color:#5b6488;">All three rows of that table, inside one structure — because each one is
+    the best answer to a different question.</span>
+  </div>
+
+</section>
+
+<!-- H12 why n log n: optional under structures -->
+<section data-background-color="#F4F6FB" class="lt" id="a04b-nlogn">
+  <div class="badges"><span class="bg bg-hole">🕳 beyond the exam</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">Why <span class="mono accent2">n log n</span>? — the one that feels invented</h2>
+  <p style="font-size:.42em; color:#8890b5; margin:0 0 3px;">
+    <span class="mono">O(n)</span> is "look at each thing once". <span class="mono">O(n²)</span> is "everything against everything".
+    But <span class="mono">n log n</span> is not a picture — until you count levels. <b>9618 assesses neither merge sort nor quicksort</b>; this is here because it answers "is there anything better than my three sorts?"</p>
+  <img src="big-o-nlogn-levels.svg" style="width:56%; max-height:215px; display:block; margin:2px auto 0;">
+  <div class="rule accent1" style="font-size:.5em; margin-top:5px;">
+    <b>Every level costs n</b> — the pieces got smaller but there are proportionally more of them, so each row still
+    covers all n items exactly once. <b>And there are log₂ n levels</b>, because that is how many halvings take n down to 1.
+    <span class="mono">n × log₂ n</span>. That is the whole secret: <b class="accent2">one linear sweep at every level of a halving.</b>
+  </div>
+  <div class="rule accent3" style="font-size:.46em; margin-top:6px;">
+    <b>And it explains quicksort's disaster in one sentence.</b> A good pivot halves the range — log n levels, so n log n.
+    A bad pivot peels off one element at a time — <b>n levels</b>, so n × n. <em>Same work per level; different number of levels.</em>
+    <br><span style="color:#5b6488;">🕳 One more, free: <b>comparison sorting needs Ω(n log n) comparisons in the worst case</b>. There are n! possible orderings and each
+    comparison halves the possibilities, so you need at least log₂(n!) ≈ n log n of them. Merge sort does not just do well — it hits the floor.</span>
+  </div>
+
+</section>
+
+<!-- H13 the wall -->
+<section data-background-color="#151B3C" class="dk" id="a04b-wall">
+  <div class="badges"><span class="bg bg-hole">🕳 beyond the exam</span></div>
+  <h2 style="font-size:.76em; margin:0 0 3px;">The wall — <span class="accent2">where no computer helps</span></h2>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <div class="rule accent2" style="font-size:.5em; margin-top:0;">
+        An <span class="mono">O(2ⁿ)</span> algorithm on just <b>n = 100</b> needs about
+        <b>1.3 × 10³⁰</b> operations.
+        <br>At a billion a second that is <b class="accent3">4 × 10¹³ years</b> —
+        about <b>three thousand times the age of the universe</b>.
+        <br><span style="color:#98a0c0;">There is no hardware answer. There is only a better algorithm, or no answer.</span>
+      </div>
+    </div>
+    <div>
+      <div class="rule accent1" style="font-size:.5em; margin-top:0;">
+        <b>You already rely on this.</b> A password of length L from 26 letters has 26<sup>L</sup> possibilities.
+        Adding <b>one character</b> multiplies the attacker's work by <b>26</b>.
+        <br>That is why <b class="accent3">length beats cleverness</b> in a password — you are buying an exponent, not a constant.
+      </div>
+    </div>
+  </div>
+  <div class="rule accent3" style="font-size:.46em; margin-top:8px;">
+    <b>🕳 And the line itself is the biggest open question in computer science.</b>
+    Think of a hard Sudoku: <b>agony to fill in, trivial to check</b> once somebody hands you a filled grid.
+    <br><b>P</b> — <em>Polynomial time</em> — the problems we can <b>solve</b> quickly.
+    &nbsp;·&nbsp; <b>NP</b> — <em>Nondeterministic Polynomial time</em> — the problems whose answers we can
+    <b>check</b> quickly.
+    <span style="color:#F0655B;"><b>NP does <em>not</em> mean "non-polynomial"</b> — that is the single most common
+    misreading of the name, and every P problem is also in NP.</span>
+    <br><b>Is finding really harder than checking?</b> Nobody knows. Almost everyone believes it; nobody can prove it.
+    There is a <b class="accent2">$1 000 000 prize</b> for the answer, unclaimed since 2000.
+  </div>
+
+</section>
+
+</section>
+
+<!-- H14 THE GAME -->
+<section data-background-color="#F4F6FB" class="lt growslide" id="a04b-game">
+  <div class="g-wrap">
+    <div class="g-head"><span id="g-stage" class="g-stage"></span><span id="g-prog" class="g-prog"></span><span id="g-score" class="g-score"></span><button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button></div>
+    <div id="g-q" class="g-q"></div>
+    <div id="g-body"></div>
+    <div id="g-say" class="g-say">&nbsp;</div>
+  </div>
+
+</section>
+
+<!-- H15 summary -->
+<section data-background-color="#151B3C" class="dk" id="a04b-recap">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <h2 style="font-size:.82em; margin:0 0 6px;">What you can now say</h2>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <div class="rule accent1" style="font-size:.48em; margin-top:0;">
+        <b>The two values</b> — linear <span class="mono">O(n)</span>, binary <span class="mono">O(log₂ n)</span> — and the
+        sentence that carries them: <em>the time increases logarithmically as the items increase linearly.</em>
+      </div>
+      <div class="rule accent3" style="font-size:.48em;">
+        <b>Read an order off unseen code</b>: sequential adds, nested multiplies, halving is a logarithm.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent2" style="font-size:.48em; margin-top:0;">
+        <b>And the two honest edges</b> — Big O is not "the worst case" until you say so, and a lower Big O is not
+        faster until n is past the crossing.
+      </div>
+      <div class="rule accent1" style="font-size:.48em;">
+        <b>Time and space:</b> name the cost model, count what grows, and state the case. Measurements test a prediction; a finite ratio does not prove a bound.
+      </div>
+    </div>
+  </div>
+  <div style="font-size:.5em; color:#c9cee6; margin-top:10px; text-align:center;">
+    Next: your data has been asking to become something. <b class="accent1">Objects.</b>
+  </div>
+
+</section>
+
+</div></div>
+
+<div id="py-chip">🐍 waking Python…</div>
+<div id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</div>
+<div id="llmhelp">
+  <b>Live LLM marking is off.</b>
+  <p>The reader runs on this Mac, not inside the slides &mdash; which is why the API key never goes near a deck.</p>
+  <ol>
+    <li>In the <b>CS_Materials</b> folder, double-click<br><code>Start-LLM-Marking.command</code></li>
+    <li>A Terminal window opens and stays open. Come back here &mdash; the chip lights up on its own within five seconds. No reload.</li>
+  </ol>
+  <p class="tiny">Double-clicking <code>grade-server.py</code> does nothing: macOS opens <code>.py</code> files in an editor rather than running them. That is what the <code>.command</code> file is for.</p>
+  <button id="llmhelp-x">got it</button>
+</div>
+<button id="fsbtn" title="fullscreen (or press F)">⛶</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+/* ===== Python runtime (Pyodide) — the audited house harness ===== */
+var pyPromise = null, pyBusy = false, currentOut = null, activeInput = null;
+
+function setRunButtons(enabled, label){
+  document.querySelectorAll('.pycell .pyrun').forEach(function(b){
+    b.disabled = !enabled;
+    b.textContent = enabled ? '▶ Run' : (label || '… running');
+  });
+}
+window.__pyInput = function(promptText){
+  return new Promise(function(resolve, reject){
+    var out = currentOut;
+    if(!out){ resolve(''); return; }
+    var row = document.createElement('span');
+    var lbl = document.createElement('span'); lbl.className='pyin-lbl'; lbl.textContent = promptText;
+    var inp = document.createElement('input'); inp.className='pyin';
+    inp.setAttribute('autocomplete','off'); inp.spellcheck = false;
+    row.appendChild(lbl); row.appendChild(inp); out.appendChild(row);
+    activeInput = {row: row, reject: reject};
+    setTimeout(function(){ inp.focus(); }, 60);
+    inp.addEventListener('keydown', function(ev){
+      if(ev.key === 'Enter'){ ev.stopPropagation(); var v=inp.value; row.remove(); activeInput=null; resolve(v); }
+    });
+  });
+};
+function stopPy(){
+  if(activeInput){ var r=activeInput.reject; activeInput.row.remove(); activeInput=null; r(new Error('__pyStop__')); }
+}
+function bootPython(){
+  if(pyPromise) return pyPromise;
+  pyPromise = loadPyodide().then(function(py){
+    py.runPython(
+      "import builtins, js\n" +
+      "async def __ainput(prompt=''):\n" +
+      "    v = await js.window.__pyInput(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "def _input_fallback(prompt=''):\n" +
+      "    v = js.window.prompt(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "builtins.input = _input_fallback\n" +
+      "builtins.__ainput = __ainput\n");
+    var chip=document.getElementById('py-chip');
+    chip.textContent='🐍 Python ready'; chip.className='ready';
+    if(!pyBusy) setRunButtons(true);
+    return py;
+  });
+  return pyPromise;
+}
+function runPy(code, outEl, doneCb){
+  if(pyBusy) return;
+  pyBusy = true; setRunButtons(false); currentOut = outEl;
+  outEl.style.display='block'; outEl.className='pyout'; outEl.textContent='';
+  var crashed=false, errLine='', sawOutput=false;
+  bootPython().then(function(py){
+    function emit(s){ sawOutput = true; outEl.appendChild(document.createTextNode(s + '\n')); }
+    py.setStdout({batched: emit});
+    py.setStderr({batched: emit});
+    var src = code.replace(/\binput\s*\(/g, 'await __ainput(');
+    var ns = py.toPy({});
+    return py.runPythonAsync(src, {globals: ns})
+      .catch(function(e){
+        crashed = true;
+        var lines = String(e.message||e).trim().split('\n').filter(function(l){ return l.trim(); });
+        errLine = lines[lines.length-1] || 'Error';
+        if(String(e.message||e).indexOf('__pyStop__') !== -1) errLine = '__stopped__';
+      })
+      .finally(function(){ ns.destroy(); });
+  }).then(function(){
+    if(activeInput){ activeInput.row.remove(); activeInput = null; }
+    if(!sawOutput && !crashed) outEl.textContent = '(no output)';
+    if(crashed){
+      var sp=document.createElement('span'); sp.className='crash';
+      sp.textContent = (errLine==='__stopped__') ? '⏹ stopped' : '💥 ' + errLine;
+      outEl.appendChild(sp);
+    }
+    pyBusy=false; setRunButtons(true); currentOut=null;
+    if(doneCb) doneCb(crashed, outEl.textContent, errLine);
+  });
+}
+
+/* ===== cells: editable live Python ===== */
+function initPyCells(){
+  document.querySelectorAll('.pycell').forEach(function(cell){
+    var srcEl  = cell.querySelector('.pysrc');
+    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
+    cell.innerHTML='';
+
+    var bar=document.createElement('div'); bar.className='pybar';
+    var dots=document.createElement('div'); dots.className='pydots';
+    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
+    bar.appendChild(dots);
+
+    var run=document.createElement('button'); run.className='pyrun';
+    run.textContent = '⏳ waking…';
+    run.disabled = true;
+    bar.appendChild(run);
+
+    var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
+    stp.title='stop a program waiting for input';
+    stp.addEventListener('click', stopPy);
+    bar.appendChild(stp);
+    var st=document.createElement('span'); st.className='pystate';
+    st.textContent = '🐍 editable · runs here';
+    bar.appendChild(st);
+
+    var ta=document.createElement('textarea'); ta.className='pyta';
+    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
+    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
+
+    cell.appendChild(bar);
+    if(cell.classList.contains('side')){
+      var row=document.createElement('div'); row.className='pyrow';
+      row.appendChild(ta); row.appendChild(out);
+      out.style.display='block'; out.textContent='press ▶ Run';
+      cell.appendChild(row);
+    } else {
+      cell.appendChild(ta); cell.appendChild(out);
+    }
+
+    run.addEventListener('click', function(){ runPy(ta.value, out); });
+  });
+  bootPython();
+}
+function autoSizePyTextareas(scope){
+  (scope||document).querySelectorAll('.pyta').forEach(function(ta){
+    if(ta.offsetParent === null) return;         /* hidden slide: scrollHeight is 0 */
+    ta.style.height='auto';
+    ta.style.height=(ta.scrollHeight+4)+'px';
+  });
+}
+
+
+
+document.getElementById('fsbtn').addEventListener('click', function(){
+  var d=document.documentElement;
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else if(d.requestFullscreen){ d.requestFullscreen(); }
+});
+/* Tab must INDENT, not move focus — Python answers are whitespace-sensitive and
+   the browser's default steals the key. Shift-Tab dedents the current line. */
+document.addEventListener('keydown', function(e){
+  var t = e.target;
+  if(e.key !== 'Tab' || !t || !t.matches || !t.matches('textarea.pyta, textarea.g-ta')) return;
+  if(t.readOnly) return;
+  e.preventDefault(); e.stopPropagation();
+  if(e.shiftKey){
+    var ls = t.value.lastIndexOf('\n', t.selectionStart - 1) + 1, n = 0;
+    while(n < 4 && t.value.charAt(ls + n) === ' ') n++;
+    if(n) t.setRangeText('', ls, ls + n, 'preserve');
+  } else {
+    t.setRangeText('    ', t.selectionStart, t.selectionEnd, 'end');
+  }
+}, true);
+
+
+/* THE ANSWER FORM IS WORTH ALL OF THE MARKS, and it flips between the two papers:
+     Paper 3 — pseudocode. No 9618 P3 mark scheme 2021-2025 offers program code.
+     Paper 4 — a listed programming language; this deck uses Python. The
+               front page says "a mark of zero will be awarded if a programming
+               language other than those listed here is used."
+   So a boss adapted from a Paper 4 question must REFUSE pseudocode outright.
+   Accepting it teaches a habit that scores nothing in the exam it prepares for. */
+function looksLikePseudocode(src){
+  return /←|<-|\bENDPROCEDURE\b|\bENDFUNCTION\b|\bENDWHILE\b|\bENDIF\b|\bDECLARE\b|\bTHEN\b|\bRETURNS\b/i.test(src);
+}
+function looksLikeProgramCode(src){
+  return /\bdef\s+\w+|\bprint\s*\(/m.test(src);
+}
+</script>
+<script>
+/* ===== the crossing =====
+   Two algorithms whose ORDER and whose CONSTANT point in opposite directions:
+   A is quadratic with a tiny constant, B is n log n with a fat one. The slider is
+   the whole argument -- below n = 144 the "worse" algorithm wins, and it wins by a
+   factor of six at n = 10. Both misconceptions die here at once: a lower Big O is
+   not "faster", and the constants that Big O drops still decide everything until
+   n gets past the crossing.
+
+   The counts are exact, not decorative:  A = 0.5n²   B = 10 n log2 n            */
+
+/* A4b uses written comparison tasks rather than a code boss, so the
+   harness's boss branch is unreachable in this deck. The stub exists because the
+   branch still CALLS bossBehaviour: without it, adding a boss here later would
+   fail with a ReferenceError instead of a message that says what is missing. */
+function bossBehaviour(code, cb){ cb(null, 'crash:this deck ships no boss battery'); }
+
+function makeCross(hostId){
+  var host = document.getElementById(hostId);
+  if(!host) return;
+  var q = function(sfx){ return document.getElementById(hostId + '-' + sfx); };
+
+  var MINN = 2, MAXN = 10000, CROSS = 144;
+  var st = {n:10, timer:null};
+
+  function costA(n){ return 0.5 * n * n; }              /* insertion sort, tiny constant */
+  function costB(n){ return 10 * n * (Math.log(n) / Math.LN2); }  /* merge sort, fat constant */
+
+  /* the slider is linear in position but the interesting range is not, so map
+     position -> n logarithmically; otherwise every value below 500 is one pixel */
+  function posToN(p){
+    var t = p / 1000;
+    return Math.max(MINN, Math.round(Math.exp(Math.log(MINN) + t * (Math.log(MAXN) - Math.log(MINN)))));
+  }
+  function nToPos(n){
+    return Math.round(1000 * (Math.log(n) - Math.log(MINN)) / (Math.log(MAXN) - Math.log(MINN)));
+  }
+  function fmt(x){
+    x = Math.round(x);
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  host.innerHTML =
+    '<div class="xw">'
+  +   '<div class="xrow">'
+  +     '<label class="xlbl">n =</label>'
+  +     '<input id="' + hostId + '-sl" class="xsl" type="range" min="0" max="1000" value="' + nToPos(10) + '">'
+  +     '<span id="' + hostId + '-nv" class="xnv">10</span>'
+  +     '<button id="' + hostId + '-go" class="xbtn">▶ walk it up</button>'
+  +     '<button id="' + hostId + '-cr' + '" class="xbtn alt">jump near the crossing</button>'
+  +   '</div>'
+  +   '<div class="xbars">'
+  +     '<div class="xb"><span class="xbn">A &nbsp;<b>O(n²)</b>, tiny constant</span>'
+  +       '<div class="xtrack"><div id="' + hostId + '-ba" class="xfill a"></div></div>'
+  +       '<span id="' + hostId + '-va" class="xv">0</span></div>'
+  +     '<div class="xb"><span class="xbn">B &nbsp;<b>O(n log n)</b>, fat constant</span>'
+  +       '<div class="xtrack"><div id="' + hostId + '-bb" class="xfill b"></div></div>'
+  +       '<span id="' + hostId + '-vb" class="xv">0</span></div>'
+  +   '</div>'
+  +   '<div id="' + hostId + '-vd" class="xverdict"></div>'
+  + '</div>';
+
+  function draw(){
+    var n = st.n, a = costA(n), b = costB(n);
+    q('nv').textContent = fmt(n);
+    q('va').textContent = fmt(a);
+    q('vb').textContent = fmt(b);
+    /* Bar length is LINEAR against the bigger of the two, not logarithmic. A log
+       scale keeps both bars comfortable at every size and quietly lies about the
+       one thing this widget exists to show: on a log scale 50 against 332 looks
+       like a near-tie. The loser can shrink to a sliver; that IS the point. */
+    var top = Math.max(a, b, 1);
+    q('ba').style.width = Math.max(1.2, 100 * a / top) + '%';
+    q('bb').style.width = Math.max(1.2, 100 * b / top) + '%';
+    var vd = q('vd'), ratio;
+    if(Math.abs(a - b) / Math.max(a, b) < 0.01){
+      vd.className = 'xverdict even';
+      vd.innerHTML = '<b>Costs differ by less than 1% at n = ' + fmt(n) + '.</b> '
+                   + (a === b ? 'The model costs are equal here. ' : (a < b ? 'A' : 'B') + ' has a slightly lower model cost here. ')
+                   + '<span class="xnote">For these models, the winner changes between n = 143 and n = 144.</span>';
+    } else if(a < b){
+      ratio = b / a;
+      vd.className = 'xverdict awin';
+      vd.innerHTML = '<b>A wins</b>, by ' + ratio.toFixed(1) + '×. '
+                   + '<span class="xnote">The quadratic algorithm is beating the n log n one, and it is not close. '
+                   + 'Its order is worse and it does not matter yet.</span>';
+    } else {
+      ratio = a / b;
+      vd.className = 'xverdict bwin';
+      vd.innerHTML = '<b>B wins</b>, by ' + ratio.toFixed(1) + '×. '
+                   + '<span class="xnote">' + (ratio > 10
+                       ? 'And from here it only gets worse for A — every doubling of n doubles this gap again.'
+                       : 'Past the crossing. The order has taken over from the constants, and it never gives it back.')
+                   + '</span>';
+    }
+  }
+
+  function setN(n){ st.n = n; q('sl').value = nToPos(n); draw(); }
+
+  q('sl').addEventListener('input', function(){
+    if(st.timer){ clearInterval(st.timer); st.timer = null; q('go').textContent = '▶ walk it up'; }
+    st.n = posToN(parseInt(q('sl').value, 10)); draw();
+  });
+
+  q('cr').addEventListener('click', function(){
+    if(st.timer){ clearInterval(st.timer); st.timer = null; q('go').textContent = '▶ walk it up'; }
+    setN(CROSS);
+  });
+
+  /* deliberately slow: it is meant to be started, taught away from, and come back to
+     (Reveal keeps every slide in the DOM, so the interval goes on ticking) */
+  q('go').addEventListener('click', function(){
+    if(st.timer){ clearInterval(st.timer); st.timer = null; q('go').textContent = '▶ walk it up'; return; }
+    q('go').textContent = '⏸ pause';
+    var p = nToPos(st.n >= MAXN ? MINN : st.n);
+    st.timer = setInterval(function(){
+      p += 4;
+      if(p >= 1000){ p = 1000; clearInterval(st.timer); st.timer = null; q('go').textContent = '▶ walk it up'; }
+      st.n = posToN(p); draw();
+    }, 90);
+  });
+
+  setN(10);
+}
+</script>
+<script>
+/* ===== 🎮 Judging Algorithms — six stages, two bosses ===== */
+var G = {i:0, score:0, locked:false, earned:{}, reviews:{}};
+
+/* The teacher walks backwards and forwards through the stages, so a stage must
+   be answerable twice without being paid for twice. Record what each stage
+   earned and REPLACE it, rather than adding to a running total. */
+function gAwardAt(idx, n){
+  G.earned[idx] = n;
+  /* the total is DERIVED from the ledger, never accumulated -- so a stage can be
+     answered any number of times, and nothing can leave the two disagreeing */
+  var t = 0;
+  for(var k in G.earned) if(G.earned.hasOwnProperty(k)) t += G.earned[k];
+  G.score = t;
+  var sc = document.getElementById('g-score');
+  if(sc) sc.textContent = G.score > 0 ? ('score ' + G.score) : '';
+}
+function gAward(n){ gAwardAt(G.i, n); }
+
+/* the boss marks a REWRITE, so the mark points follow the student's own naming */
+function bvName(src){
+  var m = /def\s+(\w+)\s*\(/.exec(src);
+  if(m) return m[1];
+  m = /static\s+[\w\[\]<>]+\s+(\w+)\s*\(/.exec(src);
+  if(m) return m[1];
+  m = /\b(?:FUNCTION|PROCEDURE)\s+(\w+)\s*\(/i.exec(src);
+  return m ? m[1] : null;
+}
+function twoLoops(src){                       /* two loop headers, one inside the other */
+  var loops = (src.match(/\b(for|while)\b/g) || []).length;
+  return loops >= 2;
+}
+
+/* A04b: conceptual checks plus written P3 answer forms.
+   Prose uses capped human rubrics. Historical samples do not restrict syllabus scope. */
+
+/* Big O has many legal spellings and a student may not lose a mark to one of
+   them: O(n^2), O(n2), O(n²) and "O(n^2) " are the same answer. */
+var BIGO = {
+  one:  /^o\(1\)$/,
+  logn: /^o\(log(2|₂|_2)?\(?n\)?\)$/,
+  n:    /^o\(n\)$/,
+  nlogn:/^o\(nlog(2|₂|_2)?\(?n\)?\)$/,
+  n2:   /^o\(n(\^2|2|²|\*n)\)$/
+};
+
+var SNIP = function(title, body){
+  return '<div style="font-size:.82em;"><b>' + title + '</b>'
+       + '<div class="ps" style="font-size:.86em; margin:2px 0 0;">' + body + '</div></div>';
+};
+
+var STAGES = [
+ { name:'Stage 1 · read the order off the code', paper:'P3',
+   q:'Give the Big O of each of these. <span style="color:#8890b5;">Write them like '
+    + '<span class="mono">O(n)</span> — spacing and <span class="mono">n^2</span> vs '
+    + '<span class="mono">n²</span> do not matter.</span>'
+    + '<div class="two-col" style="gap:14px; margin-top:5px;">'
+    + '<div>' + SNIP('A', '<span class="k">for</span> x <span class="k">in</span> A:\n    total = total + x')
+    +          SNIP('C', 'i = len(A)\n<span class="k">while</span> i &gt; 1:\n    i = i // 2') + '</div>'
+    + '<div>' + SNIP('B', '<span class="k">for</span> x <span class="k">in</span> A:\n    <span class="k">for</span> y <span class="k">in</span> A:\n        pairs = pairs + 1')
+    +          SNIP('D', 'first = A[0]') + '</div>'
+    + '</div>',
+   table:true, total:4,
+   fields:[
+     {lbl:'A', want:'O(n)', re:BIGO.n,
+      why:'One loop over the array, once. Double the array and you double the work.'},
+     {lbl:'B', want:'O(n²)', re:BIGO.n2,
+      why:'A loop inside a loop, each of length n. <b>Nested loops multiply</b> — n × n.'},
+     {lbl:'C', want:'O(log n)', re:BIGO.logn,
+      why:'The counter <b>halves</b> instead of stepping. The number of halvings from n down to 1 is log₂ n — the same halving as your binary search.'},
+     {lbl:'D', want:'O(1)', re:BIGO.one,
+      why:'No loop at all. One indexed read costs the same whether the array holds ten items or ten million — that is what constant time means.'}
+   ],
+   afterOk:'Count the work using the actual bounds. Sequential work adds; independent full nested passes multiply; repeated halving gives logarithmic growth.'},
+
+ { name:'Stage 2 · which one would you ship?', paper:'P3',
+   q:'Algorithm <b>A</b> costs <span class="mono">0.5 × n²</span> operations. Algorithm <b>B</b> costs '
+    + '<span class="mono">10 × n × log₂ n</span>.<br><b>On an array of 10 items, which one does less work?</b>',
+   opts:[
+     {t:'<b>A</b> — the O(n²) one', ok:true,
+      why:'50 operations against 332. The <b>worse</b> order wins by a factor of six, because 10 items is nowhere near the crossing at n = 144. Big O ranks how things <b>scale</b>, not how fast they are — and below the crossing the constants decide everything.'},
+     {t:'<b>B</b> — the O(n log n) one', ok:false,
+      why:'That is the answer Big O <em>alone</em> would give you, and at this size it is wrong. Put n = 10 into both: A does 0.5 × 100 = 50, B does 10 × 10 × 3.32 = 332. B does nearly seven times the work.'},
+     {t:'they cost the same', ok:false,
+      why:'The models cross between n = 143 and 144 (for n ≥ 10); n = 144 is a near-tie, not exact equality. At 10 they are a factor of about 6.6 apart.'},
+     {t:'you cannot say without knowing the machine', ok:false,
+      why:'A fair thought, and it would be right if the question asked about <b>seconds</b>. It asks about <b>operations</b>, which is a property of the algorithm alone. That is precisely the split Big O is built on.'}
+   ]},
+
+ { name:'Stage 3 · the case is half the claim', paper:'P3',
+   q:'Big O is an upper bound on <b>whichever case you point it at</b>, so each of these needs its own answer.',
+   table:true, total:3,
+   fields:[
+     {lbl:'linear search, <b>best</b> case', want:'O(1)', re:BIGO.one,
+      why:'The target is the very first item, so it costs one comparison however long the list is.'},
+     {lbl:'binary search, <b>worst</b> case', want:'O(log n)', re:BIGO.logn,
+      why:'Every comparison throws away half of what is left, so even the worst target is found — or ruled out — in about log₂ n steps.'},
+     {lbl:'bubble sort <b>with a flag</b>, best', want:'O(n)', re:BIGO.n,
+      why:'Already-sorted data: one pass finds nothing to swap and the flag stops it. You measured this last lesson — <b>39</b> comparisons on 40 items, which is n − 1.'}
+   ],
+   afterOk:'Use the case stated in the question, or name it explicitly in your answer. Big O itself does not mean worst case.'},
+
+ { name:'Stage 4 · the structures you built', paper:'P3',
+   q:'Every one of these you have written yourself in the last four lessons. Now give it its complexity.',
+   table:true, total:3,
+   fields:[
+     {lbl:'read <span class="mono">A[7]</span> in an array', want:'O(1)', re:BIGO.one,
+      why:'The machine computes the address and reads it. The array\'s length is irrelevant — this is the fastest thing in computing.'},
+     {lbl:'find a value in a <b>linked list</b>', want:'O(n)', re:BIGO.n,
+      why:'You must follow the pointers from the head; there is no way to jump to the middle. Slow to find — and yet <span class="mono">O(1)</span> to insert once you are there, which is the whole reason the structure exists.'},
+     {lbl:'find in a <b>balanced</b> binary search tree', want:'O(log n)', re:BIGO.logn,
+      why:'Each comparison discards one subtree, so the cost is the height. <b>Balanced</b> is doing the work in that sentence: insert 1, 2, 3, 4, 5 in order and the tree becomes a linked list, and the cost becomes O(n).'}
+   ],
+   afterOk:'<b>The array row is the one to remember.</b> Reading <span class="mono">A[i]</span> is O(1) and <em>searching</em> the same array is O(n) — same structure, different question, different answer.'},
+
+ { name:'Stage 5 · growth · commit, then review', paper:'P3', review:true,
+   q:'<b>Describe the performance of binary search as the number of data items increases. Refer to Big O notation. [2]</b><br>'
+    + '<span style="color:#8890b5;">June 2024 P31 Q10(c), wording and answer entry adapted; published grouped rubric. © UCLES.</span>',
+   rows:4, total:2,
+   rubric:[
+     {cap:1, title:'Group A · maximum 1', points:[
+       'MP1: binary search is O(log₂ n).',
+       'MP2: Big O indicates the time/space complexity of an algorithm.']},
+     {cap:1, title:'Group B · maximum 1', points:[
+       'MP3: search time increases logarithmically as the number of items increases linearly.',
+       'MP4: equivalently, time increases linearly as the number of items increases exponentially.',
+       'MP5: the search field repeatedly shrinks, so relatively few comparisons are needed before a match or exhaustion.']}
+   ],
+   model:'Binary search is O(log₂ n). Its search time grows logarithmically as the number of items grows linearly.' },
+
+ { name:'Stage 6 · comparison · commit, then review', paper:'P3', review:true,
+   q:'<b>Compare binary and linear search using Big O notation for order of time complexity. [3]</b><br>'
+    + '<b>Given:</b> a sorted array of n items; compare worst-case search time, excluding sorting.<br>'
+    + '<span style="color:#8890b5;">June 2022 P32 Q8(c), wording/answer entry adapted and case made explicit. Published rubric. © UCLES.</span>',
+   rows:4, total:3,
+   rubric:[
+     {cap:1, title:'MP1 · maximum 1', points:['Both values: linear O(n) and binary O(log₂ n).']},
+     {cap:1, title:'MP2 · maximum 1', points:['Time grows linearly with item count for linear search and logarithmically for binary search.']},
+     {cap:1, title:'MP3 · maximum 1', points:['As n grows, binary-search time increases less rapidly than linear-search time.']}
+   ],
+   model:'Worst-case linear search is O(n), binary search O(log₂ n). As n grows, their search times grow linearly and logarithmically respectively. Binary-search time therefore increases less rapidly.' }
+];
+function gEl(id){ return document.getElementById(id); }
+</script>
+<script>
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LIVE LLM MARKING — the third mechanic, and the consensus across all three.
+
+   The key is NOT in this file and never will be: a deck gets emailed and
+   copied, so a key written here would be a published key. Instead a small
+   server runs on the teacher's machine (grade-server.py), holds the key in
+   .env, and marks on request. If it is not there — a student's laptop, or
+   the teacher simply hasn't started it — the fetch fails and the deck keeps
+   its two deterministic mechanics. The off-switch is the absence of the
+   process; there is nothing to remember to turn off.
+   ═══════════════════════════════════════════════════════════════════════ */
+var LLM = { url:'http://127.0.0.1:8788', available:false, on:true, task:'A04b-p3-compare' };
+
+function llmChip(){
+  var c = document.getElementById('llmchip');
+  if(!c) return;
+  if(!LLM.available){
+    /* it used to hide itself, which looks identical to "not wired up" -- and that
+       is exactly the wrong thing for the one person who can start the server */
+    c.className = 'off';
+    c.textContent = '\u26a1 no LLM \u2014 click for help';
+    c.title = 'Live marking is off. Click for the two steps that turn it on.';
+    return;
+  }
+  c.className = LLM.on ? 'on' : 'off';
+  c.textContent = LLM.on ? '\u26a1 LLM marking on' : '\u26a1 LLM marking off';
+  c.title = 'click to turn the second marker off';
+}
+/* A tooltip used to be the ONLY place the deck said how to start the server,
+   which is no help at all to someone who has already clicked and seen nothing
+   happen. Say it on the screen, in the two steps that actually do it. */
+function llmHelp(show){
+  var h = document.getElementById('llmhelp');
+  if(h) h.style.display = show ? 'block' : 'none';
+}
+function llmDetect(cb){
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, 1200);
+  fetch(LLM.url + '/ping', {signal: ctl.signal, cache: 'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ clearTimeout(t); LLM.available = !!(j && j.ok && j.key);
+                       llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
+    .catch(function(){ clearTimeout(t); LLM.available = false; llmChip(); if(cb) cb(); });
+}
+/* Detecting once, at load, was the real defect: the natural order is to open the
+   deck, SEE that marking is off, and only then go and start the server -- by
+   which time the one probe has long since failed. So keep looking. A refused
+   connection to localhost costs nothing, and it stops as soon as it connects. */
+function llmWatch(){
+  setInterval(function(){
+    if(LLM.available || document.hidden) return;
+    llmDetect();
+  }, 5000);
+}
+function llmBind(){
+  var c = document.getElementById('llmchip');
+  if(!c || c.__bound) return;
+  c.__bound = true;
+  c.addEventListener('click', function(){
+    if(!LLM.available){
+      c.textContent = '\u26a1 looking for the server\u2026';
+      llmHelp(true);
+      llmDetect(function(){ if(!LLM.available) llmChip(); });
+      return;
+    }
+    LLM.on = !LLM.on; llmChip();
+  });
+  var x = document.getElementById('llmhelp-x');
+  if(x) x.addEventListener('click', function(){ llmHelp(false); });
+  /* start looking here, NOT inside Reveal's .then() -- anything that throws in
+     there (a CDN that did not answer, say) used to take the LLM down with it */
+  llmDetect();
+  llmWatch();
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
+else llmBind();
+/* the consensus: two mechanics mark the SAME mark points, so they are directly
+   comparable; the third asks a different question (does it actually work?).
+   Agreement across all three is the strong signal Kepei is after. */
+function consensusHtml(regexRaw, llmAwarded, ofPoints, behaviour){
+  var gap = Math.abs(regexRaw - llmAwarded);
+  var beh = null;
+  if(behaviour && behaviour.indexOf('|') > -1){
+    var parts = behaviour.split('||')[0].split('|');
+    var ok = parts.filter(function(p){ return p.charAt(0) === '1'; }).length;
+    beh = {ok: ok, of: parts.length};
+  }
+  var rows = '<b>pattern ' + regexRaw + '/' + ofPoints + '</b> &nbsp;·&nbsp; '
+           + '<b>reader ' + llmAwarded + '/' + ofPoints + '</b>'
+           + (beh ? ' &nbsp;·&nbsp; <b>ran ' + beh.ok + '/' + beh.of + '</b>' : '');
+  if(gap > 1)
+    return '<div class="g-cons split">' + rows + ' — <b>the two markers disagree by ' + gap + '.</b> '
+         + 'The pattern-matcher looks for shapes and the reader looks for meaning, so a gap this big '
+         + 'usually means one of them is being fooled. <b>Worth a human eye</b> — show this to your teacher.</div>';
+  if(!beh)
+    return '<div class="g-cons agree">' + rows + ' — the two markers agree.</div>';
+  var markFrac = (regexRaw + llmAwarded) / (2 * Math.max(1, ofPoints));
+  var behFrac  = beh.ok / Math.max(1, beh.of);
+  /* THE CASE THAT LOOKS LIKE SUCCESS. The program is right and both markers
+     refuse it, because the question asked for a METHOD and got an answer. The
+     old wording here assumed the opposite arrangement and told a student with a
+     working loop that "the method is visibly there", which is exactly backwards. */
+  if(behFrac - markFrac >= 0.3)
+    return '<div class="g-cons split">' + rows + ' — <b>it works, and it still scores ' + regexRaw + '.</b> '
+         + 'The machine is satisfied: your answers are right. Both markers refused it anyway, because the '
+         + 'question did not ask for the answer — it asked for a particular <b>method</b>. On this paper that '
+         + 'is not a style note, it is most of the marks.</div>';
+  if(behFrac >= 1 && markFrac >= 0.6)
+    return '<div class="g-cons agree">' + rows + ' — <b>all three agree.</b> Two markers read your '
+         + 'code the same way and it does the right thing when run. This mark is about as certain '
+         + 'as marking gets.</div>';
+  if(markFrac >= 0.6)
+    return '<div class="g-cons split">' + rows + ' — <b>the two markers agree, the machine does not.</b> '
+         + 'The method is visibly there, so an examiner would pay for it — but it does not work yet. '
+         + 'You would score here and still have a bug to find.</div>';
+  return '<div class="g-cons split">' + rows + ' — <b>all three agree, and none of them are happy.</b> '
+       + 'This is not a marking dispute: the answer is not there yet. Start from the first ✗ on the left.</div>';
+}
+
+/* A written Paper 3 answer is where the pattern-matcher is at its worst: it cannot
+   forgive "pused" for "pushed", and it cannot see a mark point made in the student's
+   own words. Cambridge marks the NOTION. So the reader runs on these stages too --
+   and on prose its verdict is the one to trust. */
+function proseConsensus(regexRaw, llmAwarded, cap){
+  var r = Math.min(regexRaw, cap), l = Math.min(llmAwarded, cap);
+  if(l > r)
+    return '<div class="g-cons split"><b>pattern ' + r + '/' + cap + '</b> &nbsp;·&nbsp; <b>reader ' + l + '/' + cap + '</b>'
+         + ' — <b>take the reader\'s mark: ' + l + '.</b> The pattern-matcher looks for particular words, so it '
+         + 'misses a mark point made in your own words and it cannot forgive a typo. On a written question '
+         + 'an examiner marks the <b>idea</b>, which is what the reader just did.</div>';
+  if(l < r)
+    return '<div class="g-cons split"><b>pattern ' + r + '/' + cap + '</b> &nbsp;·&nbsp; <b>reader ' + l + '/' + cap + '</b>'
+         + ' — <b>the reader is stricter here.</b> The words are present but it did not think the idea was. '
+         + '<b>Worth a human eye</b> — this is the case a teacher should settle.</div>';
+  return '<div class="g-cons agree"><b>pattern ' + r + '/' + cap + '</b> &nbsp;·&nbsp; <b>reader ' + l + '/' + cap + '</b>'
+       + ' — <b>both markers agree.</b> On a written answer that is about as certain as it gets.</div>';
+}
+/* The click-prompt under a marked answer doubles as the reader's status line.
+   Without this the deck says "press next → when you are ready" while the reader
+   is still working, which is an invitation to throw its answer away — and that is
+   exactly what happened the first time this was taught. */
+function gWaiting(on){
+  G.llmBusy = !!on;
+  var h = document.getElementById('g-nexthint');
+  if(!h){
+    /* the code boss's prompt is a plain sentence with no element of its own, so give
+       it one rather than letting the notice silently do nothing */
+    var say = document.getElementById('g-say');
+    if(!say) return;
+    h = document.createElement('div');
+    h.id = 'g-nexthint'; h.style.marginTop = '5px';
+    say.appendChild(h);
+  }
+  if(on){
+    if(h.getAttribute('data-orig') === null) h.setAttribute('data-orig', h.innerHTML);
+    h.style.opacity = '1';
+    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> '
+                + 'give it a few seconds \u2014 clicking now moves on without it.</span>';
+  } else {
+    var orig = h.getAttribute('data-orig');
+    h.style.opacity = '.65';
+    if(orig !== null){ h.innerHTML = orig; h.removeAttribute('data-orig'); }
+    else h.textContent = '';
+  }
+}
+function llmMarkProse(task, fn, answer, regexRaw, cap, host){
+  var idx = G.i;                    /* the stage this belongs to, captured before it can move */
+  if(!LLM.available || !LLM.on || !host) return;
+  var grid = host.closest ? host.closest('.g-grid') : null;
+  if(grid) grid.classList.add('three');
+  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
+                 + '(this one marks the idea, not the words)</span></p>';
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, 45000);
+  gWaiting(true);
+  fetch(LLM.url + '/mark', {
+    method:'POST', signal: ctl.signal,
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task: task, fn: fn, lang:'py', code: answer})
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      clearTimeout(t); gWaiting(false);
+      if(!j || j.error){
+        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">('
+                       + ((j && j.error) || 'no reply') + ')</span></p>';
+        return;
+      }
+      var rows = j.marks.map(function(m){
+        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
+             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
+      }).join('');
+      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it marked the idea, not the words</b></p>'
+                     + '<ul class="g-mp">' + rows + '</ul>'
+                     + proseConsensus(regexRaw, j.awarded, cap)
+                     + (j.missed ? '<p style="font-size:.48em; margin:4px 0 0;">' + j.missed + '</p>' : '');
+      /* the reader is the better marker on prose, so the running total follows it */
+      var better = Math.min(j.awarded, cap) - Math.min(regexRaw, cap);
+      if(better > 0) gAwardAt(idx, Math.min(j.awarded, cap));
+    })
+    .catch(function(){
+      clearTimeout(t); gWaiting(false);
+      host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">(is grade-server.py running?)</span></p>';
+    });
+}
+function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host, task, fn){
+  if(!LLM.available || !LLM.on || !host) return;
+  var grid = host.closest ? host.closest('.g-grid') : null;
+  if(grid) grid.classList.add('three');
+  host.innerHTML = '<p class="g-lbl">a second marker is reading it… <span class="conf">'
+                 + '(this one reads for meaning, not for patterns)</span></p>';
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, 45000);
+  gWaiting(true);
+  fetch(LLM.url + '/mark', {
+    method:'POST', signal: ctl.signal,
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task: task || LLM.task, fn: fn || 'BubbleSort', lang: lang, code: code})
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      clearTimeout(t); gWaiting(false);
+      if(!j || j.error){
+        host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">'
+                       + '(' + ((j && j.error) || 'no reply') + ')</span></p>';
+        return;
+      }
+      var rows = j.marks.map(function(m){
+        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'✓':'✗') + '</span> '
+             + m.point + (m.why ? ' <span class="conf">— ' + m.why + '</span>' : '') + '</li>';
+      }).join('');
+      host.innerHTML = '<p class="g-lbl">what a second marker says — <b>it read your code, it did not run it</b></p>'
+                     + '<ul class="g-mp">' + rows + '</ul>'
+                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
+                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
+    })
+    .catch(function(){
+      clearTimeout(t); gWaiting(false);
+      host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">(is grade-server.py running?)</span></p>';
+    });
+}
+
+function behaviourHtml(raw, err){
+  if(err === 'pseudo')
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li style="color:#8890b5;">'
+         + 'There is pseudocode mixed into this, so it will not run — and on Paper 4 it would not score either. '
+         + 'Write it as <b>Python</b> throughout.</li></ul>';
+  if(err && err.indexOf('crash:') === 0)
+    return '<p class="g-lbl">what the machine says</p><ul class="g-mp"><li><span class="n">✗</span> '
+         + 'it did not run — <span class="mono">' + err.slice(6) + '</span></li>'
+         + '<li style="color:#8890b5;">Mark points can be ticked by text that never executes. This is why both columns exist.</li></ul>';
+  if(!raw) return '';
+  var parts = raw.split('||');
+  var rows = parts[0].split('|').map(function(t){
+    var ok = t.charAt(0) === '1', label = t.slice(2);
+    return '<li><span class="' + (ok?'y':'n') + '">' + (ok?'✓':'✗') + '</span> ' + label + '</li>';
+  }).join('');
+  if(parts[1])
+    rows += '<li style="color:#8890b5;">first error raised: <span class="mono">' + parts[1] + '</span>'
+         +  (parts[1].indexOf('RecursionError') > -1
+             ? ' — a loop that never ends. Check what moves your loop variable towards its limit.'
+             : parts[1].indexOf('NameError') > -1
+             ? ' — check the name: the judge calls it exactly what the question did.' : '')
+         +  '</li>';
+  return '<p class="g-lbl">what the machine says — <b>your code was actually run</b></p><ul class="g-mp">' + rows + '</ul>';
+}
+
+function bossCodePane(code){
+  var esc = String(code).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<div><p class="g-lbl">your answer</p><pre class="g-ans">' + esc + '</pre></div>';
+}
+function gProg(){
+  var p=gEl('g-prog'); p.innerHTML='';
+  STAGES.forEach(function(_,k){
+    var i=document.createElement('i');
+    i.className = k<G.i ? 'done' : (k===G.i ? 'cur' : '');
+    p.appendChild(i);
+  });
+}
+function gSay(html, cls){
+  var s=gEl('g-say'); s.innerHTML=html||'&nbsp;'; s.className='g-say'+(cls?' '+cls:'');
+  /* On the code boss, gSay runs AFTER the answer has gone to the reader, so a notice
+     written before this call would be wiped. Re-assert it from the flag instead. */
+  if(G.llmBusy) gWaiting(true);
+}
+
+
+function markOne(ans, mps, cap, quiet, groupCaps){
+  var got=0, rows=[], listed=0, byGrp={};
+  mps.forEach(function(m){
+    var ok = m.fn ? m.fn(ans) : (m.re.test(ans) && (!m.also || m.also.test(ans)));
+    if(ok){
+      /* a mark scheme that caps PART of its list -- Nov 2023 P32 Q9(c) scores its
+         framing sentence on its own (max 1) and takes max 3 from the other four.
+         Capping the total alone would let four body bullets buy the first mark. */
+      if(groupCaps && m.grp){
+        byGrp[m.grp] = (byGrp[m.grp] || 0) + m.pts;
+        if(byGrp[m.grp] <= groupCaps[m.grp]) got += m.pts;
+      } else got += m.pts;
+    }
+    listed += m.pts;
+    rows.push('<li><span class="'+(ok?'y':'n')+'">'+(ok?'✓':'✗')+'</span> '+m.label+' <b>['+m.pts+']</b></li>');
+  });
+  var raw = got, missed = listed - got;
+  if(cap && got > cap) got = cap;
+  /* the cap footnotes are irrelevant when the answer was refused on form, and they are
+     the two longest rows in the column — dropping them keeps the panel on the stage */
+  if(cap && listed > cap && !quiet){
+    rows.push('<li style="color:#8890b5;">the published scheme lists <b>'+listed+'</b> bullets for a maximum of <b>'+cap
+            + '</b> marks — mark schemes are generous on purpose, so you do not have to hit every one</li>');
+    if(missed > 0 && got === cap)
+      rows.push('<li style="color:#8890b5;">…which is why you have <b>'+cap+'/'+cap+'</b> with <b>'+missed
+              + '</b> bullet'+(missed>1?'s':'')+' missing. <b>The cap did that, not your answer</b> — and the '
+              + 'bullet you dropped is still a bug in your program.</li>');
+  }
+  return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
+}
+/* A04b pilot: prose is committed before human review, never keyword-scored.
+   State is in memory only; no reader request, service change or persisted student data. */
+function drawA04bReview(host, stage){
+  var idx=G.i, state=G.reviews[idx] || (G.reviews[idx]={answer:'', committed:false, rubric:false, model:false});
+  function render(){
+    host.innerHTML='';
+    var grid=document.createElement('div'); grid.className='g-grid';
+    var left=document.createElement('div'), right=document.createElement('div');
+    var label=document.createElement('p'); label.className='g-lbl'; label.textContent='Your answer — or write on paper'; left.appendChild(label);
+    var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=stage.rows; ta.spellcheck=false;
+    ta.value=state.answer; ta.readOnly=state.committed; ta.setAttribute('aria-label','Your written answer');
+    ta.addEventListener('input',function(){state.answer=ta.value;}); left.appendChild(ta);
+    var commit=document.createElement('button'); commit.className='g-sub';
+    commit.textContent=state.committed ? 'Edit / try again' : 'Commit typed or paper answer';
+    commit.addEventListener('click',function(){state.answer=ta.value; state.committed=!state.committed; state.rubric=false; state.model=false; render();});
+    left.appendChild(commit);
+    var note=document.createElement('p'); note.className='g-lbl'; note.textContent='Human review only. This answer receives no automatic score.'; right.appendChild(note);
+    if(state.committed){
+      var rubric=document.createElement('button'); rubric.className='g-sub'; rubric.textContent=state.rubric ? 'Hide rubric' : 'Show capped rubric';
+      rubric.addEventListener('click',function(){state.rubric=!state.rubric; render();}); right.appendChild(rubric);
+      if(state.rubric){
+        var list=document.createElement('div'); list.className='a04b-rubric';
+        stage.rubric.forEach(function(group){
+          var title=document.createElement('p'); title.textContent=group.title; title.style.fontWeight='bold'; list.appendChild(title);
+          group.points.forEach(function(point){var line=document.createElement('p'); line.textContent=point; list.appendChild(line);});
+        });
+        var cap=document.createElement('p'); cap.textContent='Total maximum '+stage.total+'. Accept equivalent meanings; credit each idea only within its group cap.'; list.appendChild(cap); right.appendChild(list);
+      }
+      var model=document.createElement('button'); model.className='g-sub'; model.textContent=state.model ? 'Hide optional model' : 'Show optional model';
+      model.addEventListener('click',function(){state.model=!state.model; render();}); right.appendChild(model);
+      if(state.model){var answer=document.createElement('div'); answer.className='g-model'; answer.textContent=stage.model; right.appendChild(answer);}
+    }
+    grid.appendChild(left); grid.appendChild(right); host.appendChild(grid);
+  }
+  render();
+}
+
+function gDraw(){
+  var s=STAGES[G.i];
+  /* which paper this stage is, because the ANSWER FORM changes with it and the
+     form is worth all of the marks */
+  gEl('g-stage').innerHTML = s.name
+    + (s.paper ? ' <span class="pbadge ' + (s.paper==='P4'?'p4':'p3') + '">' + s.paper + '</span>' : '');
+  gEl('g-score').textContent = G.score>0 ? ('score ' + G.score) : '';
+  gNavState();
+  gEl('g-q').innerHTML = s.q;
+  var b=gEl('g-body'); b.innerHTML=''; G.locked=false; gSay('');
+  gProg();
+
+  if(s.opts){
+    var wrap=document.createElement('div'); wrap.className='g-opts';
+    s.opts.forEach(function(o){
+      var btn=document.createElement('button'); btn.className='g-b'; btn.style.flex='1 1 44%';
+      btn.innerHTML=o.t;
+      btn.addEventListener('click', function(){
+        if(G.locked) return;
+        if(o.ok){
+          G.locked=true; btn.className='g-b yes'; gAward(1);
+          gSay('✓ ' + o.why + ' <span style="opacity:.6">— press next → when you are ready</span>', 'ok'); /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */
+        } else {
+          btn.className='g-b no';
+          gSay('✗ ' + o.why, 'bad');
+        }
+      });
+      wrap.appendChild(btn);
+    });
+    b.appendChild(wrap);
+  } else if(s.review){
+    drawA04bReview(b, s);
+  } else if(s.boss){
+    var grid=document.createElement('div'); grid.className='g-grid';
+    s.parts.forEach(function(p, idx){
+      var col=document.createElement('div');
+      var lab=document.createElement('p'); lab.className='g-lbl'; lab.innerHTML=p.lbl;
+      var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=p.rows; ta.spellcheck=false;
+      ta.id='boss'+idx;
+      col.appendChild(lab); col.appendChild(ta); grid.appendChild(col);
+    });
+    b.appendChild(grid);
+    var sub=document.createElement('button'); sub.className='g-sub'; sub.textContent='mark it, out of '+s.total;
+    sub.addEventListener('click', function(){
+      var code = gEl('boss0').value;
+      /* Paper 4 refuses pseudocode by rubric, so this marker refuses it too — but it
+         still shows what the logic would have earned, because the logic is not the
+         thing that was wrong. */
+      var wrongForm = looksLikePseudocode(code) && !looksLikeProgramCode(code);
+      var total=0, cells='', rawHits=0, ofPoints=0;
+      s.parts.forEach(function(p, idx){
+        var r=markOne(gEl('boss'+idx).value, p.mps, s.cap, wrongForm);
+        total+=r.got;
+        /* the LLM marks the same bullets uncapped, so compare uncapped counts */
+        p.mps.forEach(function(m){
+          ofPoints += m.pts;
+          var hit = m.fn ? m.fn(gEl('boss'+idx).value) : (m.re.test(gEl('boss'+idx).value) && (!m.also || m.also.test(gEl('boss'+idx).value)));
+          if(hit) rawHits += m.pts;
+        });
+        if(wrongForm) return;      /* the ticks match against CODE, so a pseudocode
+                                     answer fails some of them on notation alone --
+                                     showing them next to a refusal reads as a second fault */
+        cells += '<div><p class="g-lbl">'
+              +  (p.lbl)
+              +  ' &mdash; <b class="'+(r.got>=s.total?'accent1':'accent2')+'">'+r.got+'</b></p>'+r.html+'</div>';
+      });
+      if(wrongForm){
+        b.innerHTML = '<div class="g-res"><div class="g-tot" style="color:var(--accent2);">0 / '+s.total+'</div>'
+                    + '<div class="g-grid">' + bossCodePane(code)
+                    + '<div>'
+                    + '<div class="formwarn"><b>That is pseudocode, and this is Paper 4.</b><br>'
+                    + 'The front page of every Paper 4 says: <i>"a mark of zero will be awarded if a programming '
+                    + 'language other than those listed here is used"</i> — this deck uses Python, console mode. '
+                    + 'Pseudocode is not one of them.<br><br>'
+                    + 'Nothing here has been marked, because the mark points attach to <b>code</b>. '
+                    + 'Write the same answer in <b>'
+                    + 'Python'
+                    + '</b> and press mark again — then you find out what it is actually worth.</div></div>'
+                    + '</div></div>';
+        gSay('<b>Zero — and not for anything that was wrong with your answer.</b> '
+           + 'On this paper the form is worth all of the marks. Press next → to finish.', 'bad');
+        if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+        return;
+      }
+      gAward(total);
+      /* the results REPLACE the inputs rather than stacking below them */
+      b.innerHTML = '<div class="g-res"><div class="g-tot">'+total+' / '+s.total+'</div>'
+                  + '<div class="g-grid">' + bossCodePane(code)
+                  + '<div>' + cells
+                  +   '<div id="g-beh"><p class="g-lbl">what the machine says</p>'
+                  +   '<ul class="g-mp"><li style="color:#8890b5;">running your code…</li></ul></div>'
+                  + '</div>'
+                  + '<div id="g-llm" class="g-llm"></div>'
+                  + '</div></div>';
+      /* the verdict must read BOTH columns — "Strong" printed over a program the
+         machine could not even run is the exact dishonesty this panel exists to kill */
+      bossBehaviour(code, function(raw, err){
+        var el = document.getElementById('g-beh');
+        if(el) el.innerHTML = behaviourHtml(raw, err);
+        /* the third mechanic, and the only one that can read for MEANING. It runs
+           last because the consensus needs the other two to have finished. */
+        llmMark(code, 'py',
+                rawHits, ofPoints, raw, document.getElementById('g-llm'), s.llmTask, s.llmFn);
+        if(err && err.indexOf('crash:') === 0){
+          gSay('<b>' + total + ' on the mark points — and it did not run at all.</b> '
+             + 'Fix the error on the right first; marks awarded to code that cannot execute '
+             + 'are marks you will not get twice. Press next → to finish.', 'bad');
+          return;
+        }
+        if(raw && raw.split('||')[0].indexOf('0:') !== -1){
+          if(total === s.total){
+            gSay('<b>Full marks on the mark points — and it still does not work.</b> '
+               + 'An examiner would give you ' + total + '. The machine would not. '
+               + 'Read the machine column: the ticks say the shape is right, so the fault is in a bound or a comparison.', 'bad');
+          } else {
+            gSay('Marks missing on the left, behaviour failing on the right — '
+               + 'fix the right-hand column first. Press next → to finish.', 'bad');
+          }
+        }
+      }, s);
+      gSay(total >= s.total-1 ? 'Strong. Press next → to finish.' : 'Read the ✗ lines — press next → to finish.',
+           total >= s.total-1 ? 'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub);
+  } else if(s.table){
+    var wrap=document.createElement('div');
+    s.fields.forEach(function(f, idx){
+      var lab=document.createElement('label');
+      lab.style.cssText='display:inline-flex; align-items:center; gap:6px; margin:0 18px 8px 0; font-size:.54em; font-weight:bold; color:var(--navy);';
+      lab.innerHTML=f.lbl+' ';
+      var inp=document.createElement('input'); inp.className='tin'; inp.id='tf'+idx;
+      inp.setAttribute('autocomplete','off'); inp.spellcheck=false;
+      lab.appendChild(inp); wrap.appendChild(lab);
+    });
+    b.appendChild(wrap);
+    var subT=document.createElement('button'); subT.className='g-sub'; subT.textContent='mark it, out of '+s.total;
+    subT.addEventListener('click', function(){
+      var got=0, rows='';
+      s.fields.forEach(function(f, idx){
+        var v=gEl('tf'+idx).value.trim().replace(/\u2212/g,'-');
+        /* an expression cell is marked on its VALUE, not its spacing: "1+0" is the
+           same answer as "1 + 0" and a student may not lose a mark to a space bar. */
+        var norm=function(t){ return String(t).replace(/\s+/g,'').toLowerCase(); };
+        /* Big O has several legal spellings, so a field may carry a regex instead of
+           an exact string; the printed answer stays f.want either way. */
+        var ok = f.re ? f.re.test(norm(v)) : (norm(v)===norm(f.want));
+        if(ok) got++;
+        rows+='<li><span class="'+(ok?'y':'n')+'">'+(ok?'\u2713':'\u2717')+'</span> '+f.lbl+' \u2014 <b>'+f.want+'</b>. '+f.why+'</li>';
+      });
+      gAward(got);
+      gSay('<b>'+got+' / '+s.total+'</b><ul class="g-mp">'+rows+'</ul>'
+         + (got===s.total && s.afterOk ? '<div style="margin-top:4px; font-size:.92em;">'+s.afterOk+'</div>' : '')
+         + '<div id="g-nexthint" style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           got===s.total?'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(subT);
+  } else {
+    var ta=document.createElement('textarea'); ta.className='g-ta'; ta.rows=s.rows||2; ta.spellcheck=false;
+    b.appendChild(ta);
+    var sub2=document.createElement('button'); sub2.className='g-sub'; sub2.textContent='mark it';
+    sub2.addEventListener('click', function(){
+      var r;
+      if(s.seq){
+        var got=(ta.value.match(/-?\d+/g)||[]).join(' ');
+        if(got===s.seq) r={got:s.total, html:'<ul class="g-mp"><li><span class="y">\u2713</span> '+s.seq+' \u2014 '+(s.seqOk||'')+'</li></ul>'};
+        else if(got.split(' ').slice().sort().join(' ')===s.seq.split(' ').slice().sort().join(' '))
+          r={got:1, html:'<ul class="g-mp"><li><span class="n">\u2717</span> '+(s.seqPerm||'right events, wrong order.')+'</li></ul>'};
+        else r={got:0, html:'<ul class="g-mp"><li><span class="n">\u2717</span> expected <b>'+s.seq+'</b> \u2014 '+(s.seqBad||'')+'</li></ul>'};
+      } else {
+        r=markOne(ta.value, s.mps, s.cap, false, s.groupCaps);
+      }
+      gAward(r.got);
+      /* the mirror of the boss: a Paper 3 answer written as program code. Not a
+         zero — P3 has no rubric saying so — but no mark scheme in five years
+         offers program code as an alternative, so say that plainly. */
+      var wrongForm = s.wantsPseudocode && looksLikeProgramCode(ta.value) && !looksLikePseudocode(ta.value);
+      var useLLM = !!(s.llmTask && LLM.available && LLM.on);
+      gSay((wrongForm
+             ? '<div class="formwarn"><b>That is program code, and this is Paper 3.</b> '
+             + 'Not an automatic zero the way the wrong language is on Paper 4 — but across every 9618 Paper 3 '
+             + 'mark scheme from 2021 to 2025, <b>not one</b> offers program code as an alternative to pseudocode. '
+             + 'The marks below are what your logic earns; write it in pseudocode to be sure of collecting them.</div>'
+             : '') +
+           '<div class="g-grid"><div>' +
+           '<b>'+r.got+' / '+s.total+'</b>'+r.html+
+           '</div><div><p class="g-lbl">model answer</p><div class="g-model">'+s.model+'</div></div>'+
+           '<div id="g-llm-p" class="g-llm"></div></div>' +
+           '<div id="g-nexthint" style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           r.got===s.total && !wrongForm ? 'ok':'bad');
+      if(useLLM)
+        llmMarkProse(s.llmTask, s.llmFn, ta.value, r.got, s.total, document.getElementById('g-llm-p'));
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(sub2);
+  }
+}
+window.gReplay = function(){
+  G.i = 0; G.score = 0; G.earned = {}; G.reviews = {};
+  var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
+  var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
+  gDraw();
+};
+function gSkip(){
+  G.locked = true;
+  G.i++;
+  if(G.i >= STAGES.length){ gFinish(); } else { gDraw(); }
+}
+function gBack(){
+  if(G.i <= 0) return;
+  G.locked = true;
+  G.i--;
+  gDraw();
+}
+function gNavState(){
+  var b = document.getElementById('g-back');
+  if(b) b.style.visibility = (G.i > 0) ? '' : 'hidden';
+}
+/* Bind immediately. In the A2-era decks this whole block lives inside the
+   Reveal.initialize().then() closure, which resolves AFTER DOMContentLoaded has
+   already fired -- so a DOMContentLoaded listener registered here never runs and
+   the button silently does nothing. */
+function gSkipBind(){
+  var b = document.getElementById('g-skip'), k = document.getElementById('g-back');
+  if(!b){ document.addEventListener('DOMContentLoaded', gSkipBind); return; }
+  if(!b.__bound){ b.__bound = true;
+    b.addEventListener('click', function(ev){ ev.stopPropagation(); gSkip(); }); }
+  if(k && !k.__bound){ k.__bound = true;
+    k.addEventListener('click', function(ev){ ev.stopPropagation(); gBack(); }); }
+  gNavState();
+}
+gSkipBind();
+function gNextOnce(){
+  G.i++;
+  if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
+}
+function gFinish(){
+  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
+  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
+  gEl('g-stage').textContent='done';
+  gEl('g-q').innerHTML=''; gEl('g-prog').innerHTML=''; gEl('g-score').textContent='';
+  gEl('g-body').innerHTML='<div class="g-fin"><div class="big">'+G.score+' / 11 checked</div>'
+    + '<p>Two written answers use human review; they are not included in this automatic total.</p>'
+    + '<p style="font-size:.9em;">Count the work · state the case and cost · explain the growth the question asks for.</p>'
+    + '<button class="g-sub" onclick="gReplay();">play again</button></div>';
+  gSay('');
+}
+
+
+Reveal.initialize({
+  hash:true, slideNumber:'c/t', width:1280, height:720, margin:.06,
+  plugins:[RevealNotes],
+  transition:'slide', backgroundTransition:'fade'
+}).then(function(){
+  initPyCells();
+  makeCross('crossviz');
+  llmDetect();
+  gDraw();
+  var ob=document.getElementById('obj-btn');
+  if(ob) ob.addEventListener('click', function(){
+    var o=document.getElementById('obj');
+    o.style.display = (o.style.display==='none') ? 'block' : 'none';
+  });
+});
+Reveal.on('ready', function(e){ autoSizePyTextareas(e.currentSlide); });
+Reveal.on('slidechanged', function(e){ autoSizePyTextareas(e.currentSlide); });
+</script>
+</body>
+</html>

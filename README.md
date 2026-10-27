@@ -46,6 +46,7 @@ If a unit you want is missing, it is because we have not reached it — ask.
 |---|---|---|
 | deck | `slides_<unit>_*.html` | **double-click it.** It opens in your browser. Arrow keys move; `↓` enters a rabbit hole; the Python cells run live, in the page |
 | practice | `practice_<unit>_*.pdf` | print it or annotate it; answers come back in class |
+| Python homework | `<unit>_Practice.py` | copy before editing; run `python3 <unit>_Practice.py`; question numbers continue from the sheet |
 | 🍦 challenge | `Challenge<unit>*.java`, `challenge_<unit>_*.py` | open in an editor, fill in the functions, run the file — the judge is at the bottom and marks itself |
 
 The decks need an internet connection the first time you open one: they pull
@@ -81,4 +82,4 @@ repo.
 
 ---
 
-*Released slides-2026-10-15 · units in this edition: A01, A02a, A02b, A02c, A03a, A03b, A04a*
+*Released slides-2026-10-27 · units in this edition: A01, A02a, A02b, A02c, A03a, A03b, A04a, A04b, A05a*

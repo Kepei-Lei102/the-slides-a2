@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Two Integers and a Promise — Stacks and Queues</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css" rel="stylesheet"/>
 <style>
 :root{
   --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
@@ -65,23 +66,7 @@
 #py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
 #py-chip.ready{color:#5FD6C9;}
 
-/* ===== the Java lane: captured, not live ===== */
-.pycell.java .pyrun{background:#8a6100;} .pycell.java .pyrun:hover{background:#a87700;}
-.pystate.cap{color:#e0b050;}
-.pyout.cap{color:#e8c98a;}
-.pyout.err{color:#ff9d95;}
 
-/* ===== the language switch ===== */
-#langsel{position:fixed; top:14px; right:16px; z-index:99; display:flex; border:2px solid #6b74a8;
-  border-radius:9px; overflow:hidden; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
-#langsel div{padding:5px 15px; background:rgba(20,26,60,.72); color:#98a0c0; transition:.12s;}
-#langsel div.on{background:var(--accent1); color:#fff;}
-#fsbtn{position:fixed; top:14px; right:calc(16px + 152px); z-index:99; background:rgba(20,26,60,.72);
-  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
-  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
-#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
-body[data-lang="java"] .lane[data-lang="py"]{display:none;}
-body[data-lang="py"] .lane[data-lang="java"]{display:none;}
 
 /* ===== 🧾 outside the exam hall ===== */
 .toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
@@ -250,177 +235,161 @@ body[data-lang="py"] .lane[data-lang="java"]{display:none;}
 .cq-log{font-family:'Courier New',monospace; font-size:.46em; color:#98a0c0; margin-top:6px; line-height:1.4; min-height:2.8em;}
 .cq-arrow{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:.42em; color:#98a0c0; text-align:center; line-height:1.3; white-space:nowrap;}
 .cq-arrow b{color:var(--accent3); font-family:'Courier New',monospace;}
-</style></head>
-<body data-lang="java">
-<div class="reveal"><div class="slides">
 
+/* Reviewed classroom route: main task first; references below. */
+.foundation-task p,.foundation-task li{font-size:24px;line-height:1.4;}
+.foundation-task h2{font-size:36px;}
+.foundation-task .rule{font-size:22px;}
+.foundation-rubric{font-size:17px;margin:5px 0;text-align:left;}
+.foundation-rubric summary{cursor:pointer;font-weight:bold;}
+.pyout{max-height:150px;overflow:auto;}
+.pyta{max-height:420px;overflow:auto;}
+.growslide #g-body{max-height:470px;overflow:auto;}
+#llmchip,#llmhelp{display:none!important;}
+</style><meta content="disabled-human-review" name="classroom-submissions"/></head>
+<body data-lang="py">
+<div class="reveal"><div class="slides">
 <!-- H1 -->
 <section>
-<section data-background-color="#151B3C" class="dk center">
-  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
-  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 2 · 9618 §19.1</p>
-  <h1 style="font-size:1.55em; margin:0 0 6px;">Two Integers<br>and a Promise</h1>
-  <p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">stacks and queues 栈与队列</p>
-  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+<section class="dk center" data-background-color="#151B3C" id="a02a-leaf-01">
+<div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+<p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 2 · 9618 §19.1</p>
+<h1 style="font-size:1.55em; margin:0 0 6px;">Two Integers<br/>and a Promise</h1>
+<p style="font-size:.62em; color:var(--accent3); margin:0 0 22px;">stacks and queues 栈与队列</p>
+<p style="margin-top:16px;"><button class="g-sub" onclick="Reveal.down()" style="font-size:.5em;">🎯 what you will be able to do</button></p>
 
 </section>
-  <section data-background-color="#151B3C" class="dk">
-    <div class="bar" style="background:var(--accent3);"></div>
-    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
-    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> Write <b class="accent1">Push</b>, <b class="accent1">Pop</b>, <b class="accent1">Enqueue</b> and <b class="accent1">Dequeue</b> from nothing</div>
-    <div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">2.</strong> Handle the <b class="accent1">overflow and underflow</b> cases — because that is where every mark is</div>
-    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">3.</strong> Explain why an empty structure is marked with <b class="accent3">−1</b> rather than 0</div>
+<section class="dk" data-background-color="#151B3C" id="a02a-leaf-02">
+<div class="bar" style="background:var(--accent3);"></div>
+<h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+<div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> Write <b class="accent1">Push</b>, <b class="accent1">Pop</b>, <b class="accent1">Enqueue</b> and <b class="accent1">Dequeue</b> from nothing</div>
+<div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">2.</strong> Handle the <b class="accent1">overflow and underflow</b> cases — because that is where every mark is</div>
+<div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">3.</strong> Explain why an empty structure is marked with <b class="accent3">−1</b> rather than 0</div>
 
 </section>
-</section>
-
+<section class="lt foundation-task" data-background-color="#F4F6FB" data-reference="evidence" id="a02a-frequency-evidence"><h2>What the historical corpus asks us to practise</h2><ul><li>P3: ADT: stack — 9/25 papers; write code 87%, identify 6%, complete/draw 4%</li><li>P3: ADT: queue — 3/25 papers; complete/draw 50%, how it works 18%, write code 14%</li><li>P4: Queue (declare, enqueue, dequeue) — 10/24 papers; write code 100%</li><li>P4: Stack (declare, push, pop) — 5/24 papers; write code 100%</li></ul><p class="rule fragment">Maintained normalized corpus, 2021–2026; duplicate variants removed. Use these response shapes for practice. This is not a forecast or permission to omit syllabus content.</p>
+</section></section>
 <!-- H2 HOOK -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.92em; margin:0 0 8px;">You closed twenty tabs. Now undo it.</h2>
-  <div class="two-col">
-    <div>
-      <div class="rule accent1" style="margin-top:0; font-size:.64em;">
+<section class="dk" data-background-color="#151B3C" id="a02a-leaf-03">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.92em; margin:0 0 8px;">You closed twenty tabs. Now undo it.</h2>
+<div class="two-col">
+<div>
+<div class="rule accent1" style="margin-top:0; font-size:.64em;">
         Press <b class="mono">Ctrl-Shift-T</b> twenty times and the tabs come back —
         <b>in exactly the reverse order you closed them.</b>
-      </div>
-      <div class="rule accent3" style="font-size:.6em;">
+</div>
+<div class="rule accent3" style="font-size:.6em;">
         Nobody at Google sat down and designed that reversal. It is not a feature.
         <b>It falls out of the shape of the box the tabs were put in.</b>
-      </div>
-      <div class="rule accent2 fragment" style="font-size:.62em;">
+</div>
+<div class="rule accent2 fragment" style="font-size:.62em;">
         Same box: <b class="mono">Ctrl-Z</b>. Same box: the <b>Back</b> button.
-        Same box: the call stack your program has been using since the day you wrote your first function.<br>
-        <b>You have used one every day for years and never once built one.</b>
-      </div>
-    </div>
-    <div class="center" style="padding-top:6px;">
-      <div class="ps" style="font-size:.56em; text-align:left; display:inline-block;">close  A
+        Same box: the call stack your program has been using since the day you wrote your first function.<br/>
+<b>You have used one every day for years and never once built one.</b>
+</div>
+</div>
+<div class="center" style="padding-top:6px;">
+<div class="ps" style="font-size:.56em; text-align:left; display:inline-block;">close  A
 close  B
 close  C
        <span class="c">↓ reopen</span>
        C
        B
        A</div>
-      <p style="font-size:.5em; color:#98a0c0; margin-top:8px;">Last in, first out.<br>The only rule there is.</p>
-    </div>
-  </div>
+<p style="font-size:.5em; color:#98a0c0; margin-top:8px;">Last in, first out.<br/>The only rule there is.</p>
+</div>
+</div>
 
 </section>
-
 <!-- H3 -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.86em; margin:0 0 10px;">One sentence disappeared over the summer</h2>
-  <div class="two-col">
-    <div class="card" style="border-top:4px solid #aab2cc;">
-      <p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>LAST YEAR · AS §10.4</b></p>
-      <p style="font-size:.58em; line-height:1.6; margin:0;">Describe the key features of a stack, queue and linked list · justify their use · add, edit and delete data · describe how they can be implemented using arrays.<br><br>
-      <span style="text-decoration:line-through; color:#a0a8c4;">Candidates will not be required to write pseudocode for these structures.</span></p>
-    </div>
-    <div class="card" style="border-top:4px solid var(--accent2);">
-      <p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>THIS YEAR · A2 §19.1</b></p>
-      <p style="font-size:.58em; line-height:1.6; margin:0;"><b>Write algorithms</b> to <b>find</b> an item in a linked list and a binary tree.<br>
-      <b>Write algorithms</b> to <b>insert</b> into a stack, queue, linked list and binary tree.<br>
-      <b>Write algorithms</b> to <b>delete</b> from a stack, queue and linked list.</p>
-    </div>
-  </div>
-  <p class="center fragment" style="font-size:.76em; margin-top:16px;"><b>AS told you what they are.<br>A2 makes you build them.</b></p>
+<section class="lt" data-background-color="#F4F6FB" id="a02a-leaf-04">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.86em; margin:0 0 10px;">One sentence disappeared over the summer</h2>
+<div class="two-col">
+<div class="card" style="border-top:4px solid #aab2cc;">
+<p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>LAST YEAR · AS §10.4</b></p>
+<p style="font-size:.58em; line-height:1.6; margin:0;">Describe the key features of a stack, queue and linked list · justify their use · add, edit and delete data · describe how they can be implemented using arrays.<br/><br/>
+<span style="text-decoration:line-through; color:#a0a8c4;">Candidates will not be required to write pseudocode for these structures.</span></p>
+</div>
+<div class="card" style="border-top:4px solid var(--accent2);">
+<p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>THIS YEAR · A2 §19.1</b></p>
+<p style="font-size:.58em; line-height:1.6; margin:0;"><b>Write algorithms</b> to <b>find</b> an item in a linked list and a binary tree.<br/>
+<b>Write algorithms</b> to <b>insert</b> into a stack, queue, linked list and binary tree.<br/>
+<b>Write algorithms</b> to <b>delete</b> from a stack, queue and linked list.</p>
+</div>
+</div>
+<p class="center fragment" style="font-size:.76em; margin-top:16px;"><b>AS told you what they are.<br/>A2 makes you build them.</b></p>
 
 </section>
-
 <!-- H4 stack -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 4px;">A stack is an array and <span class="accent2">one integer</span></h2>
-  <p style="font-size:.5em; color:#8890b5; margin:0 0 6px;">Push and pop it yourself. Watch what <span class="mono">Top</span> does.</p>
-  <div class="viz" id="stackviz"></div>
-  <div class="rule accent1 fragment" style="font-size:.6em;">
-    <b>Push:</b> move <span class="mono">Top</span> up one, then store. &nbsp;<b>Pop:</b> read, then move <span class="mono">Top</span> down one.<br>
+<section class="lt" data-background-color="#F4F6FB" id="a02a-leaf-05">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 4px;">A stack is an array and <span class="accent2">one integer</span></h2>
+<p style="font-size:.5em; color:#8890b5; margin:0 0 6px;">Push and pop it yourself. Watch what <span class="mono">Top</span> does.</p>
+<div class="viz" id="stackviz"></div>
+<div class="rule accent1 fragment" style="font-size:.6em;">
+<b>Push:</b> move <span class="mono">Top</span> up one, then store.  <b>Pop:</b> read, then move <span class="mono">Top</span> down one.<br/>
     That is the entire data structure. <b>Nothing is ever moved</b> — only the integer changes.
   </div>
 
 </section>
-
 <!-- H5 keystone -->
 <section>
-
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 6px;">Why <span class="accent2">−1</span>, and not 0?</h2>
-  <p style="font-size:.52em; color:#8890b5; margin:0 0 7px;">Last lesson a null pointer was <span class="mono">0x0000…0</span>. This lesson empty is <span class="mono">−1</span>. <b>Both are right, and the reason they differ is the whole idea.</b></p>
-  <table class="mk" style="font-size:.54em;">
-    <tr><th style="width:50%;">a real machine</th><th>Cambridge's array</th></tr>
-    <tr><td>A pointer holds an <b>address</b>.</td><td>A "pointer" holds an <b>array index</b>.</td></tr>
-    <tr><td>Address <b>0</b> is legal to write down, but the OS <b>deliberately leaves it unmapped</b> — nothing can ever live there.</td>
-        <td>Index <b>0</b> is an ordinary element. <span class="mono">Contents[0]</span> is the <b>first item</b>.</td></tr>
-    <tr><td>So 0 is free to mean "nothing". It was <b>made</b> impossible, by decree.</td>
-        <td>So 0 <b>cannot</b> mean "nothing" — it already means something.</td></tr>
-    <tr><td><b class="accent1">null = 0</b></td><td><b class="accent2">null = −1</b></td></tr>
-  </table>
-  <div class="rule accent3" style="font-size:.64em;">
-    <b>A sentinel has to come from outside the set of legal values.</b> Not from the edge of it — from <em>outside</em> it.
+<section class="lt" data-background-color="#F4F6FB" id="a02a-leaf-06">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 6px;">Why <span class="accent2">−1</span>, and not 0?</h2>
+<p style="font-size:.52em; color:#8890b5; margin:0 0 7px;">Last lesson a null pointer was <span class="mono">0x0000…0</span>. This lesson empty is <span class="mono">−1</span>. <b>Both are right, and the reason they differ is the whole idea.</b></p>
+<table class="mk" style="font-size:.54em;">
+<tr><th style="width:50%;">a real machine</th><th>Cambridge's array</th></tr>
+<tr><td>A pointer holds an <b>address</b>.</td><td>A "pointer" holds an <b>array index</b>.</td></tr>
+<tr><td>Address <b>0</b> is legal to write down, but the OS <b>deliberately leaves it unmapped</b> — nothing can ever live there.</td>
+<td>Index <b>0</b> is an ordinary element. <span class="mono">Contents[0]</span> is the <b>first item</b>.</td></tr>
+<tr><td>So 0 is free to mean "nothing". It was <b>made</b> impossible, by decree.</td>
+<td>So 0 <b>cannot</b> mean "nothing" — it already means something.</td></tr>
+<tr><td><b class="accent1">null = 0</b></td><td><b class="accent2">null = −1</b></td></tr>
+</table>
+<div class="rule accent3" style="font-size:.64em;">
+<b>A sentinel has to come from outside the set of legal values.</b> Not from the edge of it — from <em>outside</em> it.
     Real memory has no such value, so the operating system <b>manufactures</b> one. An array index cannot, so you go
     <b>below</b> the range: <b class="mono">−1 is the largest impossible index.</b>
-  </div>
-  <div class="dig">🕳 and when the sentinel is a lie ↓</div>
+</div>
+<div class="dig">🕳 and when the sentinel is a lie ↓</div>
 
 </section>
-
 <!-- H5 vertical -->
-<section data-background-color="#222B5A" class="dk">
-  <h3 style="font-size:.74em; margin:0 0 8px;">🕳 When the sentinel is a lie</h3>
-  <p style="font-size:.56em; line-height:1.6; margin:0 0 8px;">Here are two sentences from a real Paper 4 question. <b>Read them together.</b></p>
-  <div class="rule accent3" style="font-size:.6em; margin-top:0;">
-    "A linked list stores <b class="accent1">positive integer</b> data in a 2D array…<br>
+<section class="dk" data-background-color="#222B5A" id="a02a-leaf-07">
+<h3 style="font-size:.74em; margin:0 0 8px;">🕳 When the sentinel is a lie</h3>
+<p style="font-size:.56em; line-height:1.6; margin:0 0 8px;">Here are two sentences from a real Paper 4 question. <b>Read them together.</b></p>
+<div class="rule accent3" style="font-size:.6em; margin-top:0;">
+    "A linked list stores <b class="accent1">positive integer</b> data in a 2D array…<br/>
     A linked list node with no data is initialised with the integer <b class="accent2">−1</b>."
     <span style="color:#98a0c0; font-size:.85em;"> — Nov 2024 Paper 41 Q3, © UCLES</span>
-  </div>
-  <div class="two-col" style="gap:16px;">
-    <div class="rule accent2" style="font-size:.55em;">
-      <b>−1 is safe as "empty" only because of the first sentence.</b> The question has quietly promised the data
+</div>
+<div class="two-col" style="gap:16px;">
+<div class="rule accent2" style="font-size:.55em;">
+<b>−1 is safe as "empty" only because of the first sentence.</b> The question has quietly promised the data
       will never be negative. Change it to <b>temperatures</b>, or <b>bank balances</b>, or scores that can drop
       below zero — and the sentinel <b>collides with real data</b>. There is then no way on earth for the program
       to tell an empty node from a cold Tuesday.
     </div>
-    <div class="rule accent1" style="font-size:.55em;">
+<div class="rule accent1" style="font-size:.55em;">
       The professional name is <b>in-band signalling</b> — using a value from inside the data's own range to mean
-      something that is not data. It works in an exam and would be rejected in a code review.<br>
-      <b class="accent3">And you will see both designs in one question, one line apart</b> — hold that thought until slide 9.
+      something that is not data. It works in an exam and would be rejected in a code review.<br/>
+<b class="accent3">And you will see both designs in one question, one line apart</b> — hold that thought until slide 9.
     </div>
-  </div>
-  <p class="center" style="font-size:.56em; margin-top:10px;">The habit worth taking away is not <i>"−1 is wrong"</i>.<br><b>It is reading for the promise the sentence above just made.</b></p>
+</div>
+<p class="center" style="font-size:.56em; margin-top:10px;">The habit worth taking away is not <i>"−1 is wrong"</i>.<br/><b>It is reading for the promise the sentence above just made.</b></p>
 
 </section>
 </section>
-
-
 <!-- H6 code -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 4px;">Push and Pop, written out</h2>
-  <p style="font-size:.5em; color:#98a0c0; margin:0 0 7px;">A five-element stack. Watch the last two lines.</p>
-  <div class="lane" data-lang="java">
-  <div class="pycell java side" data-out="push 10 20 30 -> true true true
-Top is now      2
-pop  -> 30   pop -> 20
-Top is now      0
-pop  -> 10   (last one)
-pop  -> -1   <- UNDERFLOW,
-             and it did not crash"><script type="text/plain" class="pysrc">static Integer[] Contents = new Integer[5];
-static Integer Top = -1;            // -1 means empty
-
-static Boolean Push(Integer Data) {
-    if (Top < 4) { Top++; Contents[Top] = Data; return true; }
-    else         { return false; }              // overflow
-}
-static Integer Pop() {
-    if (Top > -1) { Integer v = Contents[Top]; Top--; return v; }
-    else          { return -1; }                // underflow
-}</script></div>
-  </div>
-  <div class="lane" data-lang="py">
-  <div class="pycell side tight"><script type="text/plain" class="pysrc">Contents = [-1] * 5
+<section><section class="lt foundation-task" data-background-color="#F4F6FB" id="a02a-a-stack-contract-derive-the-two-operations"><h2>A stack contract — derive the two operations</h2><p>Contents has indices 0–4. Top is the current top index; −1 means empty. Stored data is positive.</p><p>Write Push(Item) returning True/False, and Pop() returning the removed value or −1 when empty.</p><p>Trace from empty: Push(8), Push(3), Pop(), Push(9). Give every returned value, final Top, and the cells still holding data.</p><p class="rule fragment">Check: full/empty guards happen before pointer movement. Justify the order of each read and write. Optional implementation ↓.</p>
+</section><section class="dk" data-background-color="#151B3C" data-reference="optional-working" id="a02a-leaf-08">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 4px;">Push and Pop, written out</h2>
+<p style="font-size:.5em; color:#98a0c0; margin:0 0 7px;">A five-element stack. Watch the last two lines.</p>
+<div class="pycell side tight"><script class="pysrc" type="text/plain">Contents = [-1] * 5
 Top = -1                            # -1 means empty
 
 def Push(Data):
@@ -447,88 +416,62 @@ print("pop  ->", Pop(), "  pop ->", Pop())
 print("Top is now     ", Top)
 print("pop  ->", Pop(), "  (last one)")
 print("pop  ->", Pop(), "  <- UNDERFLOW, and it did not crash")</script></div>
-  </div>
-  <div class="rule accent3" style="font-size:.46em; margin-top:4px;">
-    <b>How the working world writes this.</b> Real code keeps this state in a class — <span class="mono">self.Top</span>, <span class="mono">self.Contents</span>, no keyword, nothing shared by accident. That form belongs to the OOP chapter and to every codebase you will ever touch. <b>But Paper 4 declares its variables global and pays marks for the paper's shape</b> — so here, and in every challenge, write <span class="mono">global Top</span> inside the function and never forget it: forgetting is an <span class="mono">UnboundLocalError</span> the moment your code actually runs.
-  </div>
+<div class="rule accent3" style="font-size:.46em; margin-top:4px;"><b>Exam contract and engineering choice.</b> This question supplies module globals, so write <code>global Top</code> in functions that assign it. An instance can instead keep <code>self.Top</code> and <code>self.Contents</code>; classes, closures and modules are different ways to organise state.</div>
 
-</section>
-
+</section></section>
 <!-- H7 -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 8px;">The two questions that are actually marked</h2>
-  <div class="two-col">
-    <div class="card" style="border-top:4px solid var(--accent2);">
-      <p style="font-size:.62em; margin:0; line-height:1.55;"><b class="accent2">OVERFLOW</b><br>
-      Push onto a <b>full</b> stack.<br>
-      <span class="mono" style="font-size:.9em;">Top</span> is already at the last index and there is nowhere to put it.</p>
-    </div>
-    <div class="card" style="border-top:4px solid var(--accent3);">
-      <p style="font-size:.62em; margin:0; line-height:1.55;"><b style="color:#B8860B;">UNDERFLOW</b><br>
-      Pop an <b>empty</b> stack.<br>
-      <span class="mono" style="font-size:.9em;">Top</span> is <span class="mono">−1</span> and there is nothing to return.</p>
-    </div>
-  </div>
-  <div class="rule accent1" style="font-size:.64em;">
+<section class="lt" data-background-color="#F4F6FB" id="a02a-leaf-09">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 8px;">The two questions that are actually marked</h2>
+<div class="two-col">
+<div class="card" style="border-top:4px solid var(--accent2);">
+<p style="font-size:.62em; margin:0; line-height:1.55;"><b class="accent2">OVERFLOW</b><br/>
+      Push onto a <b>full</b> stack.<br/>
+<span class="mono" style="font-size:.9em;">Top</span> is already at the last index and there is nowhere to put it.</p>
+</div>
+<div class="card" style="border-top:4px solid var(--accent3);">
+<p style="font-size:.62em; margin:0; line-height:1.55;"><b style="color:#B8860B;">UNDERFLOW</b><br/>
+      Pop an <b>empty</b> stack.<br/>
+<span class="mono" style="font-size:.9em;">Top</span> is <span class="mono">−1</span> and there is nothing to return.</p>
+</div>
+</div>
+<div class="rule accent1" style="font-size:.64em;">
     These are <b>not edge cases</b>. They are the question. <b>A stack that works when it is neither full nor empty
     is worth almost no marks</b> — the middle of the array is the easy part and every candidate gets it.
   </div>
-  <div class="toll">
-    <span class="th">🧾 OUTSIDE THE EXAM HALL</span><br>
+<div class="toll">
+<span class="th">🧾 OUTSIDE THE EXAM HALL</span><br/>
     Overflowing a real stack is called a <b>stack overflow</b>, and for thirty years it was the most exploited
     security bug in computing: write past the end of a buffer, land on the return address, and the machine jumps
     wherever you told it to. <span class="yes">The check you are writing on this slide is the fix.</span>
-    <span class="no">Whole languages were designed because people kept forgetting it.</span><br>
-    <b>It is so famous that the largest programming question-and-answer site on earth is named after it</b> —
+<span class="no">Whole languages were designed because people kept forgetting it.</span><br/>
+<b>It is so famous that the largest programming question-and-answer site on earth is named after it</b> —
     <b class="mono">stackoverflow.com</b>, where a generation of programmers went to ask why their program had died.
     And there is a decent chance the answers on it helped train the AI you use to write code, which makes the name
     quietly perfect: <i>a website about crashing, teaching the machines.</i>
-  </div>
+</div>
 
 </section>
-
 <!-- H8 queue -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 4px;">A queue is an array and <span class="accent2">two integers</span></h2>
-  <p style="font-size:.5em; color:#8890b5; margin:0 0 6px;">Cambridge's own names: <span class="mono">HeadPointer</span> comes off the front, <span class="mono">TailPointer</span> goes on the back. Both start at <span class="mono">−1</span>.</p>
-  <div class="viz" id="queueviz"></div>
-  <div class="rule accent1" style="font-size:.58em;">
-    <b>Enqueue</b> at the tail, <b>dequeue</b> from the head — first in, first out. The printer queue, the OS
+<section class="lt" data-background-color="#F4F6FB" id="a02a-leaf-10">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 4px;">A queue is an array and <span class="accent2">two integers</span></h2>
+<p style="font-size:.5em; color:#8890b5; margin:0 0 6px;">Cambridge's own names: <span class="mono">HeadPointer</span> comes off the front, <span class="mono">TailPointer</span> goes on the back. Both start at <span class="mono">−1</span>.</p>
+<div class="viz" id="queueviz"></div>
+<div class="rule accent1" style="font-size:.58em;">
+<b>Enqueue</b> at the tail, <b>dequeue</b> from the head — first in, first out. The printer queue, the OS
     process queue, the keyboard buffer holding the letters you typed while the machine was busy.
   </div>
 
 </section>
-
 <!-- H9 code + divergence -->
-<section>
-
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.82em; margin:0 0 3px;">Enqueue and Dequeue — <span class="accent3">the marked signatures</span></h2>
-  <p style="font-size:.48em; color:#98a0c0; margin:0 0 6px;">This is the shape Cambridge marks. Learn the return values, not just the idea.</p>
-  <div class="lane" data-lang="java">
-  <div class="pycell java side" data-out="3 in                   Head=0 Tail=2
-3 out - now empty      Head=3 Tail=2
-2 more in              Head=3 Tail=4"><script type="text/plain" class="pysrc">static Boolean Enqueue(Integer DataValue) {
-    if (TailPointer < 4) {
-        TailPointer++;
-        Queue[TailPointer] = DataValue;
-        if (HeadPointer == -1) { HeadPointer = 0; }
-        return true;
-    } else { return false; }          // full
-}
-static Integer Dequeue() {
-    if (HeadPointer > -1 && HeadPointer <= TailPointer) {
-        Integer ReturnValue = Queue[HeadPointer];
-        HeadPointer++;
-        return ReturnValue;
-    } else { return -1; }             // empty
-}</script></div>
-  </div>
-  <div class="lane" data-lang="py">
-  <div class="pycell side tight"><script type="text/plain" class="pysrc">Queue = [-1] * 5
+<section><section class="lt foundation-task" data-background-color="#F4F6FB" id="a02a-the-queue-needs-a-precise-promise"><h2>The queue needs a precise promise</h2><p>A linear queue uses Contents[0..49], HeadPointer = TailPointer = −1 initially. Items are positive integers. TailPointer denotes the last occupied slot.</p><p>Derive Enqueue(Item), returning True/False. Set HeadPointer on the first successful insertion. Derive Dequeue(), returning −1 when empty.</p><p>Predict the pointer values after Enqueue(10), Enqueue(20), Dequeue(). What happens once TailPointer reaches 49?</p><p class="rule fragment">State the convention before tracing. Full working and the alternative return design ↓.</p>
+</section>
+<section class="dk" data-background-color="#151B3C" data-reference="optional-working" id="a02a-leaf-11">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.82em; margin:0 0 3px;">Enqueue and Dequeue — <span class="accent3">the marked signatures</span></h2>
+<p style="font-size:.48em; color:#98a0c0; margin:0 0 6px;">This is the shape Cambridge marks. Learn the return values, not just the idea.</p>
+<div class="pycell side tight"><script class="pysrc" type="text/plain">Queue = [-1] * 5
 HeadPointer = -1
 TailPointer = -1
 
@@ -552,62 +495,43 @@ def Dequeue():
 
 Enqueue(10); Enqueue(20); Enqueue(30)
 print("3 in   Head=%d Tail=%d" % (HeadPointer, TailPointer))</script></div>
-  </div>
-  <div class="dig">📐 the safe design and the dangerous one ↓</div>
+<div class="dig">📐 the safe design and the dangerous one ↓</div>
 
 </section>
-
 <!-- H9 vertical — the divergence, given a whole slide -->
-<section data-background-color="#222B5A" class="dk">
-  <h3 style="font-size:.72em; margin:0 0 4px;">📐 One question. Both designs. One line apart.</h3>
-  <p style="font-size:.5em; color:#98a0c0; margin:0 0 8px;">Look again at what the two functions hand back.</p>
-  <div class="two-col" style="gap:16px;">
-    <div class="rule accent1" style="margin-top:0; font-size:.58em;">
-      <b>Enqueue → a separate <span class="mono">BOOLEAN</span></b><br><br>
+<section class="dk" data-background-color="#222B5A" id="a02a-leaf-12">
+<h3 style="font-size:.72em; margin:0 0 4px;">📐 One question. Both designs. One line apart.</h3>
+<p style="font-size:.5em; color:#98a0c0; margin:0 0 8px;">Look again at what the two functions hand back.</p>
+<div class="two-col" style="gap:16px;">
+<div class="rule accent1" style="margin-top:0; font-size:.58em;">
+<b>Enqueue → a separate <span class="mono">BOOLEAN</span></b><br/><br/>
       The answer to <i>"did it work?"</i> travels in its <b>own channel</b>. It cannot be confused with data,
-      because it is not the same kind of thing as data.<br><br>
-      <b class="accent3">This is the safe design.</b> It stays safe no matter what the queue holds.
+      because it is not the same kind of thing as data.<br/><br/>
+<b class="accent3">This is the safe design.</b> It stays safe no matter what the queue holds.
     </div>
-    <div class="rule accent2" style="margin-top:0; font-size:.58em;">
-      <b>Dequeue → <span class="mono">−1</span></b><br><br>
+<div class="rule accent2" style="margin-top:0; font-size:.58em;">
+<b>Dequeue → <span class="mono">−1</span></b><br/><br/>
       The answer to <i>"did it work?"</i> is <b>smuggled inside the value itself</b>. A caller who gets −1
-      cannot tell "the queue was empty" from "the queue held −1".<br><br>
-      <b class="accent3">In-band signalling</b> — and it survives here <b>only</b> because the question
+      cannot tell "the queue was empty" from "the queue held −1".<br/><br/>
+<b class="accent3">In-band signalling</b> — and it survives here <b>only</b> because the question
       promised the data would be positive.
     </div>
-  </div>
-  <div class="rule accent3" style="font-size:.6em;">
-    <b>Write both exactly as marked</b> — this is the convention the exam uses and the marks follow it.
+</div>
+<div class="rule accent3" style="font-size:.6em;">
+<b>Write both exactly as marked</b> — this is the convention the exam uses and the marks follow it.
     Then notice, out loud, that <b>one of them is better engineering than the other</b>, and that you can
     now say which and why. <span class="accent2">That sentence is worth more than the six marks.</span>
-  </div>
+</div>
 
 </section>
 </section>
-
-
 <!-- H10 the walking bug -->
 <section>
-
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 2px;">Now break it</h2>
-  <p style="font-size:.48em; color:#98a0c0; margin:0 0 4px;">Press <b>walk it</b>. Three in, three out, two in. Then try to add one more.</p>
-  <div class="lane" data-lang="java">
-  <div class="pycell java side" data-out="3 in                   Head=0 Tail=2
-3 out - now empty      Head=3 Tail=2
-2 more in              Head=3 Tail=4
-
-Enqueue(60) -> false   <- FULL
-...but the queue holds
-   2 items in an array of 5."><script type="text/plain" class="pysrc">Enqueue(10); Enqueue(20); Enqueue(30);   show("3 in");
-Dequeue();   Dequeue();   Dequeue();     show("3 out - now empty");
-Enqueue(40); Enqueue(50);                show("2 more in");
-
-System.out.println("Enqueue(60) -> " + Enqueue(60) + "   <- FULL");</script></div>
-  </div>
-  <div class="lane" data-lang="py">
-  <div class="pycell side tight"><script type="text/plain" class="pysrc">Queue = [-1] * 5; HeadPointer = -1; TailPointer = -1
+<section class="dk" data-background-color="#151B3C" id="a02a-leaf-13">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 2px;">Now break it</h2>
+<p style="font-size:.48em; color:#98a0c0; margin:0 0 4px;">Press <b>walk it</b>. Three in, three out, two in. Then try to add one more.</p>
+<div class="pycell side tight"><script class="pysrc" type="text/plain">Queue = [-1] * 5; HeadPointer = -1; TailPointer = -1
 
 def Enqueue(v):                    # same code as the last slide
     global HeadPointer, TailPointer
@@ -630,34 +554,32 @@ Enqueue(40); Enqueue(50)                 # two more
 
 print("Head=%d  Tail=%d" % (HeadPointer, TailPointer))
 print("Enqueue(60) ->", Enqueue(60), " <- FULL, holding 2 of 5")</script></div>
-  </div>
-  <div class="rule accent2 fragment" style="font-size:.6em; margin-top:5px;">
-    <b>The queue walks up the array and never comes back.</b> <span class="mono">TailPointer</span> has hit the end,
+<div class="rule accent2 fragment" style="font-size:.6em; margin-top:5px;">
+<b>The queue walks up the array and never comes back.</b> <span class="mono">TailPointer</span> has hit the end,
     so it reports <b>full</b> — while three slots sit empty behind <span class="mono">HeadPointer</span>, unreachable.
     <b class="accent3">A linear queue can be full and nearly empty at the same time.</b>
-  </div>
+</div>
 
 </section>
-
 <!-- H11 circular queue — main line, because it is examined -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 4px;">The fix is <span class="accent2">one operator</span></h2>
-  <p style="font-size:.5em; color:#8890b5; margin:0 0 7px;">The array does not have to end. Bend it into a ring: when a pointer runs off the last index, send it back to 0.</p>
-  <div class="ps" style="font-size:.62em;">TailPointer <span class="v">←</span> (TailPointer + 1) <span class="k">MOD</span> MaxSize</div>
-  <div class="two-col" style="margin-top:6px;">
-    <div class="rule accent1" style="margin-top:0; font-size:.58em;">
+<section class="lt" data-background-color="#F4F6FB" id="a02a-leaf-14">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 4px;">The fix is <span class="accent2">one operator</span></h2>
+<p style="font-size:.5em; color:#8890b5; margin:0 0 7px;">The array does not have to end. Bend it into a ring: when a pointer runs off the last index, send it back to 0.</p>
+<div class="ps" style="font-size:.62em;">TailPointer <span class="v">←</span> (TailPointer + 1) <span class="k">MOD</span> MaxSize</div>
+<div class="two-col" style="margin-top:6px;">
+<div class="rule accent1" style="margin-top:0; font-size:.58em;">
       That single <span class="mono">MOD</span> reclaims <b>every slot the linear queue abandoned</b>.
       Index 4 wraps to 0, and the space behind <span class="mono">HeadPointer</span> comes back into use.
     </div>
-    <div class="rule accent2" style="margin-top:0; font-size:.58em;">
-      <b>And it costs you something.</b> Once the array is a ring you can <b>no longer tell full from empty by
+<div class="rule accent2" style="margin-top:0; font-size:.58em;">
+<b>And it costs you something.</b> Once the array is a ring you can <b>no longer tell full from empty by
       comparing the pointers</b> — in both cases they meet. So a circular queue must also <b>count its items</b>,
       or deliberately waste one slot.
     </div>
-  </div>
-  <div class="toll" style="font-size:.56em;">
-    <span class="th">🧾 HOW OFTEN THIS IS ASKED — AND IT IS NOT A HOLE</span><br>
+</div>
+<div class="toll" style="font-size:.56em;">
+<span class="th">🧾 HOW OFTEN THIS IS ASKED — AND IT IS NOT A HOLE</span><br/>
     Circular queues appear in <b>4 of the 24 papers</b> in the archive, and only on <b>Paper 4</b>.
     That is rarer than the linear queue and <span class="yes">it is still examinable</span>, which is exactly why
     this is a slide and not an optional dig. <b>Know the <span class="mono">MOD</span> line, and know the
@@ -665,37 +587,13 @@ print("Enqueue(60) ->", Enqueue(60), " <- FULL, holding 2 of 5")</script></div>
   </div>
 
 </section>
-
 <!-- H11 the ring, stepped — widget + the code in both languages (added 2026-09-09, Kepei: "it is being tested; it is useful") -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.8em; margin:0 0 2px;">Step the ring</h2>
-  <p style="font-size:.48em; color:#98a0c0; margin:0 0 3px;">The same five slots, bent round. <b>walk it</b> replays the walking bug's sequence — three in, three out, two in, one more — and this time the one more <b>lands</b>.</p>
-  <div id="cq-host"></div>
-  <div class="lane" data-lang="java" style="margin-top:6px;">
-  <div class="pycell java side" data-out="3 in                   Head=0 Tail=2 Count=3
-3 out - now empty      Head=3 Tail=2 Count=0
-2 more in              Head=3 Tail=4 Count=2
-Enqueue(60) -> true  <- wrapped to index 0
-3 in the ring          Head=3 Tail=0 Count=3"><script type="text/plain" class="pysrc">static int HeadPointer = 0, TailPointer = -1, Count = 0;   // Queue = new Integer[5]
-static Boolean Enqueue(Integer v) {
-    if (Count == 5) return false;                    // full is a COUNT question now
-    TailPointer = (TailPointer + 1) % 5;             // the one operator
-    Queue[TailPointer] = v; Count++; return true;
-}
-static Integer Dequeue() {
-    if (Count == 0) return -1;                       // and so is empty
-    Integer v = Queue[HeadPointer];
-    HeadPointer = (HeadPointer + 1) % 5; Count--; return v;
-}
-Enqueue(10); Enqueue(20); Enqueue(30);   show("3 in");
-Dequeue();   Dequeue();   Dequeue();     show("3 out - now empty");
-Enqueue(40); Enqueue(50);                show("2 more in");
-System.out.println("Enqueue(60) -> " + Enqueue(60) + "  <- wrapped to index " + TailPointer);
-show("3 in the ring");</script></div>
-  </div>
-  <div class="lane" data-lang="py" style="margin-top:6px;">
-  <div class="pycell side tight"><script type="text/plain" class="pysrc">Queue = [-1] * 5; HeadPointer = 0; TailPointer = -1; Count = 0
+<section class="dk" data-background-color="#151B3C" id="a02a-leaf-15">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.8em; margin:0 0 2px;">Step the ring</h2>
+<p style="font-size:.48em; color:#98a0c0; margin:0 0 3px;">The same five slots, bent round. <b>walk it</b> replays the walking bug's sequence — three in, three out, two in, one more — and this time the one more <b>lands</b>.</p>
+<div id="cq-host"></div>
+<div class="pycell side tight"><script class="pysrc" type="text/plain">Queue = [-1] * 5; HeadPointer = 0; TailPointer = -1; Count = 0
 def Enqueue(v):
     global TailPointer, Count
     if Count == 5: return False              # full is a COUNT question now
@@ -713,134 +611,118 @@ for i in range(3): Dequeue()
 show("3 out - now empty")
 Enqueue(40); Enqueue(50); show("2 more in")
 print("Enqueue(60) ->", Enqueue(60), " <- wrapped to index", TailPointer); show("3 in the ring")</script></div>
-  </div>
 
 </section>
-
 </section>
-
-
 <!-- H11 where you've met them -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.84em; margin:0 0 8px;">Where these have been hiding</h2>
-  <div class="two-col">
-    <div class="card" style="border-top:4px solid var(--accent1);">
-      <p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>STACKS</b></p>
-      <p style="font-size:.56em; line-height:1.65; margin:0;">Undo · the Back button · reopening tabs<br>
-      <b>The call stack</b> — every function call pushes a frame, every return pops one<br>
-      Evaluating an expression — <b>and that one comes back at the end of the year</b><br>
+<section class="lt" data-background-color="#F4F6FB" id="a02a-leaf-16">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.84em; margin:0 0 8px;">Where these have been hiding</h2>
+<div class="two-col">
+<div class="card" style="border-top:4px solid var(--accent1);">
+<p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>STACKS</b></p>
+<p style="font-size:.56em; line-height:1.65; margin:0;">Undo · the Back button · reopening tabs<br/>
+<b>The call stack</b> — every function call pushes a frame, every return pops one<br/>
+      Evaluating an expression — <b>and that one comes back at the end of the year</b><br/>
       Depth-first search through a maze</p>
-    </div>
-    <div class="card" style="border-top:4px solid var(--accent2);">
-      <p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>QUEUES</b></p>
-      <p style="font-size:.56em; line-height:1.65; margin:0;">The printer · the OS <b>process scheduler</b> <span style="color:#8890b5;">(round robin is a queue)</span><br>
-      The <b>keyboard buffer</b> holding what you typed while the machine was busy<br>
+</div>
+<div class="card" style="border-top:4px solid var(--accent2);">
+<p style="font-size:.5em; letter-spacing:.05em; color:#8890b5; margin:0 0 5px;"><b>QUEUES</b></p>
+<p style="font-size:.56em; line-height:1.65; margin:0;">The printer · the OS <b>process scheduler</b> <span style="color:#8890b5;">(round robin is a queue)</span><br/>
+      The <b>keyboard buffer</b> holding what you typed while the machine was busy<br/>
       Every ticket system, every checkout, every server request</p>
-    </div>
-  </div>
-  <div class="rule accent3 fragment" style="font-size:.62em;">
-    <b>The call stack is the one to keep hold of.</b> You have just built the exact structure a program uses to
+</div>
+</div>
+<div class="rule accent3 fragment" style="font-size:.62em;">
+<b>The call stack is the one to keep hold of.</b> You have just built the exact structure a program uses to
     remember where to go back to — which is a good thing to own, because <b>next lesson but one, a function is
     going to call itself</b> and the only way to see what happens is to know what a stack does.
   </div>
 
 </section>
-
 <!-- H12 game -->
-<section data-background-color="#151B3C" class="dk growslide">
-  <h2 style="font-size:.78em; margin:0 0 8px;">🎮 Overflow / Underflow</h2>
-  <div class="g-wrap" id="gw">
-    <div class="g-top">
-      <span class="g-stage" id="g-stage">Stage 1</span>
-      <span class="g-score" id="g-score"></span>
-      <div class="g-prog" id="g-prog"></div>
-      <button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button>
-    </div>
-    <div class="g-q" id="g-q"></div>
-    <div id="g-body"></div>
-    <div class="g-say" id="g-say">&nbsp;</div>
-  </div>
+<section class="dk growslide" data-background-color="#151B3C" id="a02a-leaf-17">
+<h2 style="font-size:.78em; margin:0 0 8px;">🎮 Overflow / Underflow</h2>
+<div class="g-wrap" id="gw">
+<div class="g-top">
+<span class="g-stage" id="g-stage">Stage 1</span>
+<span class="g-score" id="g-score"></span>
+<div class="g-prog" id="g-prog"></div>
+<button class="g-skip" id="g-back" title="back to the previous question">← back</button><button class="g-skip" id="g-skip" title="on to the next question, answered or not">next →</button>
+</div>
+<div class="g-q" id="g-q"></div>
+<div id="g-body"></div>
+<div class="g-say" id="g-say"> </div>
+</div>
 
 </section>
-
 <!-- H13 the real thing -->
-<section data-background-color="#F4F6FB" class="lt">
-  <div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
-  <h2 style="font-size:.82em; margin:0 0 4px;">The real thing</h2>
-  <p style="font-size:.48em; color:#8890b5; margin:0 0 7px;">June 2025 Paper 43 Question 1 — a whole Paper 4 question, and it is this lesson end to end. © UCLES</p>
-  <table class="mk" style="font-size:.52em;">
-    <tr><th style="width:9%;">part</th><th>what it asks</th><th style="width:9%;">marks</th></tr>
-    <tr><td><b>(a)</b></td><td>Declare and initialise a global <span class="mono">Queue</span> of 50 integers, all <span class="mono">−1</span>, with <span class="mono">HeadPointer</span> and <span class="mono">TailPointer</span> at <span class="mono">−1</span></td><td class="m">3</td></tr>
-    <tr><td><b>(b)</b></td><td>Write <span class="mono">Enqueue()</span> — one parameter, <span class="mono">FALSE</span> if full, <span class="mono">TRUE</span> if stored</td><td class="m">6</td></tr>
-    <tr><td><b>(c)</b></td><td>Write <span class="mono">Dequeue()</span> — the next item, or <span class="mono">−1</span> if empty</td><td class="m">5</td></tr>
-    <tr><td><b>(d)</b></td><td>Write <span class="mono">CreateQueue()</span> — <b>read a text file</b> and enqueue every line, printing "Queue full" if one will not fit</td><td class="m">6</td></tr>
-  </table>
-  <div class="rule accent2" style="font-size:.58em;">
-    <b>Twenty marks, and part (d) is a file-handling question wearing a queue costume.</b>
+<section class="lt" data-background-color="#F4F6FB" id="a02a-leaf-18">
+<div class="badges"><span class="bg bg-p34">P3 + P4</span></div>
+<h2 style="font-size:.82em; margin:0 0 4px;">The real thing</h2>
+<p style="font-size:.48em; color:#8890b5; margin:0 0 7px;">June 2025 Paper 43 Question 1 — a whole Paper 4 question, and it is this lesson end to end. © UCLES</p>
+<table class="mk" style="font-size:.52em;">
+<tr><th style="width:9%;">part</th><th>what it asks</th><th style="width:9%;">marks</th></tr>
+<tr><td><b>(a)</b></td><td>Declare and initialise a global <span class="mono">Queue</span> of 50 integers, all <span class="mono">−1</span>, with <span class="mono">HeadPointer</span> and <span class="mono">TailPointer</span> at <span class="mono">−1</span></td><td class="m">3</td></tr>
+<tr><td><b>(b)</b></td><td>Write <span class="mono">Enqueue()</span> — one parameter, <span class="mono">FALSE</span> if full, <span class="mono">TRUE</span> if stored</td><td class="m">6</td></tr>
+<tr><td><b>(c)</b></td><td>Write <span class="mono">Dequeue()</span> — the next item, or <span class="mono">−1</span> if empty</td><td class="m">5</td></tr>
+<tr><td><b>(d)</b></td><td>Write <span class="mono">CreateQueue()</span> — <b>read a text file</b> and enqueue every line, printing "Queue full" if one will not fit</td><td class="m">6</td></tr>
+</table>
+<div class="rule accent2" style="font-size:.58em;">
+<b>Twenty marks, and part (d) is a file-handling question wearing a queue costume.</b>
     That is how Paper 4 works: the structures do not appear on their own, they appear <b>with a file behind them</b>.
     You will meet that combination properly in a few weeks — for now, notice that it is coming.
   </div>
 
 </section>
-
 <!-- H14 summary -->
-<section data-background-color="#151B3C" class="dk">
-  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
-  <h2 style="font-size:.84em; margin:0 0 10px;">What you can build now</h2>
-  <div class="two-col">
-    <div class="rule accent1" style="margin-top:0; font-size:.6em;">
-      <b>A stack</b> — an array and one integer.<br>
-      <b>A queue</b> — an array and two integers.<br>
+<section class="dk" data-background-color="#151B3C" id="a02a-leaf-19">
+<div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+<h2 style="font-size:.84em; margin:0 0 10px;">What you can build now</h2>
+<div class="two-col">
+<div class="rule accent1" style="margin-top:0; font-size:.6em;">
+<b>A stack</b> — an array and one integer.<br/>
+<b>A queue</b> — an array and two integers.<br/>
       Both with <b>overflow and underflow handled</b>, which is where the marks were all along.
     </div>
-    <div class="rule accent3" style="margin-top:0; font-size:.6em;">
+<div class="rule accent3" style="margin-top:0; font-size:.6em;">
       And one idea that outlives both: <b>a sentinel must come from outside the range of legal values</b> —
       which is why empty is <span class="mono">−1</span> and not 0.
     </div>
-  </div>
-  <div class="rule navy" style="font-size:.62em;">
-    <b>And notice how little separates them.</b> Both are an array and some indices. A stack takes items off
+</div>
+<div class="rule navy" style="font-size:.62em;">
+<b>And notice how little separates them.</b> Both are an array and some indices. A stack takes items off
     <b>the end it puts them on</b>; a queue takes them off <b>the other end</b>. That is the entire difference —
     <b class="accent3">change which index you read from and the structure becomes the other one.</b>
     A data structure is never really a thing. It is <b>a rule about which end you are allowed to touch.</b>
-  </div>
-  <div class="rule accent2 fragment" style="font-size:.62em;">
-    <b>But look at what you had to decide before the program ran.</b> Five elements. Fifty. Two hundred.
+</div>
+<div class="rule accent2 fragment" style="font-size:.62em;">
+<b>But look at what you had to decide before the program ran.</b> Five elements. Fifty. Two hundred.
     Every structure on this slide has a <b>size chosen in advance</b> — and when it is full it is full, even when,
     as you saw, it is nearly empty.
   </div>
-  <p class="center fragment" style="font-size:.72em; margin-top:14px;"><b>Next lesson: the one<br>that does not have a size.</b></p>
-  <p class="center" style="font-size:.48em; color:#98a0c0; margin-top:10px;">🍦 <span class="mono">challenge_A02a_StackQueue</span> is live — 10 000 random operations, and your structure has to survive all of them.</p>
+<p class="center fragment" style="font-size:.72em; margin-top:14px;"><b>Next lesson: the one<br/>that does not have a size.</b></p>
 
 </section>
-
 <!-- vocabulary -->
-<section data-background-color="#222B5A" class="dk">
-  <h3 style="font-size:.76em; margin:0 0 10px;">词汇 Vocabulary</h3>
-  <table class="mk" style="font-size:.54em; color:var(--ice);">
-    <tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
-    <tr><td>abstract data type (ADT)</td><td>抽象数据类型</td><td>a collection of data <b>and the operations allowed on it</b></td></tr>
-    <tr><td>stack</td><td>栈</td><td>last in, first out — one pointer, <span class="mono">Top</span></td></tr>
-    <tr><td>queue</td><td>队列</td><td>first in, first out — two pointers, head and tail</td></tr>
-    <tr><td>push / pop</td><td>入栈 / 出栈</td><td>the only two things a stack can do</td></tr>
-    <tr><td>enqueue / dequeue</td><td>入队 / 出队</td><td>add at the tail, remove from the head</td></tr>
-    <tr><td>overflow</td><td>上溢</td><td>adding to a <b>full</b> structure</td></tr>
-    <tr><td>underflow</td><td>下溢</td><td>removing from an <b>empty</b> one</td></tr>
-    <tr><td>sentinel</td><td>哨兵值</td><td>an impossible value used to mean "nothing here" — here, <span class="mono">−1</span></td></tr>
-  </table>
+<section class="dk" data-background-color="#222B5A" id="a02a-leaf-20">
+<h3 style="font-size:.76em; margin:0 0 10px;">词汇 Vocabulary</h3>
+<table class="mk" style="font-size:.54em; color:var(--ice);">
+<tr><th style="background:rgba(255,255,255,.08); color:#fff;">English</th><th style="background:rgba(255,255,255,.08); color:#fff;">中文</th><th style="background:rgba(255,255,255,.08); color:#fff;">the thing to remember</th></tr>
+<tr><td>abstract data type (ADT)</td><td>抽象数据类型</td><td>a collection of data <b>and the operations allowed on it</b></td></tr>
+<tr><td>stack</td><td>栈</td><td>last in, first out — one pointer, <span class="mono">Top</span></td></tr>
+<tr><td>queue</td><td>队列</td><td>first in, first out — two pointers, head and tail</td></tr>
+<tr><td>push / pop</td><td>入栈 / 出栈</td><td>the only two things a stack can do</td></tr>
+<tr><td>enqueue / dequeue</td><td>入队 / 出队</td><td>add at the tail, remove from the head</td></tr>
+<tr><td>overflow</td><td>上溢</td><td>adding to a <b>full</b> structure</td></tr>
+<tr><td>underflow</td><td>下溢</td><td>removing from an <b>empty</b> one</td></tr>
+<tr><td>sentinel</td><td>哨兵值</td><td>an impossible value used to mean "nothing here" — here, <span class="mono">−1</span></td></tr>
+</table>
 
 </section>
-
 </div></div>
-<button id="llmchip" class="off" title="live LLM marking — only on the teacher's machine">⚡ LLM</button>
-<div id="llmhelp"><span class="x" id="llmhelp-x">✕</span><b>Live marking needs the marking server.</b><br>
-Two steps, on the teacher's Mac:<br>1. open the <b>CS_Materials</b> folder<br>2. double-click <b>Start-LLM-Marking.command</b><br>
-This chip lights up by itself a few seconds after the server starts — no reload needed. Without it, the pattern marks and the machine column still work; the reader adds the marker that reads for <i>meaning</i>.</div>
 <div id="py-chip">🐍 waking Python…</div>
-<div id="langsel"><div id="l-java" class="on">Java</div><div id="l-py">Python</div></div>
 <button id="fsbtn" title="fullscreen (or press F)">⛶</button>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
@@ -875,7 +757,7 @@ function stopPy(){
 }
 function bootPython(){
   if(pyPromise) return pyPromise;
-  pyPromise = loadPyodide().then(function(py){
+  pyPromise = Promise.resolve().then(function(){ if(typeof loadPyodide!=="function") throw new Error("Python runtime download unavailable"); return loadPyodide(); }).then(function(py){
     py.runPython(
       "import builtins, js\n" +
       "async def __ainput(prompt=''):\n" +
@@ -931,60 +813,20 @@ function runPy(code, outEl, doneCb){
 
 /* ===== cells: Python runs live, Java replays a real build-time run ===== */
 function initPyCells(){
-  document.querySelectorAll('.pycell').forEach(function(cell){
-    var isJava = cell.classList.contains('java');
-    var srcEl  = cell.querySelector('.pysrc');
-    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
-    var capOut = cell.getAttribute('data-out') || '';
-    var isErr  = cell.getAttribute('data-err') === '1';
-    cell.innerHTML='';
-
-    var bar=document.createElement('div'); bar.className='pybar';
-    var dots=document.createElement('div'); dots.className='pydots';
-    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
-    bar.appendChild(dots);
-
-    var run=document.createElement('button'); run.className='pyrun';
-    run.textContent = isJava ? '▶ Run' : '⏳ waking…';
-    run.disabled = !isJava;
-    bar.appendChild(run);
-
-    if(!isJava){
-      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
-      stp.title='stop a program waiting for input';
-      stp.addEventListener('click', stopPy);
-      bar.appendChild(stp);
-    }
-    var st=document.createElement('span'); st.className='pystate' + (isJava?' cap':'');
-    st.textContent = isJava ? '☕ captured from a real run' : '🐍 editable · runs here';
-    bar.appendChild(st);
-
-    var ta=document.createElement('textarea'); ta.className='pyta';
-    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
-    if(isJava) ta.readOnly = true;
-    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
-
-    cell.appendChild(bar);
-    if(cell.classList.contains('side')){
-      var row=document.createElement('div'); row.className='pyrow';
-      row.appendChild(ta); row.appendChild(out);
-      out.style.display='block'; out.textContent='press ▶ Run';
-      cell.appendChild(row);
-    } else {
-      cell.appendChild(ta); cell.appendChild(out);
-    }
-
-    if(isJava){
-      run.addEventListener('click', function(){
-        out.style.display='block';
-        out.className='pyout cap' + (isErr?' err':'');
-        out.textContent = capOut;
-      });
-    } else {
-      run.addEventListener('click', function(){ runPy(ta.value, out); });
-    }
-  });
-  bootPython();
+ document.querySelectorAll('.pycell').forEach(function(cell){
+  var src=cell.querySelector('.pysrc'); var code=src?src.textContent.replace(/^\n/,'').replace(/\s+$/,''):'';
+  cell.innerHTML='';
+  var bar=document.createElement('div');bar.className='pybar';
+  var run=document.createElement('button');run.className='pyrun';run.textContent='loading Python';run.disabled=true;
+  var stop=document.createElement('button');stop.className='pylock';stop.textContent='stop input';stop.onclick=stopPy;
+  var label=document.createElement('span');label.className='pystate';label.textContent='Python · editable · fresh namespace';
+  bar.append(run,stop,label);
+  var ta=document.createElement('textarea');ta.className='pyta';ta.value=code;ta.rows=Math.max(2,code.split('\n').length);ta.spellcheck=false;
+  var out=document.createElement('pre');out.className='pyout';out.style.display='none';
+  cell.append(bar,ta,out);
+  run.onclick=function(){runPy(ta.value,out,function(){Reveal.layout();});};
+ });
+ bootPython().catch(function(e){document.getElementById('py-chip').textContent='Python unavailable — reload to retry';});
 }
 function autoSizePyTextareas(scope){
   (scope||document).querySelectorAll('.pyta').forEach(function(ta){
@@ -994,16 +836,7 @@ function autoSizePyTextareas(scope){
   });
 }
 
-/* ===== the language switch ===== */
-function setLang(l){
-  document.body.setAttribute('data-lang', l);
-  document.getElementById('l-java').className = (l==='java') ? 'on' : '';
-  document.getElementById('l-py').className   = (l==='py')   ? 'on' : '';
-  try{ localStorage.setItem('a2lang', l); }catch(e){}
-  setTimeout(function(){ autoSizePyTextareas(document); }, 20);
-}
-document.getElementById('l-java').addEventListener('click', function(){ setLang('java'); });
-document.getElementById('l-py').addEventListener('click', function(){ setLang('py'); });
+
 document.getElementById('fsbtn').addEventListener('click', function(){
   var d=document.documentElement;
   if(document.fullscreenElement){ document.exitFullscreen(); }
@@ -1288,7 +1121,7 @@ function markOne(ans, mps){
   });
   return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
 }
-function gDraw(){
+function foundationLegacyDraw(){
   var s=STAGES[G.i];
   /* which paper this stage is, because the ANSWER FORM changes with it */
   gEl('g-stage').innerHTML = s.name
@@ -1381,7 +1214,7 @@ function gDraw(){
       bossBehaviour(code, function(raw, err){
         var el = document.getElementById('g-beh');
         if(el) el.innerHTML = behaviourHtml(raw, err, code);
-        llmMark(code, document.body.getAttribute('data-lang') === 'py' ? 'py' : 'java',
+        llmMark(code, 'py',
                 total, s.total, raw, document.getElementById('g-llm'), 'A02a-boss', 'Enqueue');
         /* the verdict line must read BOTH columns — full marks on a program that
            does not work is the most instructive result this game can produce */
@@ -1442,7 +1275,7 @@ function gSkip(){
    (An inline handler resolves names GLOBALLY, so a function declared inside the
    Reveal.initialize().then() closure would never be found from the attribute.) */
 window.gReplay = function(){
-  G.i = 0; G.score = 0; G.earned = {};
+  G.i = 0; G.score = 0; G.earned = {}; foundationReviews = {};
   var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
   var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
   gDraw();
@@ -1462,20 +1295,10 @@ function gNextOnce(){
   if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
 }
 function gFinish(){
-  var sk=document.getElementById('g-skip'); if(sk) sk.style.display='none';
-  var bk=document.getElementById('g-back'); if(bk) bk.style.display='none';
-  gEl('g-stage').textContent='done';
-  gEl('g-q').innerHTML='';
-  gEl('g-prog').innerHTML='';
-  gEl('g-score').textContent='';
-  gEl('g-body').innerHTML=
-    '<div class="g-fin"><div class="big">'+G.score+'</div>'+
-    '<p style="margin:6px 0 0;">Every mark on that boss came from a real mark scheme.</p>'+
-    '<p style="margin:6px 0 0; font-size:.9em; color:#5b6488;">The two that cost the most are the two that only matter '+
-    'at the edges: <b>setting HeadPointer to 0 for the very first item</b>, and <b>checking that the queue is full</b> '+
-    'before writing. The middle of the array was never the difficult part.</p>'+
-    '<button class="g-sub" onclick="gReplay()">play again</button></div>';
-  gSay('');
+ var sk=gEl('g-skip'),bk=gEl('g-back');if(sk)sk.style.display='none';if(bk)bk.style.display='none';
+ gEl('g-stage').textContent='Review complete';gEl('g-q').innerHTML='';gEl('g-prog').innerHTML='';gEl('g-score').textContent='';
+ var marks=Object.keys(foundationReviews).filter(function(k){return foundationReviews[k].reviewed;}).length;
+ gEl('g-body').innerHTML='<div class="g-fin"><p>Automatic checks: '+G.score+'</p><p>Human-reviewed written answers: '+marks+'. Their marks are recorded separately.</p><p>Revisit an unfinished task or explain one correction before leaving.</p><button class="g-sub" onclick="gReplay();">play again</button></div>';gSay('');
 }
 
 
@@ -1483,29 +1306,15 @@ function gFinish(){
    grade-server.py holds it in .env on the teacher's Mac and marks on request;
    the absence of the process is the off-switch. ═══ */
 var LLM = { url:'http://127.0.0.1:8788', available:false, on:true };
-function llmChip(){
-  var c = document.getElementById('llmchip'); if(!c) return;
-  if(!LLM.available){ c.className='off'; c.textContent='⚡ no LLM — click for help'; return; }
-  c.className = LLM.on ? 'on' : 'off';
-  c.textContent = LLM.on ? '⚡ LLM marking on' : '⚡ LLM marking off';
+function llmChip(){ /* Classroom revision: external grading disabled. */
 }
-function llmHelp(show){ var h = document.getElementById('llmhelp'); if(h) h.style.display = show ? 'block' : 'none'; }
-function llmDetect(cb){
-  var ctl = new AbortController(); var tm = setTimeout(function(){ ctl.abort(); }, 1200);
-  fetch(LLM.url + '/ping', {signal: ctl.signal, cache:'no-store'})
-    .then(function(r){ return r.json(); })
-    .then(function(j){ clearTimeout(tm); LLM.available = !!(j && j.ok && j.key); llmChip(); if(LLM.available) llmHelp(false); if(cb) cb(); })
-    .catch(function(){ clearTimeout(tm); LLM.available = false; llmChip(); if(cb) cb(); });
+function llmHelp(){ /* Classroom revision: external grading disabled. */
 }
-function llmWatch(){ setInterval(function(){ if(LLM.available || document.hidden) return; llmDetect(); }, 5000); }
-function llmBind(){
-  var c = document.getElementById('llmchip'); if(!c || c.__bound) return; c.__bound = true;
-  c.addEventListener('click', function(){
-    if(!LLM.available){ c.textContent='⚡ looking for the server…'; llmHelp(true); llmDetect(); return; }
-    LLM.on = !LLM.on; llmChip();
-  });
-  var x = document.getElementById('llmhelp-x'); if(x) x.addEventListener('click', function(){ llmHelp(false); });
-  llmDetect(); llmWatch();
+function llmDetect(){ /* Classroom revision: external grading disabled. */
+}
+function llmWatch(){ /* Classroom revision: external grading disabled. */
+}
+function llmBind(){ /* Classroom revision: external grading disabled. */
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', llmBind);
 else llmBind();
@@ -1559,48 +1368,44 @@ function consensusHtml(regexRaw, llmAwarded, ofPoints, behaviour){
   return '<div class="g-cons split">' + rows + ' \u2014 <b>all three agree, and none of them are happy.</b> '
        + 'Start from the first \u2717 on the left.</div>';
 }
-function gWaiting(on){
-  G.llmBusy = !!on;
-  var say = gEl('g-say'); if(!say) return;
-  var h = document.getElementById('g-nexthint');
-  if(!h){ h = document.createElement('div'); h.id = 'g-nexthint'; h.style.marginTop = '5px'; say.appendChild(h); }
-  if(on){
-    h.style.opacity = '1';
-    h.innerHTML = '<span style="color:#8a5a00;">\u26a1 <b>the reader is still marking\u2026</b> give it a few seconds \u2014 clicking now moves on without it.</span>';
-  } else { h.style.opacity = '.65'; h.textContent = ''; }
+function gWaiting(){ /* Classroom revision: external grading disabled. */
 }
-function llmMark(code, lang, regexRaw, ofPoints, behaviourRaw, host, task, fn){
-  if(!LLM.available || !LLM.on || !host) return;
-  var grid = host.closest ? host.closest('.g-grid') : null;
-  if(grid) grid.classList.add('three');
-  host.innerHTML = '<p class="g-lbl">a second marker is reading it\u2026 <span class="conf">(this one reads for meaning, not for patterns)</span></p>';
-  var ctl = new AbortController();
-  var timedOut = false, t0 = Date.now();
-  var tm = setTimeout(function(){ timedOut = true; ctl.abort(); }, 90000);
-  gWaiting(true);
-  fetch(LLM.url + '/mark', {
-    method:'POST', signal: ctl.signal, headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({task: task, fn: fn, lang: lang, code: code})
-  }).then(function(r){ return r.json(); })
-    .then(function(j){
-      clearTimeout(tm); gWaiting(false);
-      if(!j || j.error){ host.innerHTML = '<p class="g-lbl">second marker unavailable <span class="conf">(' + ((j && j.error) || 'no reply') + ')</span></p>'; return; }
-      var rows = j.marks.map(function(m){
-        return '<li><span class="' + (m.awarded?'y':'n') + '">' + (m.awarded?'\u2713':'\u2717') + '</span> '
-             + m.point + (m.why ? ' <span class="conf">\u2014 ' + m.why + '</span>' : '') + '</li>';
-      }).join('');
-      host.innerHTML = '<p class="g-lbl">what a second marker says \u2014 <b>it read your code, it did not run it</b></p>'
-                     + '<ul class="g-mp">' + rows + '</ul>'
-                     + (j.did_right ? '<p style="font-size:.5em; margin:4px 0 0;">' + j.did_right + '</p>' : '')
-                     + consensusHtml(regexRaw, j.awarded, ofPoints, behaviourRaw);
-    })
-    .catch(function(){
-      clearTimeout(tm); gWaiting(false);
-      var secs = Math.round((Date.now() - t0) / 1000);
-      host.innerHTML = timedOut
-        ? '<p class="g-lbl">the reader gave up after ' + secs + ' s <span class="conf">(the model is busy, not broken \u2014 the other columns stand. Press mark again to retry.)</span></p>'
-        : '<p class="g-lbl">could not reach the reader <span class="conf">(nothing answered on 127.0.0.1:8788 \u2014 is the Terminal window still open?)</span></p>';
-    });
+function llmMark(){ /* Classroom revision: external grading disabled. */
+}
+
+
+// Written explanations: commit first; meaning is reviewed by a person, never token-scored.
+var foundationReviews={};
+function gDraw(){
+ var s=STAGES[G.i];
+ if(!s.llmTask||s.boss||!s.mps||s.seq){foundationLegacyDraw();return;}
+ var ix=G.i;G.locked=false;var state=foundationReviews[ix]||(foundationReviews[ix]={answer:'',committed:false,selected:[],reviewed:false});
+ gEl('g-stage').textContent=s.name+' · P3 · human review';gEl('g-q').innerHTML=s.q;
+ gEl('g-score').textContent=G.score?'automatic checks '+G.score:'';gNavState();gProg();gSay('');
+ var host=gEl('g-body');host.innerHTML='';
+ var ta=document.createElement('textarea');ta.className='g-ta';ta.rows=3;ta.value=state.answer;ta.readOnly=state.committed;ta.setAttribute('aria-label','Written answer');
+ ta.oninput=function(){state.answer=ta.value;state.reviewed=false;};host.appendChild(ta);
+ var commit=document.createElement('button');commit.className='g-sub';commit.textContent=state.committed?'Edit answer':'Commit answer';
+ commit.onclick=function(){state.answer=ta.value;state.committed=!state.committed;state.reviewed=false;gDraw();};host.appendChild(commit);
+ var status=document.createElement('p');status.style.cssText='font-size:15px;margin:5px 0';status.textContent='No automatic prose score. Human marks stay separate from automatic checks.';host.appendChild(status);
+ if(!state.committed)return;
+ var details=document.createElement('details');details.className='foundation-rubric';
+ var summary=document.createElement('summary');summary.textContent='Optional self/teacher rubric · max '+s.total;details.appendChild(summary);
+ var content=document.createElement('div');content.style.cssText='max-height:145px;overflow:auto;font-size:16px;line-height:1.25';
+ s.mps.forEach(function(m,i){
+  var row=document.createElement('label');row.style.cssText='display:flex;gap:7px;margin:4px 0';
+  var box=document.createElement('input');box.type='checkbox';box.checked=!!state.selected[i];box.disabled=!state.answer.trim();
+  box.onchange=function(){state.selected[i]=box.checked;state.reviewed=false;showScore();};
+  var text=document.createElement('span');text.innerHTML=m.label+' ['+m.pts+']'+(m.grp?' · group '+m.grp:'');row.append(box,text);content.appendChild(row);
+ });
+ if(s.groupCaps){var caps=document.createElement('p');caps.textContent='Group caps: '+Object.entries(s.groupCaps).map(function(x){return x[0]+' max '+x[1];}).join('; ')+'; overall max '+s.total;content.prepend(caps);}
+ var save=document.createElement('button');save.className='g-sub';save.textContent='Record self/teacher mark';save.disabled=!state.answer.trim();save.onclick=function(){state.reviewed=true;showScore();};content.appendChild(save);
+ var result=document.createElement('p');content.appendChild(result);
+ function showScore(){var groups={},points=0;s.mps.forEach(function(m,i){if(!state.selected[i])return;if(m.grp&&s.groupCaps)groups[m.grp]=(groups[m.grp]||0)+m.pts;else points+=m.pts;});Object.keys(groups).forEach(function(k){points+=Math.min(groups[k],s.groupCaps[k]);});points=Math.min(s.total,points);result.textContent=!state.answer.trim()?'Not attempted · 0 / '+s.total:state.reviewed?'Recorded self/teacher mark '+points+' / '+s.total:'Awaiting self/teacher review';result.dataset.mode='human';result.dataset.score=state.reviewed?String(points):'pending';}
+ showScore();details.appendChild(content);host.appendChild(details);
+ var model=document.createElement('details');model.className='foundation-rubric';model.innerHTML='<summary>Optional model answer — compare meaning</summary>';
+ var answer=document.createElement('p');answer.style.cssText='font-size:16px;max-height:95px;overflow:auto;white-space:pre-wrap';answer.textContent=s.model||'';model.appendChild(answer);host.appendChild(model);
+ host.querySelectorAll('details').forEach(function(x){x.ontoggle=function(){Reveal.layout();};});Reveal.layout();
 }
 
 Reveal.initialize({
@@ -1612,7 +1417,6 @@ Reveal.initialize({
   makeViz('stackviz','stack');
   makeViz('queueviz','queue');
   gDraw();
-  try{ var L=localStorage.getItem('a2lang'); if(L) setLang(L); }catch(e){}
   var ob=document.getElementById('obj-btn');
   if(ob) ob.addEventListener('click', function(){
     var o=document.getElementById('obj');
@@ -1622,7 +1426,6 @@ Reveal.initialize({
 Reveal.on('ready', function(e){ autoSizePyTextareas(e.currentSlide); });
 Reveal.on('slidechanged', function(e){ autoSizePyTextareas(e.currentSlide); });
 </script>
-
 <script>
 /* ===== the ring — a steppable circular queue ===== */
 var CQ = {N:5, q:[], head:0, tail:-1, count:0, next:10, timer:null, log:[]};
