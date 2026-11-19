@@ -1,0 +1,2018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="classroom-submissions" content="disabled-human-review">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Who Chose the Order? — file organisation and hashing</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<style>
+:root{
+  --dark:#151B3C; --light:#F4F6FB; --accent1:#17B3A3; --accent2:#F0655B;
+  --accent3:#F2B53C; --navy:#222B5A; --ice:#E8EEF9; --white:#fff;
+}
+.reveal{font-family:'Calibri','Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif; font-size:26px;}
+.reveal h1,.reveal h2,.reveal h3{font-family:'Georgia','Times New Roman','PingFang SC','Microsoft YaHei',serif; text-transform:none; letter-spacing:-.02em;}
+.reveal section{text-align:left;}
+.dk{color:var(--ice);} .dk h1,.dk h2,.dk h3{color:var(--white);}
+.lt{color:var(--navy);} .lt h2,.lt h3{color:var(--navy);}
+.bar{position:absolute; top:0; left:0; right:0; height:5px;}
+.card{background:var(--white); border-radius:10px; padding:16px 20px; box-shadow:0 4px 12px rgba(0,0,0,.07); text-align:left;}
+.rule{background:var(--white); border-radius:8px; padding:11px 16px; box-shadow:0 3px 10px rgba(0,0,0,.05); border-left:5px solid var(--accent1); margin:10px 0; text-align:left; font-size:.74em;}
+.rule.accent2{border-left-color:var(--accent2);} .rule.accent3{border-left-color:var(--accent3);} .rule.navy{border-left-color:var(--navy);}
+.dk .rule{background:rgba(255,255,255,.06); color:var(--ice);}
+/* .card is white by design; on a dark slide it must go translucent like .rule does, or the
+   ice/white text written for the dark background lands on white -- unreadable, not merely
+   faint. The border makes the cards' inline border-color (the accent tint) actually show. */
+.dk .card{background:rgba(255,255,255,.06); box-shadow:none; border:2px solid rgba(255,255,255,.14);}
+.two-col{display:flex; gap:26px; align-items:flex-start;} .two-col>*{flex:1; min-width:0;}
+.three-col{display:flex; gap:16px;} .three-col>*{flex:1; min-width:0;}
+.smaller{font-size:.7em;} .center{text-align:center;}
+.accent1{color:var(--accent1);} .accent2{color:var(--accent2);} .accent3{color:var(--accent3);}
+.mono{font-family:'Courier New',monospace; font-weight:bold;}
+
+.badges{position:absolute; top:-14px; right:0; display:flex; gap:6px; z-index:5;}
+.bg{font-size:.44em; font-weight:bold; letter-spacing:.03em; padding:3px 12px; border-radius:20px; font-family:'Calibri','Segoe UI',sans-serif;}
+.bg-p3{background:rgba(240,101,91,.14); color:#c0392b; border:1.5px solid var(--accent2);}
+.bg-p34{background:rgba(23,179,163,.15); color:#0d7a6e; border:1.5px solid var(--accent1);}
+.bg-p4{background:rgba(242,181,60,.18); color:#8a5c00; border:1.5px solid var(--accent3);}
+.dk .bg-p3{color:#ff9d95;} .dk .bg-p34{color:#5FD6C9;} .dk .bg-p4{color:#F2B53C;}
+
+.dig{position:absolute; bottom:-34px; left:50%; transform:translateX(-50%); font-size:.5em; color:#98a0c0; animation:bob 2s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(5px);}}
+#obj-btn{background:rgba(255,255,255,.08); color:var(--ice); border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:5px 14px; cursor:pointer; font-size:.42em; opacity:.55;}
+#obj-btn:hover{opacity:1;}
+
+/* ===== py-cell: live Python ===== */
+.pycell{background:var(--navy); border-radius:12px; padding:10px 12px 12px; box-shadow:0 4px 14px rgba(0,0,0,.14); text-align:left;}
+.pycell .pybar{display:flex; gap:8px; align-items:center; margin-bottom:6px;}
+.pycell .pydots{display:flex; gap:5px;}
+.pycell .pydots i{width:9px; height:9px; border-radius:50%; display:block;}
+.pyta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.45; padding:10px 12px; resize:none; outline:none; display:block;}
+.pyta[readonly]{color:#aeb8dd;}
+.pyta:focus{box-shadow:0 0 0 2px var(--accent1);}
+.pyrun{background:var(--accent1); color:#fff; border:none; border-radius:7px; padding:4px 16px; font-size:.5em; font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.pyrun:hover{background:#12907f;} .pyrun:disabled{background:#5a6394; cursor:wait;}
+.pylock{background:transparent; color:#98a0c0; border:1.5px solid #454e82; border-radius:7px; padding:3px 9px; font-size:.5em; font-weight:bold; cursor:pointer;}
+.pylock:hover{color:var(--accent3); border-color:var(--accent3);}
+.pyout{background:#0d1230; color:#5FD6C9; border-radius:8px; font-family:'Courier New',monospace; font-weight:bold;
+  font-size:.54em; line-height:1.45; padding:9px 12px; margin:8px 0 0; min-height:1.4em; white-space:pre-wrap; text-align:left;}
+.pyout .crash{color:var(--accent2);}
+.pyin-lbl{color:#5FD6C9;}
+.pyin{background:#1b234d; border:2px solid var(--accent1); border-radius:6px; color:var(--ice);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:1em; padding:1px 8px; width:130px; outline:none;}
+.pystate{font-size:.44em; color:#98a0c0; margin-left:auto;}
+.pycell.tight .pyta{font-size:.485em; line-height:1.34;}
+.pycell.tight .pyout{font-size:.485em; line-height:1.34;}
+.pycell.xtight .pyta{font-size:.43em; line-height:1.3;}
+.pycell.xtight .pyout{font-size:.43em; line-height:1.3;}
+.pycell.side .pyrow{display:flex; gap:10px; align-items:stretch;}
+.pycell.side .pyrow .pyta{flex:1; min-width:0;}
+.pycell.side .pyrow .pyout{margin:0; flex:0 0 auto; min-width:190px;}
+#py-chip{position:fixed; bottom:18px; left:18px; z-index:99; font-size:14px; font-weight:bold; padding:6px 14px; border-radius:20px; background:rgba(30,39,97,.75); color:#98a0c0;}
+#py-chip.ready{color:#5FD6C9;}
+
+#fsbtn{position:fixed; top:14px; right:16px; z-index:99; background:rgba(20,26,60,.72);
+  color:#98a0c0; border:2px solid #6b74a8; border-radius:9px; padding:3px 11px; font-size:16px;
+  cursor:pointer; line-height:1.25; font-family:'Calibri','Segoe UI',sans-serif;}
+#fsbtn:hover{background:var(--accent1); color:#fff; border-color:var(--accent1);}
+
+/* ===== 🧾 outside the exam hall ===== */
+.toll{background:#fffaf0; border:2px solid var(--accent3); border-radius:10px; padding:9px 14px; text-align:left; font-size:.56em; line-height:1.5; color:var(--navy); margin:8px 0;}
+.toll .th{display:inline-block; font-weight:bold; font-size:.86em; letter-spacing:.05em; color:#8a6100; margin-bottom:3px;}
+.toll .yes{color:#0d7a6e; font-weight:bold;} .toll .no{color:#c0392b; font-weight:bold;}
+
+/* ===== 📐 the divergence box ===== */
+.diverge{background:#f7f5ff; border:2px dashed #b3a6e8; border-radius:10px; padding:10px 15px; text-align:left; font-size:.55em; line-height:1.5; color:var(--navy); margin:9px 0;}
+.diverge .dh{display:inline-block; font-weight:bold; font-size:.85em; letter-spacing:.04em; color:#6d4fd0; margin-bottom:3px;}
+
+/* ===== pseudocode block ===== */
+.ps{background:#f4f6fb; border:1px solid #d9deed; border-left:4px solid var(--accent3); border-radius:8px;
+  padding:10px 14px; font-family:'Courier New',monospace; font-weight:bold; font-size:.56em; line-height:1.5;
+  color:var(--navy); white-space:pre; margin:8px 0; overflow-x:auto;}
+.dk .ps{background:rgba(255,255,255,.07); color:var(--ice); border-color:rgba(255,255,255,.16); border-left-color:var(--accent3);}
+.ps .k{color:#6d4fd0;} .dk .ps .k{color:#c0aef5;}
+.ps .v{color:#c0392b;} .dk .ps .v{color:#ff9d95;}
+.ps .c{color:#8890b5; font-weight:normal;}
+
+/* ===== marks table ===== */
+.mk{border-collapse:collapse; font-size:.5em; width:100%;}
+.mk td,.mk th{border:1px solid #ccd3e8; padding:4px 9px; text-align:left; vertical-align:top;}
+.mk th{background:#eef2fb; font-weight:bold; color:var(--navy);}
+.mk td.m{text-align:center; font-weight:bold; color:var(--accent2); white-space:nowrap;}
+.mk code{font-family:'Courier New',monospace; font-weight:bold; color:#6d4fd0;}
+
+/* ===== 🎮 game ===== */
+.g-wrap{background:var(--white); border-radius:12px; padding:14px 18px; box-shadow:0 5px 18px rgba(0,0,0,.09); color:var(--navy);}
+.g-top,.g-head{display:flex; align-items:center; gap:14px; margin-bottom:9px;}
+/* a teacher must be able to move on without answering */
+.g-skip{margin-left:8px; background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;
+  border-radius:7px; padding:2px 11px; font-size:.44em; font-weight:bold; cursor:pointer;
+  font-family:'Calibri','Segoe UI',sans-serif;}
+.g-skip:hover{color:var(--accent1); border-color:var(--accent1);}
+.g-opts .g-b{min-width:0;}
+.g-stage{font-size:.56em; font-weight:bold; color:var(--navy); background:rgba(242,181,60,.18); border:2px solid var(--accent3); border-radius:22px; padding:3px 20px;}
+.pbadge{display:inline-block; font-size:.82em; letter-spacing:.04em; padding:1px 9px; border-radius:14px; margin-left:5px; border:1.5px solid;}
+.pbadge.p3{background:rgba(240,101,91,.13); color:#c0392b; border-color:var(--accent2);}
+.pbadge.p4{background:rgba(23,179,163,.15); color:#0d7a6e; border-color:var(--accent1);}
+.formwarn{background:#fdeeec; border:2px solid var(--accent2); border-radius:9px; padding:8px 13px; margin:7px 0 0;
+  font-size:.92em; line-height:1.5; color:var(--navy);}
+.formwarn b{color:#c0392b;}
+.g-prog{display:flex; gap:6px; margin-left:auto;}
+.g-prog i{width:9px; height:9px; border-radius:50%; background:#d3d9ec; display:block; transition:.2s;}
+.g-prog i.done{background:var(--accent1);} .g-prog i.cur{background:var(--accent3); transform:scale(1.35);}
+.g-score{font-size:.52em; font-weight:bold; color:var(--accent2); font-family:'Courier New',monospace;}
+.g-q{font-size:.58em; line-height:1.5; margin-bottom:8px;}
+.g-q b{color:var(--accent2);}
+.g-opts{display:flex; flex-wrap:wrap; gap:8px;}
+.g-b{background:#f4f6fb; border:2px solid #ccd3e8; border-radius:9px; padding:7px 14px; font-size:.54em;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; color:var(--navy); text-align:left; line-height:1.4;}
+.g-b:hover{border-color:var(--accent1);}
+.g-b.no{border-color:var(--accent2); background:#fdeeec; animation:shake .35s;}
+.g-b.yes{border-color:var(--accent1); background:#e6f7f4;}
+.g-b .mono{display:block; font-size:.92em;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.g-ta{width:100%; box-sizing:border-box; background:#1b234d; color:var(--ice); border:none; border-radius:8px;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.54em; line-height:1.5; padding:9px 12px; resize:none; outline:none;}
+.g-ta:focus{box-shadow:0 0 0 2px var(--accent3);}
+.g-sub{background:var(--accent3); color:#4a3500; border:none; border-radius:8px; padding:5px 20px; font-size:.52em;
+  font-weight:bold; cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif; margin-top:7px;}
+.g-sub:hover{background:#e0a52c;}
+.g-say{font-size:.54em; min-height:1.5em; margin-top:7px; line-height:1.5;}
+.g-say.ok{color:#0d7a6e; font-weight:bold;} .g-say.bad{color:var(--accent2); font-weight:bold;}
+/* .g-mp nested inside .g-say compounds two em reductions down to ~7px — reset it */
+.g-say .g-mp{font-size:.92em; font-weight:normal; color:var(--navy);}
+.g-say .g-mp .y{color:#0d7a6e;} .g-say .g-mp .n{color:var(--accent2);}
+/* the game panel is white even on a dark slide, so .dk .ps must not win inside it */
+.dk .g-wrap .ps{background:#f4f6fb; color:var(--navy); border-color:#d9deed; border-left-color:var(--accent3);}
+.dk .g-wrap .ps .k{color:#6d4fd0;} .dk .g-wrap .ps .v{color:#c0392b;}
+.g-say .ps{font-weight:bold;}
+.g-mp{list-style:none; padding:0; margin:6px 0 0; font-size:.48em; line-height:1.55;}
+.g-mp li{padding-left:2px;} .g-mp .y{color:#0d7a6e; font-weight:bold;} .g-mp .n{color:var(--accent2); font-weight:bold;}
+/* minmax(0,…) or one long line inside a column sets that column's width and
+   squeezes the other one taller — measured at 848px on a 720 stage */
+.g-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px 20px;}
+/* a MODEL ANSWER for a written question is prose, not code: let it wrap */
+.g-model{background:#f4f6fb; border:1px solid #d9deed; border-left:4px solid var(--accent1);
+  border-radius:8px; padding:8px 12px; font-size:.5em; line-height:1.5; color:var(--navy);
+  white-space:pre-wrap; margin:0;}
+.g-lbl{font-size:.5em; color:#5b6488; margin:5px 0 3px;}
+.g-res .g-tot{font-size:1.1em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace; text-align:center; margin:2px 0 4px;}
+.g-fin{text-align:center; font-size:.62em; line-height:1.6;}
+.g-fin .big{font-size:1.5em; font-weight:bold; color:var(--accent3); font-family:'Courier New',monospace;}
+/* a small node table inside a game question */
+.qt{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.86em; margin:5px 0 0;}
+.qt td,.qt th{border:1px solid #ccd3e8; padding:1px 11px; text-align:center;}
+.qt th{background:#eef2fb; font-size:.85em; color:#5b6488;}
+.qt td.f{color:#b3bad2;}
+
+/* ===== the step-through trace — one line runs, one cell lights up ===== */
+.tr2{display:flex; gap:20px; align-items:flex-start;}
+.tr2 .tcode{flex:1.15; min-width:0;} .tr2 .tstate{flex:1; min-width:0;}
+.tline{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; line-height:1.5;
+  padding:3px 11px; border-radius:6px; color:#8f98c2; white-space:pre; transition:.15s;}
+.tline.cur{background:rgba(242,181,60,.24); color:#fff3d6;}
+.tline.done{color:#5FD6C9; opacity:.72;}
+.tnote{font-size:.5em; min-height:3.6em; margin-top:8px; line-height:1.55; color:#c3cae6;}
+.tnote b{color:var(--accent3);} .tnote .warn{color:#ff9d95; font-weight:bold;}
+.tbtns{display:flex; gap:8px; margin-top:6px; align-items:center;}
+.treads{font-family:'Courier New',monospace; font-weight:bold; font-size:.48em; margin-top:6px; color:#8ff0e4; min-height:1.4em;}
+.treads .lp{color:#ff9d95;}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+
+/* ===== the node table widget ===== */
+.lt-wrap{background:var(--white); border-radius:12px; padding:12px 16px; box-shadow:0 4px 14px rgba(0,0,0,.08); color:var(--navy);}
+.dk .lt-wrap{background:rgba(255,255,255,.07); color:var(--ice);}
+.ltab{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.62em; width:100%;}
+.ltab th{background:#eef2fb; color:#5b6488; padding:3px 8px; font-size:.88em; border:1px solid #ccd3e8;}
+.dk .ltab th{background:rgba(255,255,255,.08); color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.ltab td{border:1px solid #ccd3e8; padding:3px 8px; text-align:center; transition:.15s;}
+.dk .ltab td{border-color:rgba(255,255,255,.18);}
+.ltab tr.free td{color:#b3bad2; background:#fbfcff;}
+.dk .ltab tr.free td{color:#6d7699; background:rgba(255,255,255,.02);}
+.ltab tr.used td{color:var(--navy); background:rgba(23,179,163,.10);}
+.dk .ltab tr.used td{color:#d8f5f1; background:rgba(23,179,163,.16);}
+.ltab tr.hit td{background:rgba(242,181,60,.42); color:#4a3500;}
+.dk .ltab tr.hit td{background:rgba(242,181,60,.38); color:#fff3d6;}
+.ltab tr.fhit td{background:rgba(109,79,208,.28);}
+.ltab td.ix{color:#98a0c0; background:transparent;}
+.dk .ltab td.ix{color:#7b85ab;}
+.ptrchip{display:inline-block; font-family:'Courier New',monospace; font-weight:bold; font-size:.58em;
+  border-radius:16px; padding:3px 14px; margin:0 7px 7px 0; border:2px solid;}
+.ptrchip.fn{border-color:var(--accent2); color:#c0392b; background:rgba(240,101,91,.10);}
+.ptrchip.fe{border-color:#6d4fd0; color:#6d4fd0; background:rgba(109,79,208,.09);}
+.dk .ptrchip.fn{color:#ff9d95;} .dk .ptrchip.fe{color:#c0aef5;}
+.vzc{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;}
+.vzb{background:var(--navy); color:#fff; border:none; border-radius:8px; padding:6px 15px; font-size:.52em; font-weight:bold;
+  cursor:pointer; font-family:'Calibri','Segoe UI',sans-serif;}
+.vzb:hover{background:var(--accent1);} .vzb:disabled{background:#c6cde4; cursor:default;}
+.vzb.alt{background:#6d4fd0;} .vzb.alt:hover{background:#8467e0;}
+.vzb.gh{background:transparent; color:#98a0c0; border:1.5px solid #ccd3e8;}
+.dk .vzb.gh{border-color:rgba(255,255,255,.25);}
+/* ===== the trace stepper: source | call stack | the exam's table ===== */
+.trw{display:flex; gap:12px; align-items:stretch;}
+.trsrc{flex:0 0 30%; min-width:0;}
+.trstack{flex:0 0 22%; min-width:0; display:flex; flex-direction:column-reverse; justify-content:flex-start; gap:3px;
+  border-left:2px dashed #ccd3e8; padding-left:9px; min-height:150px;}
+.dk .trstack{border-left-color:rgba(255,255,255,.2);}
+.trtab{flex:1; min-width:0; max-height:196px; overflow-y:auto;}
+.trcode{font-family:'Courier New',monospace; font-weight:bold; font-size:.44em; line-height:1.5; white-space:pre;
+  background:#f4f6fb; border:1px solid #d9deed; border-radius:8px; padding:7px 9px;}
+.dk .trcode{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.16);}
+.trcode span.ln{display:block; padding:0 4px; border-radius:3px;}
+.trcode span.ln.on{background:rgba(242,181,60,.38);}
+.frm{font-family:'Courier New',monospace; font-weight:bold; font-size:.42em; border-radius:6px; padding:3px 7px;
+  border:2px solid var(--accent1); background:rgba(23,179,163,.12); color:var(--navy); transition:.15s;}
+.dk .frm{color:var(--ice);}
+.frm.top{border-color:var(--accent3); background:rgba(242,181,60,.26);}
+.frm.popping{border-color:var(--accent2); background:rgba(240,101,91,.2);}
+.frm small{display:block; font-size:.8em; font-weight:normal; color:#8890b5;}
+.trt{border-collapse:collapse; font-family:'Courier New',monospace; font-weight:bold; font-size:.42em; width:100%;}
+.trt th{background:#eef2fb; color:#5b6488; padding:2px 6px; border:1px solid #ccd3e8; position:sticky; top:0;}
+.dk .trt th{background:#2b3566; color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.trt td{border:1px solid #ccd3e8; padding:2px 6px; text-align:center;}
+.dk .trt td{border-color:rgba(255,255,255,.18);}
+.trt tr.wind td{background:rgba(23,179,163,.13);}
+.trt tr.unwind td{background:rgba(242,181,60,.20);}
+.trt tr.new td{outline:2px solid var(--accent2); outline-offset:-2px;}
+/* ===== live LLM marking (teacher's machine only; see grade-server.py) ===== */
+#llmchip{position:fixed; top:52px; right:16px; z-index:99; font-size:13px; font-weight:bold;
+  padding:4px 12px; border-radius:20px; cursor:pointer; border:2px solid #6b74a8;
+  background:rgba(20,26,60,.72); color:#98a0c0; font-family:'Calibri','Segoe UI',sans-serif;}
+#llmchip.on{border-color:var(--accent1); color:#5FD6C9;}
+#llmchip.off{opacity:.5;}
+#llmchip.absent{display:none;}
+#llmhelp{position:fixed; top:84px; right:16px; z-index:100; display:none; width:342px;
+  background:rgba(20,26,60,.97); border:2px solid var(--accent3); border-radius:10px;
+  padding:14px 16px; font-size:13px; line-height:1.45; color:#c9cee6; text-align:left;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);}
+#llmhelp b{color:#F2B53C;}
+#llmhelp p{margin:6px 0;}
+#llmhelp ol{margin:6px 0 6px 18px; padding:0;}
+#llmhelp li{margin:7px 0;}
+#llmhelp code{background:rgba(0,0,0,.35); padding:1px 5px; border-radius:4px;
+  color:#5FD6C9; font-size:12px;}
+#llmhelp .tiny{font-size:11.5px; opacity:.78; margin-top:9px;}
+#llmhelp button{margin-top:9px; background:var(--accent1); color:#0d1230; border:0;
+  border-radius:6px; padding:5px 14px; font-weight:bold; cursor:pointer;}
+.g-llm{margin-top:6px;}
+/* The reader's column only exists on the teacher's machine, so a two-column
+   panel that fits in review can be 142px off the stage in the classroom. It
+   gets its own column the moment it has anything in it. */
+.g-llm:empty{display:none;}
+/* minmax(0,…) or a long line in the student's own code widens column 1 past its
+   share and squeezes the other two taller — 724px on a 720 stage in A3a. */
+.g-grid.three{grid-template-columns:minmax(0,.86fr) minmax(0,1.07fr) minmax(0,1.07fr); gap:6px 14px;}
+.g-grid.three .g-ans{max-height:250px; overflow:auto;}
+/* the reader's own column was the one nobody capped, and it is the tallest thing
+   on the panel: five mark points, each with its evidence and its reasoning. */
+.g-grid.three .g-llm{max-height:228px; overflow:auto;}
+.g-llm .conf{font-size:.82em; opacity:.7; font-style:italic;}
+.g-cons{margin-top:7px; border-radius:9px; padding:7px 12px; font-size:.5em; line-height:1.5;
+  border:2px solid; text-align:left;}
+.g-cons.agree{border-color:var(--accent1); background:rgba(23,179,163,.12); color:#0d7a6e;}
+.g-cons.split{border-color:var(--accent3); background:rgba(242,181,60,.14); color:#8a5c00;}
+.g-cons b{font-family:'Courier New',monospace;}
+.trlegend{display:flex; gap:14px; font-size:.42em; align-items:center; margin-top:5px; color:#8890b5;}
+.trlegend i{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:4px; vertical-align:-1px;}
+.trcount{font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; margin-left:auto; color:var(--accent2);}
+.vzmsg{font-size:.54em; min-height:3.2em; margin-top:8px; font-weight:bold; line-height:1.5;}
+.vzmsg.ok{color:#0d7a6e;} .vzmsg.bad{color:var(--accent2);} .vzmsg.nt{color:#6d4fd0;}
+.dk .vzmsg.ok{color:#5FD6C9;} .dk .vzmsg.bad{color:#ff9d95;} .dk .vzmsg.nt{color:#c0aef5;}
+.reads{font-family:'Courier New',monospace; font-weight:bold; font-size:.64em; margin-top:9px;}
+.reads b{color:var(--accent1);}
+
+/* THE GAME SLIDE GROWS AFTER REVEAL HAS LAID IT OUT, and Reveal centres a slide
+   only ONCE, at slide-change time. Stage 1 is short, so Reveal pinned top:232px
+   — and the boss then grew downward off the bottom of the 720 stage (measured
+   at 799px, i.e. 79px of the panel below the visible area). scrollHeight said
+   "fits" the whole time, because scrollHeight is not where the slide SITS.
+   min-height cannot fix it: Reveal's own stylesheet sets
+   `.reveal.center .slides section { min-height: 0 !important }`.
+   So anchor the top instead — a stylesheet !important beats Reveal's inline
+   top. The panel now sits high, does not jump between stages, and has ~50px of
+   headroom below its tallest state. Any slide whose content expands WITHOUT a
+   slide change needs this class. */
+.reveal .slides section.growslide{top:40px !important;}
+
+/* the student's own code stays on screen beside the feedback, so a tick and the
+   line that earned it can be read on the same screen */
+.g-ans{background:#1b234d; color:var(--ice); border-radius:8px; font-family:'Courier New',monospace;
+  font-weight:bold; font-size:.5em; line-height:1.45; padding:9px 12px; margin:0; white-space:pre;
+  overflow:auto; max-height:300px; text-align:left;}
+.g-ans:empty::before{content:'(you did not write anything)'; color:#7b85ab; font-weight:normal;}
+
+/* ===== the tree canvas — geometry in SVG, every label in HTML ===== */
+.tcv{position:relative; width:100%; height:270px;}
+.tcv svg{position:absolute; inset:0; width:100%; height:100%;}
+.tnode{position:absolute; transform:translate(-50%,-50%); background:var(--white); border:2.5px solid var(--accent1);
+  border-radius:50%; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.6em; color:var(--navy); transition:.2s;}
+.dk .tnode{background:#1b234d; color:var(--ice);}
+.tnode.hot{border-color:var(--accent3); background:rgba(242,181,60,.3); transform:translate(-50%,-50%) scale(1.18);}
+.tnode.new{border-color:var(--accent2);}
+.tnode .ix{position:absolute; top:-15px; right:-9px; font-size:.72em; color:#98a0c0; font-family:'Courier New',monospace;}
+.tmsg{font-size:.52em; min-height:2.9em; font-weight:bold; line-height:1.45; margin-top:4px;}
+.tmsg.ok{color:#0d7a6e;} .dk .tmsg.ok{color:#5FD6C9;}
+.tmsg.bad{color:var(--accent2);} .dk .tmsg.bad{color:#ff9d95;}
+.tmsg.nt{color:#6d4fd0;} .dk .tmsg.nt{color:#c0aef5;}
+.tio{font-family:'Courier New',monospace; font-weight:bold; font-size:.52em; margin-top:3px; color:#0d7a6e; min-height:1.4em;}
+.dk .tio{color:#8ff0e4;}
+.tin{background:#fff; border:2px solid var(--accent1); border-radius:6px; color:var(--navy);
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.5em; padding:3px 8px; width:64px; outline:none;}
+.dk .tin{background:#1b234d; color:var(--ice);}
+.ltab td.chg{background:rgba(240,101,91,.4) !important; color:#fff !important;}
+
+/* ===== the frame inspector — A3b's centrepiece =====
+   A3a's stepper showed a frame as a box with an argument in it. This one OPENS
+   the box, because "return address and the values of the local variables" is
+   the marked answer and a student has to see the three parts separately. */
+.fiw{display:flex; gap:14px; align-items:stretch;}
+.fisrc{flex:0 0 38%; min-width:0;}
+.fistk{flex:1; min-width:0; display:flex; flex-direction:column-reverse; justify-content:flex-start;
+  gap:4px; border-left:2px dashed #ccd3e8; padding-left:11px; min-height:210px; max-height:250px; overflow-y:auto;}
+.dk .fistk{border-left-color:rgba(255,255,255,.2);}
+.fifr{font-family:'Courier New',monospace; font-weight:bold; font-size:.4em; border-radius:6px;
+  border:2px solid var(--accent1); background:rgba(23,179,163,.10); color:var(--navy); padding:2px 7px; transition:.15s;}
+.dk .fifr{color:var(--ice);}
+.fifr.top{border-color:var(--accent3); background:rgba(242,181,60,.24);}
+.fifr.popping{border-color:var(--accent2); background:rgba(240,101,91,.22);}
+.fifr.stranded{border-color:#b3bad2; background:repeating-linear-gradient(45deg,#f4f6fb,#f4f6fb 5px,#e6e9f4 5px,#e6e9f4 10px); color:#8890b5;}
+.fifr .fra{color:#6d4fd0;} .dk .fifr .fra{color:#c0aef5;}
+.fifr .frp{color:#0d7a6e;} .dk .fifr .frp{color:#5FD6C9;}
+.fifr .frl{color:#c0392b;} .dk .fifr .frl{color:#ff9d95;}
+.fifr b{font-weight:bold;}
+.fitag{font-size:.86em; color:#8890b5; font-weight:normal;}
+.fimet{margin-top:7px;}
+.fibar{height:15px; border-radius:8px; background:#e6e9f4; overflow:hidden; border:1px solid #ccd3e8;}
+.dk .fibar{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.2);}
+.fibar i{display:block; height:100%; width:0; background:linear-gradient(90deg,#17B3A3,#F2B53C); transition:width .18s;}
+.fibar.full i{background:linear-gradient(90deg,#F2B53C,#F0655B);}
+.fimlbl{display:flex; font-size:.42em; color:#8890b5; margin-top:3px; font-family:'Courier New',monospace; font-weight:bold;}
+.fimlbl .r{margin-left:auto;}
+.fijump{font-family:'Courier New',monospace; font-weight:bold; font-size:.44em; color:#8890b5;
+  margin-top:5px; min-height:1.5em;}
+.fijump .jj{color:var(--accent2); letter-spacing:.05em;}
+.fijump b{color:var(--navy);} .dk .fijump b{color:var(--ice);}
+.fireg{font-family:'Courier New',monospace; font-weight:bold; font-size:.46em; color:#8890b5;
+  border:1.5px solid #ccd3e8; border-radius:14px; padding:2px 11px; margin-left:6px;}
+.fireg.hot{border-color:var(--accent1); color:#0d7a6e; background:rgba(23,179,163,.12);}
+.dk .fireg.hot{color:#5FD6C9;}
+.fisw{display:inline-flex; align-items:center; gap:6px; font-size:.46em; color:#5b6488; font-weight:bold; margin-left:4px;}
+.dk .fisw{color:#aeb8dd;}
+
+/* ===== the search race — A4a's centrepiece ===== */
+.rcw{display:flex; gap:16px; align-items:flex-start;}
+.rccol{flex:1; min-width:0;}
+.rcarr{display:flex; flex-wrap:wrap; gap:2px; margin:4px 0 0;}
+.rcc{width:20px; height:20px; border-radius:4px; background:#eef2fb; border:1px solid #d9deed;
+  font-family:'Courier New',monospace; font-weight:bold; font-size:.32em; color:#8890b5;
+  display:flex; align-items:center; justify-content:center; transition:.12s;}
+.dk .rcc{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16);}
+.rcc.win{background:rgba(23,179,163,.14); border-color:#9fd5cc; color:var(--navy);}
+.dk .rcc.win{color:#d8f5f1;}
+.rcc.look{background:rgba(242,181,60,.5); border-color:var(--accent3); color:#4a3500; transform:scale(1.18);}
+.rcc.dead{opacity:.28;}
+.rcc.hit{background:rgba(23,179,163,.75); border-color:#0d7a6e; color:#fff;}
+.rclab{font-size:.44em; font-weight:bold; color:#5b6488; margin-top:6px;}
+.dk .rclab{color:#aeb8dd;}
+.rcnum{font-family:'Courier New',monospace; font-weight:bold; font-size:.62em;}
+.rcnum.lin{color:var(--accent2);} .rcnum.bin{color:#0d7a6e;}
+.dk .rcnum.bin{color:#5FD6C9;}
+.rcbar{height:11px; border-radius:6px; background:#e6e9f4; overflow:hidden; border:1px solid #ccd3e8; margin-top:3px;}
+.dk .rcbar{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.2);}
+.rcbar i{display:block; height:100%; width:0; transition:width .12s;}
+.rcbar.lin i{background:var(--accent2);} .rcbar.bin i{background:var(--accent1);}
+.rcsel{font-size:.46em; font-weight:bold; color:#5b6488; display:inline-flex; align-items:center; gap:5px;}
+.dk .rcsel{color:#aeb8dd;}
+.rcsel select{font-family:'Calibri','Segoe UI',sans-serif; font-size:1em; font-weight:bold; padding:2px 6px;
+  border-radius:6px; border:1.5px solid #ccd3e8; background:#fff; color:var(--navy);}
+/* the three-sort scoreboard */
+.sb{border-collapse:collapse; font-size:.5em; width:100%; font-family:'Courier New',monospace; font-weight:bold;}
+.sb th{background:#eef2fb; color:#5b6488; padding:3px 8px; border:1px solid #ccd3e8; font-size:.92em;}
+.dk .sb th{background:rgba(255,255,255,.08); color:#aeb8dd; border-color:rgba(255,255,255,.18);}
+.sb td{border:1px solid #ccd3e8; padding:3px 8px; text-align:center;}
+.dk .sb td{border-color:rgba(255,255,255,.18);}
+.sb td.nm{text-align:left; color:var(--navy);} .dk .sb td.nm{color:var(--ice);}
+.sb tr.win td{background:rgba(23,179,163,.14);}
+.sb .big{color:var(--accent2);} .sb .small{color:#0d7a6e;}
+.dk .sb .small{color:#5FD6C9;}
+
+/* ===== the crossing widget ===== */
+.xw{max-width:1000px; margin:2px auto 0;}
+.xrow{display:flex; align-items:center; gap:11px; font-size:.5em; margin-bottom:12px;}
+.xlbl{color:#98a0c0; font-weight:bold;}
+.xsl{flex:1 1 auto; accent-color:#17B3A3; height:16px;}
+.xnv{min-width:92px; font-family:'JetBrains Mono',monospace; font-weight:bold; color:#F2B53C; font-size:1.15em;}
+.xbtn{background:rgba(23,179,163,.16); border:1.5px solid #17B3A3; color:#5FD6C9; border-radius:6px;
+  padding:3px 10px; font-size:.9em; font-weight:bold; cursor:pointer; font-family:inherit;}
+.xbtn.alt{background:rgba(242,181,60,.14); border-color:#F2B53C; color:#F2B53C;}
+.xbars{display:flex; flex-direction:column; gap:13px;}
+.xb{display:flex; align-items:center; gap:11px; font-size:.46em;}
+.xbn{flex:0 0 250px; color:#c9cee6; text-align:right;}
+.xtrack{flex:1 1 auto; height:30px; background:rgba(255,255,255,.06); border-radius:5px; overflow:hidden;}
+.xfill{height:100%; border-radius:5px; transition:width .12s linear;}
+.xfill.a{background:linear-gradient(90deg,rgba(240,101,91,.55),#F0655B);}
+.xfill.b{background:linear-gradient(90deg,rgba(23,179,163,.55),#17B3A3);}
+.xv{flex:0 0 152px; font-family:'JetBrains Mono',monospace; font-weight:bold; color:#c9cee6;}
+.xverdict{margin-top:14px; font-size:.5em; padding:10px 14px; border-radius:8px; line-height:1.4;}
+.xverdict.awin{background:rgba(240,101,91,.12); border-left:3px solid #F0655B; color:#ffd7d3;}
+.xverdict.bwin{background:rgba(23,179,163,.12); border-left:3px solid #17B3A3; color:#c6f2ec;}
+.xverdict.even{background:rgba(242,181,60,.14); border-left:3px solid #F2B53C; color:#ffeec2;}
+.xverdict .xnote{display:block; opacity:.82; font-size:.92em; margin-top:2px;}
+
+/* When the reader is running the panel gains a THIRD column, every column gets
+   narrower, and a model answer that fitted in two columns wraps its way off the
+   stage. .g-ans is already capped for exactly this reason; the model was not. */
+.g-grid.three .g-model{max-height:250px; overflow:auto;}
+
+/* A model answer that is CODE is not prose: monospace, tighter, and it must not
+   wrap, or a five-mark class pushes the marked panel off the 720 stage. */
+.g-model.code{font-family:'JetBrains Mono','Courier New',monospace; font-size:.4em;
+  line-height:1.32; white-space:pre;}
+
+/* ===== the encapsulation break ===== */
+.lkw{max-width:1080px; margin:2px auto 0;}
+.lkrow{display:flex; align-items:center; gap:10px; font-size:.46em; margin-bottom:10px; flex-wrap:wrap;}
+.lklbl{color:#98a0c0; font-weight:bold;}
+.lkin{width:110px; font-family:'JetBrains Mono',monospace; font-size:1em; font-weight:bold; padding:3px 7px;
+  border-radius:6px; border:2px solid #6b74a8; background:rgba(10,14,40,.6); color:#F2B53C;}
+.lkbtn{background:rgba(23,179,163,.16); border:1.5px solid #17B3A3; color:#5FD6C9; border-radius:6px;
+  padding:3px 11px; font-size:.94em; font-weight:bold; cursor:pointer; font-family:inherit;}
+.lkbtn.alt{background:rgba(240,101,91,.14); border-color:#F0655B; color:#F0655B;}
+.lkbtn.ghost{background:transparent; border-color:#6b74a8; color:#98a0c0;}
+.lkpair{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px;}
+.lkcard{border-radius:10px; padding:9px 12px; border:2px solid;}
+.lkcard.open{border-color:rgba(240,101,91,.55); background:rgba(240,101,91,.07);}
+.lkcard.safe{border-color:rgba(23,179,163,.55); background:rgba(23,179,163,.07);}
+.lkh{font-size:.46em; font-weight:bold; margin-bottom:4px;}
+.lkcard.open .lkh{color:#F0655B;} .lkcard.safe .lkh{color:#17B3A3;}
+.lkcode{font-family:'JetBrains Mono',monospace; font-size:.34em; line-height:1.35; white-space:pre;
+  color:#98a0c0; background:rgba(0,0,0,.22); border-radius:6px; padding:5px 8px; min-height:74px;}
+.lkbal{font-family:'JetBrains Mono',monospace; font-size:.95em; font-weight:bold; color:#5FD6C9; margin-top:6px;}
+.lkbal.bad{color:#F0655B;}
+.lkst{font-size:.36em; color:#98a0c0; margin-top:1px;}
+.lkst.bad{color:#F0655B; font-weight:bold;}
+.lkverdict{margin-top:11px; font-size:.44em; padding:8px 13px; border-radius:8px; line-height:1.45;
+  background:rgba(255,255,255,.05); border-left:3px solid #6b74a8; color:#c9cee6;}
+.lkverdict.bad{background:rgba(240,101,91,.12); border-left-color:#F0655B; color:#ffd7d3;}
+.lkverdict.ok{background:rgba(23,179,163,.12); border-left-color:#17B3A3; color:#c6f2ec;}
+.lkverdict.warn{background:rgba(242,181,60,.13); border-left-color:#F2B53C; color:#ffeec2;}
+.lkverdict .lknote{display:block; opacity:.82; font-size:.94em; margin-top:2px;}
+
+/* A PROSE STAGE'S COLUMNS NEED THE SAME CAP THE BOSS COLUMNS ALREADY HAVE.
+   Stage 5 is June 2022 P31 Q7(b): the published scheme lists NINE bullets for a
+   maximum of six marks, three rows more than any A-lane panel had carried, and
+   with the two cap footnotes underneath it measured 771px on a 720 stage — the
+   whole verdict below the visible area. .g-ans, .g-model and the reader's column
+   are each capped for exactly this reason; the mark-point column never was,
+   because until now it was always the short one.
+
+   And stage 4 stacks the three tallest things this harness can put on one panel
+   at once — a given-code question, the wrong-form refusal box AND the reader's
+   column — which measured 724. Everything above the grid is content the student
+   needs; the grid is where the give is, so it is capped tighter here than the
+   228 the reader's column carries in the other decks. */
+.g-say .g-grid > div{max-height:150px; overflow:auto;}
+.g-say .g-grid.three .g-llm{max-height:150px; overflow:auto;}
+
+/* ===== the same linked list, twice — A5b's centrepiece =====
+   Lives on a dark slide only, so the palette is written for dark directly. */
+.twx{max-width:1140px; margin:2px auto 0;}
+.twrow{display:flex; align-items:center; gap:9px; font-size:.46em; margin-bottom:9px; flex-wrap:wrap;}
+.twpair{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:start;}
+.twcard{border-radius:10px; padding:8px 12px; border:2px solid;}
+.twcard.arr{border-color:rgba(240,101,91,.5); background:rgba(240,101,91,.06);}
+.twcard.obj{border-color:rgba(23,179,163,.5); background:rgba(23,179,163,.06);}
+.twh{font-size:.44em; font-weight:bold; margin-bottom:5px;}
+.twcard.arr .twh{color:#F0655B;} .twcard.obj .twh{color:#17B3A3;}
+.twt{border-collapse:collapse; font-family:'JetBrains Mono','Courier New',monospace; font-weight:bold;
+  font-size:.46em; width:100%;}
+.twt th{background:rgba(255,255,255,.09); color:#aeb8dd; padding:1px 6px;
+  border:1px solid rgba(255,255,255,.18);}
+.twt td{border:1px solid rgba(255,255,255,.18); padding:1px 6px; text-align:center; color:#c9cee6; transition:.15s;}
+.twt tr.free td{color:#6d7699; background:rgba(255,255,255,.02);}
+.twt tr.hit td{background:rgba(242,181,60,.4); color:#fff3d6;}
+.twt td.neg{color:#F0655B;}
+.twt td.negflash{background:rgba(240,101,91,.5); color:#fff;}
+.twchips{margin-top:6px;}
+.twboxes{display:flex; align-items:center; flex-wrap:wrap; gap:4px; min-height:96px;}
+.twn{border:2px solid #17B3A3; border-radius:7px; padding:2px 9px; background:rgba(23,179,163,.14);
+  font-family:'JetBrains Mono','Courier New',monospace; font-size:.46em; font-weight:bold; color:#c6f2ec; text-align:center;}
+.twn small{display:block; font-size:.68em; color:#8890b5; font-weight:normal;}
+.twar{color:#8890b5; font-size:.44em;}
+.twnil{border:2px dashed #6b74a8; border-radius:7px; padding:3px 9px; color:#98a0c0;
+  font-family:'JetBrains Mono','Courier New',monospace; font-size:.46em; font-weight:bold; transition:.15s;}
+.twnil.flash{border-color:#17B3A3; color:#5FD6C9; background:rgba(23,179,163,.14);}
+.twcode{font-family:'JetBrains Mono','Courier New',monospace; font-size:.38em; line-height:1.4;
+  white-space:pre; color:#98a0c0; background:rgba(0,0,0,.24); border-radius:6px; padding:5px 8px;
+  margin-top:6px; min-height:62px;}
+
+/* The last-words table carries whole published definitions, not one-word cells.
+   .qt centres everything, which is right for a grid of single values and wrong
+   for two lines of prose a student is meant to scan and learn. */
+#terms-tbl td:nth-child(2){text-align:left;}
+
+/* ===== the three drawers — A6a's centrepiece =====
+   Dark slide only, palette written for dark directly. */
+.dww{max-width:1150px; margin:2px auto 0;}
+.dwrow{display:flex; align-items:center; gap:9px; font-size:.46em; margin-bottom:8px; flex-wrap:wrap;}
+.dwsel{font-family:'JetBrains Mono','Courier New',monospace; font-weight:bold; font-size:1em;
+  padding:3px 7px; border-radius:6px; border:2px solid #6b74a8; background:rgba(10,14,40,.6); color:#F2B53C;}
+.dwavg{margin-left:auto; font-family:'JetBrains Mono','Courier New',monospace; font-weight:bold; color:#98a0c0; font-size:.92em;}
+.dwpair{display:grid; grid-template-columns:1fr 1.1fr 1fr; gap:12px; align-items:start;}
+.dwcard{border-radius:10px; padding:7px 10px; border:2px solid;}
+.dwcard.a{border-color:rgba(240,101,91,.5); background:rgba(240,101,91,.06);}
+.dwcard.b{border-color:rgba(242,181,60,.5); background:rgba(242,181,60,.06);}
+.dwcard.c{border-color:rgba(23,179,163,.5); background:rgba(23,179,163,.06);}
+.dwh{font-size:.4em; font-weight:bold; margin-bottom:4px;}
+.dwcard.a .dwh{color:#ff9d95;} .dwcard.b .dwh{color:#F2B53C;} .dwcard.c .dwh{color:#5FD6C9;}
+.dwc{font-family:'JetBrains Mono','Courier New',monospace; font-weight:bold; font-size:.36em;
+  color:#c9cee6; background:rgba(0,0,0,.22); border-radius:4px; padding:1px 7px; margin:2px 0; transition:.12s;}
+.dwc small{color:#8890b5; font-weight:normal;}
+.dwc.hot{background:rgba(242,181,60,.45); color:#fff3d6;}
+.dwsl{font-family:'JetBrains Mono','Courier New',monospace; font-weight:bold; font-size:.33em;
+  color:#c9cee6; background:rgba(0,0,0,.22); border-radius:4px; padding:0 6px; margin:1px 0;
+  min-height:13px; transition:.12s;}
+.dwsl i{font-style:normal; color:#6d7699; display:inline-block; width:20px;}
+.dwsl small{color:#8890b5; font-weight:normal;}
+.dwsl.hot{background:rgba(242,181,60,.45); color:#fff3d6;}
+.dwe{color:#4a527a;}
+.dwidx{display:flex; gap:5px; flex-wrap:wrap; margin-bottom:4px;}
+.dwix{font-family:'JetBrains Mono','Courier New',monospace; font-weight:bold; font-size:.34em;
+  border:1.5px dashed #8a5c00; border-radius:10px; padding:1px 8px; color:#F2B53C; transition:.12s;}
+.dwix.hot{background:rgba(242,181,60,.45); color:#fff3d6;}
+.dwct{font-size:.4em; color:#98a0c0; margin-top:4px;}
+.dwct b{font-family:'JetBrains Mono','Courier New',monospace; color:#fff; font-size:1.15em;}
+/* Classroom rollout: projection-sized question and bounded human review. */
+.rollout-task h2{font-size:38px!important;line-height:1.15!important;margin:0 0 14px!important;}
+.rollout-task p,.rollout-task .rule{font-size:25px!important;line-height:1.32!important;}
+.rollout-task .ps{font-size:22px!important;line-height:1.3!important;}
+.rollout-task table{font-size:23px!important;line-height:1.3!important;}
+.rollout-task td,.rollout-task th{padding:7px 10px!important;}
+.rollout-review{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.rollout-review .g-ta{font-size:19px!important;max-height:180px!important;min-height:70px;}
+.rollout-review .review-pane{max-height:310px;overflow:auto;font-size:20px;line-height:1.35;}
+.rollout-review details{margin:8px 0;}.rollout-review summary{cursor:pointer;font-weight:bold;}
+.rollout-review .g-sub{font-size:18px!important;margin:7px 7px 0 0!important;}
+.rollout-review .review-note{font-size:18px!important;margin:5px 0;}
+.rollout-review>div:first-child{max-height:310px;overflow:auto;}
+#g-q{max-height:210px;overflow:auto;}
+.rollout-review pre{white-space:pre-wrap;font-size:18px;max-height:180px;overflow:auto;}
+.reveal .slides section.rollout-task{top:35px!important;}
+</style></head><body data-lang="py">
+<div class="reveal"><div class="slides">
+
+<!-- H1 -->
+<section>
+<section data-background-color="#151B3C" class="dk center" id="a06a-leaf-00">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <p style="font-size:.5em; letter-spacing:.22em; color:#98a0c0; margin-bottom:4px;">A2 · LESSON 11 · 9618 §13.2</p>
+  <h1 style="font-size:1.4em; margin:0;">Who Chose <span class="accent1">the Order?</span></h1>
+  <p style="font-size:.62em; color:#c9cee6; margin:8px 0 0;">serial · sequential · random · hashing — <em>and how a school finds one student among 200 000 without reading 200 000 records</em></p>
+  <p style="margin-top:16px;"><button class="g-sub" style="font-size:.5em;" onclick="Reveal.down()">🎯 what you will be able to do</button></p>
+
+</section>
+  <section data-background-color="#151B3C" class="dk" id="a06a-leaf-01">
+    <div class="bar" style="background:var(--accent3);"></div>
+    <h2 style="font-size:.9em; margin:0 0 16px;">🎯 Today you will be able to</h2>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">1.</strong> say how records are organised in serial, sequential and random files — in the mark scheme's words, and in <b>running code</b>;</div>
+    <div class="rule" style="font-size:.7em; line-height:1.5;"><strong class="accent1">2.</strong> choose the right organisation for a given problem, and say what each one costs;</div>
+    <div class="rule accent3" style="font-size:.7em; line-height:1.5;"><strong class="accent3">3.</strong> explain sequential access and direct access — and why the word "sequential" appears on both sides;</div>
+    <div class="rule accent2" style="font-size:.7em; line-height:1.5;"><strong class="accent2">4.</strong> calculate hash values with <span class="mono">MOD</span>, and describe what happens when two keys collide.</div>
+
+</section>
+</section>
+
+<!-- H2 the hook -->
+<section data-background-color="#151B3C" class="dk" id="a06a-leaf-02">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 3px;">One student, <span class="accent1">two hundred thousand records</span></h2>
+  <div class="two-col" style="gap:18px;">
+    <div>
+      <div class="rule accent2" style="font-size:.5em; margin-top:0;">
+        The city's student information system holds <b>200 000 records</b> on disk. A school office asks for student
+        <span class="mono">137452</span>. <b class="accent3">How many records does the computer read before it can answer?</b>
+      </div>
+      <div style="font-size:.46em; color:#98a0c0; margin-top:8px;">Every file you have ever processed — U7c's text files, every
+      CSV, every log — you read <b>from the front, one line at a time</b>. If that is the only trick you have, the honest
+      answer is: <b>on average 100 000, and all 200 000 to be sure someone <em>isn't</em> there.</b></div>
+    </div>
+    <div>
+      <div class="card" style="border-color:rgba(23,179,163,.4);">
+        <div style="font-size:.5em; font-weight:bold; color:#5FD6C9;">Today's whole topic is one question:</div>
+        <div style="font-size:.72em; color:#fff; font-weight:bold; margin-top:4px;">Who chose the order the records sit in?</div>
+        <div style="font-size:.44em; color:#c9cee6; margin-top:5px;">Answer it three ways and you get the three file
+        organisations — and the answer for one of them finds any record in <b>one read</b>.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- H3 who chose the order -->
+<section data-background-color="#F4F6FB" class="lt" id="a06a-leaf-03">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.78em; margin:0 0 2px;">Who chose the order?</h2>
+  <div class="three-col" style="gap:12px;">
+    <div class="card" style="border-color:rgba(240,101,91,.35);">
+      <div style="font-size:.52em; font-weight:bold; color:#c0392b;">SERIAL — history chose</div>
+      <div style="font-size:.44em; color:var(--navy); margin-top:3px;">Records sit in the order they <b>arrived</b> —
+      chronological, like a till roll or a sign-in sheet. Nobody decided; it just happened.<br>
+      <b>New record:</b> stick it on the end. Free.</div>
+    </div>
+    <div class="card" style="border-color:rgba(242,181,60,.4);">
+      <div style="font-size:.52em; font-weight:bold; color:#8a5c00;">SEQUENTIAL — the key chose</div>
+      <div style="font-size:.44em; color:var(--navy); margin-top:3px;">Records sit in the order of a <b>key field</b> —
+      a register sorted by student ID.<br>
+      <b>New record:</b> it has <em>a place</em>, and putting it there costs — A2b's insertion problem, wearing a file extension.</div>
+    </div>
+    <div class="card" style="border-color:rgba(23,179,163,.4);">
+      <div style="font-size:.52em; font-weight:bold; color:#0d7a6e;">RANDOM — nobody needs to choose</div>
+      <div style="font-size:.44em; color:var(--navy); margin-top:3px;">The position is <b>computed from the key</b> by a
+      hashing algorithm. The records look scattered — hence "random" — but every one is exactly where its key says.<br>
+      <b>New record:</b> compute, write. One step.</div>
+    </div>
+  </div>
+  <div class="rule accent1" style="font-size:.46em; margin-top:8px;">
+    <b>The published wording, Nov 2021 P31:</b> <em>in both serial and sequential files records are stored one after the
+    other; serial files are stored in <b>chronological order</b>; sequential files are stored with ordered records, in the
+    order of the <b>key field</b>; in serial files new records are <b>appended</b>; in sequential files new records are
+    <b>inserted in the correct position</b>.</em>
+  </div>
+  <div class="rule accent2" style="font-size:.44em; margin-top:5px;">
+    <b>And the examiner checks this exact line.</b> a recent sitting's marker guidance, on describing <em>sequential</em>
+    organisation: <em>"Chronological order is not correct — that would be <b>serial</b> organisation."</em>
+    Say <b>key field</b> for sequential, <b>chronological / arrival order</b> for serial, and the mark is safe.
+  </div>
+
+</section>
+
+<!-- H4 real code -->
+<section>
+
+<section class="lt rollout-task" data-background-color="#F4F6FB" id="a06a-leaf-04"><h2>Append or preserve key order?</h2><div class="rule">Arrival keys are 31, 12, 43. Add key 24 to a log, then to a file sorted by key. Draw both final orders. Sketch the steps needed to preserve each invariant before reading the code.</div><p>Draw / trace first. Keep the question on screen while deriving. ↓ optional live Python implementation · → next idea</p>
+</section>
+<section data-background-color="#F4F6FB" class="lt" id="a06a-leaf-05">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">A serial file, <span class="accent2">in real code</span></h2>
+  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">Not a diagram — the actual file operations. A visitors' log: three arrivals, then one more, then a search.</p>
+  
+  <div class="lane" data-lang="py">
+  <div class="pycell tight"><script type="text/plain" class="pysrc">with open("visits.txt", "w") as f:            # the day so far
+    f.write("1204,Ella,08:55\n")
+    f.write("1519,Marcus,09:12\n")
+    f.write("1043,Blessing,09:30\n")
+
+with open("visits.txt", "a") as f:            # 'a' -- APPEND, serial's only write
+    f.write("2077,Kepei,14:02\n")
+
+reads = 0
+with open("visits.txt") as f:                 # finding = reading from the front
+    for line in f:
+        reads += 1
+        if line.startswith("2077"):
+            print(f"found after {reads} reads:", line.strip())
+            break</script></div>
+  </div>
+  <div class="rule accent1" style="font-size:.48em; margin-top:5px;">
+    <b>Adding took one line and touched nothing that was already there</b> — append cannot corrupt the past, which is
+    why logs are serial. <b class="accent2">Finding took four reads out of four records</b> — and finding someone who
+    never visited would take all of them, every time. That is the serial trade, executed rather than asserted.
+  </div>
+
+</section>
+
+<section data-background-color="#F4F6FB" class="lt" id="a06a-leaf-06">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">A sequential file — <span class="accent2">and what keeping order costs</span></h2>
+  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">The register is sorted by ID. Student 1300 joins. Watch what "inserted in the correct position" actually means for a file.</p>
+  
+  <div class="lane" data-lang="py">
+  <div class="pycell tight"><script type="text/plain" class="pysrc">import os
+
+with open("register.txt", "w") as f:              # sorted by ID -- SEQUENTIAL
+    f.write("1043,Blessing\n1204,Ella\n1519,Marcus\n")
+
+def insert(sid, name):                            # keeping order costs a WHOLE pass
+    with open("register.txt") as old, open("register.tmp", "w") as new:
+        written = False
+        for line in old:
+            if not written and int(line.split(",")[0]) > sid:
+                new.write(f"{sid},{name}\n")      # the new record, in its place
+                written = True
+            new.write(line)
+        if not written:
+            new.write(f"{sid},{name}\n")
+    os.replace("register.tmp", "register.txt")    # swap the finished copy in
+
+insert(1300, "Noor")
+print(open("register.txt").read())</script></div>
+  </div>
+  <div class="rule accent3" style="font-size:.46em; margin-top:5px;">
+    <b>The insert copied the entire file to put one record in its place</b> — a file cannot shuffle itself the way
+    A2b's array could, so "insert in the correct position" means <em>rewrite</em>. The swap at the end is deliberate:
+    the original is never half-written, so a crash mid-insert can never destroy the register.
+    <b class="accent1">What did the pass buy? Finding can now stop early, and two sorted files merge in one pass</b> —
+    which is why payroll and billing run on sequential files.
+  </div>
+
+</section>
+
+<section data-background-color="#222B5A" class="dk" id="a06a-leaf-07">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">…and the exam's spelling of the scan</h2>
+  <p style="font-size:.42em; color:#98a0c0; margin:0 0 4px;">Same loop you just ran, in the dialect. You met these keywords at AS — nothing here is new.</p>
+  <div class="ps" style="font-size:.54em; margin-top:0;"><span class="k">DECLARE</span> ThisLine : STRING
+<span class="k">OPENFILE</span> "visits.txt" <span class="k">FOR READ</span>
+<span class="k">WHILE NOT</span> EOF("visits.txt")
+   <span class="k">READFILE</span> "visits.txt", ThisLine
+   <span class="k">IF</span> LEFT(ThisLine, 4) = "2077" <span class="k">THEN</span>
+      OUTPUT ThisLine
+   <span class="k">ENDIF</span>
+<span class="k">ENDWHILE</span>
+<span class="k">CLOSEFILE</span> "visits.txt"</div>
+  <div class="rule accent3" style="font-size:.48em; margin-top:6px;">
+    <b>Today you only ever <em>read</em> this dialect</b> — Paper 3 describes organisations in prose, and you saw the
+    real code first because the real code is what the sentences are <em>about</em>. Writing the dialect's file
+    operations — including the random-file commands you will meet in a moment — is <b>next lesson's job</b>.
+  </div>
+
+</section>
+
+</section>
+
+<!-- H5 one word two jobs -->
+<section data-background-color="#F4F6FB" class="lt" id="a06a-leaf-08">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">One word, <span class="accent2">two jobs</span></h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 5px;">If serial and sequential have ever blurred together for you, here is the actual reason — and it is not you.</p>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <table class="qt" style="font-size:.5em; margin:0;">
+        <tr><th>access method</th><th>works on</th></tr>
+        <tr><td class="mono">sequential access</td><td>serial <b>and</b> sequential files</td></tr>
+        <tr class="win"><td class="mono">direct access</td><td>sequential <b>and</b> random files</td></tr>
+      </table>
+      <div style="font-size:.44em; color:#5b6488; margin-top:6px;">The syllabus's own table — and both rows are
+      exam questions.</div>
+    </div>
+    <div>
+      <div class="diverge" style="margin:0;">
+        <span class="dh">📐 THE WORD DOES DOUBLE DUTY</span><br>
+        <b>"Sequential" names an organisation</b> (records ordered by key field) <b>and an access method</b> (read one
+        record after another). So <em>"a serial file is read with sequential access"</em> is a correct sentence in which
+        the word means two different things. <b>The confusion is in the vocabulary, not in you</b> — and the fix is to
+        always say which job the word is doing: <b>sequential <u>organisation</u></b> or <b>sequential <u>access</u></b>.
+      </div>
+    </div>
+  </div>
+  <div class="rule accent1" style="font-size:.48em; margin-top:7px;">
+    <b>Read the table's second row again, because it hides the two best questions in the topic:</b> how does
+    <em>direct</em> access work on a <em>sequential</em> file (next slide), and on a <em>random</em> file (the slide
+    after)? Different mechanisms — <b>an index</b>, and <b>a hash</b> — and June 2024 asked for both in one question.
+  </div>
+
+</section>
+
+<!-- H6 index -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt" id="a06a-leaf-09">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">Direct access on a sequential file = <span class="accent2">an index</span></h2>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <div class="ps" style="font-size:.46em; margin-top:0; border-left-color:#17B3A3;"><span class="c">// the INDEX — a small file about the big one</span>
+key 1043  &rarr;  position 0
+key 2049  &rarr;  position 4
+key 2661  &rarr;  position 6
+
+<span class="c">// find 2340: the index says "at or after</span>
+<span class="c">// position 4" -- jump there, read 2 records,</span>
+<span class="c">// done. 3 reads instead of 6.</span></div>
+      <div style="font-size:.44em; color:#5b6488; margin-top:5px;">The index only works because the big file is
+      <b>ordered</b> — "at or after position 4" is only a meaningful promise when the keys run in order. <b>This is why
+      the examined sequential-file mechanism uses an additional index; order alone is not an address lookup.</b></div>
+    </div>
+    <div>
+      <div class="rule accent1" style="font-size:.46em; margin-top:0;">
+        <b>The published answer, June 2024 P32:</b> <em>"In sequential files, an <b>index of all key fields</b> is kept.
+        The index is searched for the <b>address</b> of the file location where the target record is stored."</em>
+      </div>
+      <div class="rule accent2" style="font-size:.46em;">
+        <b>And a marking trap, from a recent sitting's guidance:</b> asked to outline plain <em>sequential access</em>,
+        candidates who describe searching an index <b>do not answer the question</b>. The index is the answer to
+        <em>direct</em> access on a sequential file — keep the two answers in separate pockets.
+      </div>
+    </div>
+  </div>
+  <div class="dig">⬇ where every database keeps this idea</div>
+
+</section>
+
+<section data-background-color="#151B3C" class="dk" id="a06a-leaf-10">
+  <div class="badges"><span class="bg" style="background:rgba(109,79,208,.2); color:#c0aef5; border:1.5px solid #6d4fd0;">🕳 beyond the exam</span></div>
+  <h2 style="font-size:.74em; margin:0 0 3px;">Databases live <span class="accent1">right here</span></h2>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <div class="rule accent1" style="font-size:.45em; margin-top:0;">
+        <b>The index-on-a-sorted-file idea grew up and took over.</b> IBM called it <b>ISAM</b> — Indexed Sequential
+        Access Method — in the 1960s; its descendant, the <b>B-tree</b>, is an index of indexes of indexes, so even a
+        billion-row table is "jump, jump, jump, read" — four or five reads, never a scan.
+      </div>
+      <div class="rule accent3" style="font-size:.45em;">
+        <b>Every time a database answers a <span class="mono">WHERE</span> in milliseconds</b>, this slide is what
+        happened. And when it <em>can't</em> — no index on that column — it does exactly what the serial drawer does:
+        reads every record. Database people call it a <em>full table scan</em>, and they say it the way doctors say
+        "infection".
+      </div>
+    </div>
+    <div>
+      <div class="rule accent2" style="font-size:.45em; margin-top:0;">
+        <b>The trade never went away.</b> An index makes reading fast and <b>writing slower</b> — every insert must
+        update the index too, which is A2b's insertion cost moved one level up. Real systems choose which columns
+        deserve an index the way you are choosing organisations today: by asking <em>what will this file be asked to
+        do most?</em>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</section>
+
+<!-- H7 hashing -->
+<section>
+
+<section data-background-color="#F4F6FB" class="lt" id="a06a-leaf-11">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">Hashing — <span class="accent2">compute the address</span> instead of finding it</h2>
+  <div class="two-col" style="gap:14px;">
+    <div>
+      <div class="rule accent1" style="font-size:.46em; margin-top:0;">
+        <b>The exam's hash is <span class="mono">MOD</span></b> — June 2023, published: <em>hash = key modulus 3</em>, so
+        1030 → <b>1</b>, 1050 → <b>0</b>, 1025 → <b>2</b>. The remainder <em>is</em> the address.
+        <span style="color:#8890b5;">You have met MOD twice: the clock arithmetic of A2a's circular queue, and the ring
+        buffer's index. <b>Third job: the hash function.</b></span>
+      </div>
+      <div class="rule accent3" style="font-size:.44em;">
+        <b>Fixed-width records are what make it work.</b> If every record is exactly <span class="mono">REC</span> bytes,
+        then record <span class="mono">N</span> <em>starts at byte</em> <span class="mono">N × REC</span> — the array's
+        address arithmetic, back from the dead. <b class="accent2">A random file is an array on disk</b>, and the hash is
+        how you know which element you want.
+      </div>
+    </div>
+    <div>
+  
+  <div class="lane" data-lang="py">
+  <div class="pycell xtight"><script type="text/plain" class="pysrc">REC, SLOTS = 24, 10
+def hash_of(sid): return sid % SLOTS          # the exam's hash: MOD
+
+with open("students.dat", "w") as f:          # ten empty fixed slots
+    f.write(" " * REC * SLOTS)
+
+def store(sid, name):
+    with open("students.dat", "r+") as f:
+        f.seek(hash_of(sid) * REC)            # compute the address...
+        f.write(f"{sid:<6}{name:<18}"[:REC])  # ...write straight to it
+
+def fetch(sid):
+    with open("students.dat") as f:
+        f.seek(hash_of(sid) * REC)            # ONE read, wherever it is
+        return f.read(REC).strip()
+
+store(1737, "Ada")
+store(2049, "Grace")
+print("fetch(1737) ->", fetch(1737))
+print("fetch(2049) ->", fetch(2049))</script></div>
+  </div>
+    </div>
+  </div>
+
+</section>
+
+<section data-background-color="#222B5A" class="dk" id="a06a-leaf-12">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">The exam's spelling — <span class="accent3">and you have already read it</span></h2>
+  <p style="font-size:.42em; color:#98a0c0; margin:0 0 4px;">November 2023 Paper 31 printed this and asked candidates what it does. It is the cell you just ran, in dialect.</p>
+  <div class="ps" style="font-size:.54em; margin-top:0;"><span class="k">OPENFILE</span> AccountFile <span class="k">FOR RANDOM</span>
+OUTPUT "Please enter an account number"
+INPUT Customer.AccountNumber
+Location &larr; <span class="v">Hash(Customer.AccountNumber)</span>
+<span class="k">SEEK</span> AccountFile, Location
+<span class="k">GETRECORD</span> AccountFile, Customer
+OUTPUT Customer
+<span class="k">CLOSEFILE</span> AccountFile</div>
+  <div class="rule accent3" style="font-size:.48em; margin-top:6px;">
+    <b>Three new keywords, one idea:</b> <span class="mono">FOR RANDOM</span> opens for record-level jumping,
+    <span class="mono">SEEK</span> moves the file pointer to a computed location, <span class="mono">GETRECORD</span> /
+    <span class="mono">PUTRECORD</span> read and write the record sitting there. <b>An address you computed is an
+    address you can jump to</b> — that is the entire random-file story. <span style="color:#98a0c0;">Writing these
+    yourself is next lesson.</span>
+  </div>
+
+</section>
+
+<section data-background-color="#151B3C" class="dk" id="a06a-leaf-13">
+  <div class="badges"><span class="bg" style="background:rgba(109,79,208,.2); color:#c0aef5; border:1.5px solid #6d4fd0;">🕳 beyond the exam</span></div>
+  <h2 style="font-size:.76em;">How Python hashes — optional implementation detail</h2>
+  <div class="two-col" style="gap:14px;">
+    <div>
+  
+  <div class="lane" data-lang="py">
+  <div class="pycell tight"><script type="text/plain" class="pysrc">def polynomial_hash(s):                 # an illustrative polynomial hash, not Python hash()
+    h = 0
+    for ch in s:
+        h = h * 31 + ord(ch)      # 31: an odd prime, and 31*h is just (h<<5)-h
+    return h
+
+print(polynomial_hash("Kepei"))         # the number a fixed polynomial computes for this string
+print(polynomial_hash("Kepei") % 20)    # cut down to one of 20 drawers -- MOD again</script></div>
+  </div>
+      <div style="font-size:.4em; color:#98a0c0; margin-top:4px;">(Matches a fixed polynomial exactly for short strings; a fixed polynomial wraps
+      the example uses arbitrary-precision Python integers; fixed-width algorithms may explicitly mask their result.)</div>
+    </div>
+    <div>
+      <div class="rule accent1" style="font-size:.45em; margin-top:0;">
+        <b>The exam hashes numbers with MOD. Real languages hash <em>anything</em></b> — a string becomes a number by
+        the polynomial on the left, and then… <b>MOD again</b>, down to a drawer. Two steps, same idea.
+      </div>
+      <div class="rule accent3" style="font-size:.45em;">
+        <b>A <span class="mono">dict</span> / <span class="mono">HashMap</span> is this lesson's random file, living in
+        RAM.</b> Every <span class="mono">d[key]</span> you have ever written computed a hash, jumped to a slot, and
+        handled the collisions you meet on the next slide. A2c called the dictionary an ADT and would not say how it
+        works. <b>Now you know.</b>
+      </div>
+      <div class="rule accent2" style="font-size:.44em;">
+        <b>And one true spy story:</b> Python's own <span class="mono">hash("...")</span> gives a <em>different answer
+        every run</em> — deliberately. In 2011, attackers realised that if you know the hash function you can send a web
+        server thousands of keys that all collide, and its dictionaries grind to O(n). Python's fix: salt the hash at
+        startup. <b>A hash function so important it had to become unpredictable.</b>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</section>
+
+<!-- H8 THE CENTREPIECE -->
+<section data-background-color="#151B3C" class="dk" id="a06a-leaf-14">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.72em; margin:0 0 2px;">🎮 The three drawers</h2>
+  <p style="font-size:.4em; color:#98a0c0; margin:0 0 4px;">
+    The same eight students filed three ways. Every operation scored in <b>reads</b> — the currency A4a taught you to
+    count. Find someone, add someone, look for someone who was never there.</p>
+  <div id="drawviz"></div>
+
+</section>
+
+<!-- H9 collisions -->
+<section>
+<section data-background-color="#F4F6FB" class="lt" id="a06a-leaf-15">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">Collisions — <span class="accent2">when two keys want one slot</span></h2>
+  <p style="font-size:.44em; color:#8890b5; margin:0 0 4px;">1737 MOD 10 = 7. So does 2047. The second arrival finds the slot taken — a <b>collision</b> — and the file needs a rule. The exam gives you two, and the 4-mark question wants both.</p>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <div class="rule accent1" style="font-size:.46em; margin-top:0;">
+        <b>Closed hash — probe onward.</b> Search <b>linearly from the home slot</b> for the <b>next available space</b>
+        and store the record there. <span style="color:#8890b5;">You have met this: it is A2b's free-list instinct —
+        "the next empty row" — walking forward one slot at a time.</span>
+      </div>
+      <div class="rule accent3" style="font-size:.46em;">
+        <b>Open hash — overflow area.</b> A separate region at the end of the file; colliding records go there, and it
+        is <b>searched linearly</b> when needed.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent2" style="font-size:.46em; margin-top:0;">
+        <b>Retrieval retraces the same path.</b> Compute the hash, look at the home slot — <b>if the key there doesn't
+        match, keep searching by the same rule</b> (probe on, or scan the overflow area) until the key matches…
+      </div>
+      <div class="rule navy" style="font-size:.46em;">
+        <b>…or until you can stop:</b> an <b>empty slot</b> (closed) or the <b>end of the overflow area</b> (open) means
+        the search is over and <em>the record is not in the file</em> — the published mark scheme's own final bullet.
+        Absence has a proof, and it is short.
+      </div>
+    </div>
+  </div>
+  <div class="rule accent1" style="font-size:.44em; margin-top:6px;">
+    One honest addition the mark scheme makes, Nov 2024: <em>"a hashing algorithm is used in direct access methods on
+    random <b>and sequential</b> files"</em> — a hash can also feed a sequential file's index lookup. Don't let that MP
+    surprise you: the syllabus's own bullet says hashing serves <em>"a random / sequential file"</em>.
+  </div>
+
+<div class="dig">⬇ how the real world resolves them</div>
+</section>
+
+<!-- H9b how the real world resolves collisions -->
+<section data-background-color="#151B3C" class="dk" id="a06a-leaf-16">
+  <div class="badges"><span class="bg" style="background:rgba(109,79,208,.2); color:#c0aef5; border:1.5px solid #6d4fd0;">🕳 beyond the exam</span></div>
+  <h2 style="font-size:.74em; margin:0 0 3px;">How the real world <span class="accent1">resolves collisions</span></h2>
+  <p style="font-size:.42em; color:#98a0c0; margin:0 0 5px;">The exam's two rules are real — but each is the <em>ancestor</em> of what your own <span class="mono">dict</span> and <span class="mono">HashMap</span> do. Same twelve keys as the drawers, same 16 slots, a third rule:</p>
+  <div class="two-col" style="gap:14px; align-items:stretch;">
+    <div style="flex:1.15;">
+  
+  <div class="lane" data-lang="py">
+  <div class="pycell xtight"><script type="text/plain" class="pysrc">keys = [1519,1043,2049,1204,2926,1737,2661,2340,2352,2372,1250,2612]
+N = 16
+chains = [[] for _ in range(N)]          # every slot is a list -- A2b's node, again
+for k in keys:
+    chains[k % N].append(k)              # a collision just makes that list longer
+for i, c in enumerate(chains):
+    if len(c) > 1: print(f"slot {i:2}: {c}")
+longest = max(len(c) for c in chains)
+print("longest chain:", longest, "-> at most", longest, "reads for these fixed keys")
+
+import sys                               # and Python's own dict? it GROWS instead
+d, last = {}, 0
+for k in keys:
+    d[k] = k
+    if sys.getsizeof(d) != last:
+        last = sys.getsizeof(d)
+        print(f"{len(d):2} keys -> the dict is now {last} bytes")</script></div>
+  </div>
+      <div style="font-size:.4em; color:#98a0c0; margin-top:4px;">Slot 4 is the drawers' own cluster: with linear probing
+      those four keys spilled into 5, 6, 7 and 8 — <b>stealing slots from keys that hashed there honestly</b>. Chaining keeps
+      the mess inside the drawer that caused it.</div>
+    </div>
+    <div style="flex:1;">
+      <div class="rule accent1" style="font-size:.42em; margin-top:0;">
+        <b>1 · Chaining</b> — every slot owns its own little list; a collision appends. That is the exam's <em>open hash</em>
+        with an overflow area <b>per slot</b> instead of one shared one. Real hash tables choose a collision policy and a resizing/load-factor policy.
+      </div>
+      <div class="rule accent3" style="font-size:.42em;">
+        <b>2 · Open addressing, but never in a straight line</b> — Python's <span class="mono">dict</span> probes with
+        <span class="mono">i = (5·i + 1 + perturb) mod N</span>, a scrambled walk that avoids the clusters linear probing
+        breeds. And since 3.6 the dict keeps a small <b>index array</b> pointing into a dense entries array — the exam's
+        index idea, inside the language.
+      </div>
+      <div class="rule accent2" style="font-size:.42em;">
+        <b>3 · Don't fight load factor — grow.</b> The exam's file has a fixed number of slots; a real table doubles itself
+        when it passes a threshold (<b>¾</b> full for HashMap, <b>⅔</b> for dict — that is what the byte jumps show) and
+        re-inserts everything. Your load-factor curve tonight will climb to 4+ probes at 91 % full; resizing exists so a
+        real program never gets there.
+      </div>
+      <div style="font-size:.4em; color:#98a0c0; margin-top:4px;">Further out: <b>cuckoo hashing</b> (two hash functions; a
+      newcomer evicts the occupant to its other home, so a lookup is never more than two reads), and <b>Swiss tables</b> — Google's
+      and Rust's default maps — which check 16 slots at once with one SIMD instruction. Different rules, one problem: <em>two
+      keys wanted one slot.</em></div>
+    </div>
+  </div>
+
+</section>
+</section>
+
+<!-- H10 real world -->
+<section data-background-color="#151B3C" class="dk" id="a06a-leaf-17">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.74em; margin:0 0 3px;">🌍 Where each drawer <span class="accent1">runs the world</span></h2>
+  <div class="three-col" style="gap:12px;">
+    <div class="card" style="border-color:rgba(240,101,91,.4);">
+      <div style="font-size:.5em; font-weight:bold; color:#ff9d95;">SERIAL — the log</div>
+      <div style="font-size:.43em; color:#c9cee6; margin-top:3px;">The most-written file shape on earth. Every server
+      log, every flight recorder, every <span class="mono">journald</span> — and <b>Kafka</b>, the pipe most of the
+      internet's events flow through, is at heart an append-only serial file. <b>Why:</b> append is the one write that
+      <em>cannot corrupt what came before</em> — a crash mid-append loses one record, never the file.</div>
+    </div>
+    <div class="card" style="border-color:rgba(242,181,60,.45);">
+      <div style="font-size:.5em; font-weight:bold; color:#F2B53C;">SEQUENTIAL — the batch</div>
+      <div style="font-size:.43em; color:#c9cee6; margin-top:3px;">The mark scheme's own examples — payroll, billing,
+      bank statements — are real: process every record once, in key order, merging sorted files as you go. And modern
+      storage engines (LevelDB, RocksDB — inside your phone's apps) still <b>write sorted runs and merge them</b>:
+      A2b's insight that sorted things merge cheaply, at industrial scale.</div>
+    </div>
+    <div class="card" style="border-color:rgba(23,179,163,.45);">
+      <div style="font-size:.5em; font-weight:bold; color:#5FD6C9;">RANDOM — the hash</div>
+      <div style="font-size:.43em; color:#c9cee6; margin-top:3px;"><b>git</b> files every object under its hash — the
+      address is computed from the content, which is why git never searches for anything. Every database's hash index,
+      every <span class="mono">dict</span> and <span class="mono">HashMap</span>, every cache: compute, jump, done.</div>
+    </div>
+  </div>
+  <div class="rule accent3" style="font-size:.46em; margin-top:8px;">
+    <b>Notice nobody "won".</b> The world kept all three, because the trade never goes away: appending fast, reading in
+    order, and jumping straight to a key are <em>different superpowers</em>, and every real system picks the one its
+    workload needs — which is exactly the judgement §13.2 asks of you: <em>select an appropriate method of file
+    organisation for a given problem.</em>
+  </div>
+
+</section>
+
+<!-- H11 exam lens -->
+<section><section class="lt rollout-task" data-background-color="#F4F6FB" id="a06a-hand-task">
+<div class="badges"><span class="bg bg-p34">Authored task · pen first</span></div>
+<h2>Find 43 without changing the records</h2><div class="ps">Arrival order:  31, 12, 43, 24
+Key order:      12, 24, 31, 43
+Hash slots 0–4: empty, 31, 12, 43, 24
+Hash rule: key MOD 5; linear probing; no deletions.</div>
+<p>On paper, trace the reads needed to find 43 in a serial scan, a plain sequential scan and this hashed file. Now insert 18. Explain what each organisation must preserve and how a later search finds 18.</p><p>Keep this question visible while deriving. ↓ concise check and optional full answer · → next idea</p>
+
+</section>
+<section class="lt rollout-task" data-background-color="#F4F6FB" id="a06a-hand-check"><h2>Check the mechanism</h2><div class="rule">43: serial 3, sequential 4, hashed 1. Typical mistake: assuming key order itself supplies an index, or calling hashed placement chance.</div>
+<details><summary>Optional full reference</summary><pre style="font-size:21px;white-space:pre-wrap;max-height:370px;overflow:auto;">Serial appends 18, keeping arrival order. Sequential inserts 18 between 12 and 24, typically by rewriting/merging. Random: 18 MOD 5 = 3; slots 3 and 4 are occupied, so probe to empty slot 0. Retrieval hashes then follows the same probe path. An index is additional structure, required for the examined direct-access mechanism on a sequential file.</pre></details>
+<p><a href="#/a06a-hand-task">↑ concrete question</a> · → next idea</p>
+</section></section>
+<section><section class="dk rollout-task" data-background-color="#151B3C" id="a06a-leaf-20"><h2>Match the requested evidence</h2><table class="sb"><tr><th>form</th><th>show</th><th>typical loss</th></tr><tr><td>Describe organisation</td><td>arrival / key / computed position</td><td>call sequential chronological</td></tr><tr><td>Explain access</td><td>index vs hash; collision policy</td><td>describe order but not retrieval</td></tr><tr><td>Calculate hash</td><td>remainder with working</td><td>quotient used as address</td></tr></table><p style="font-size:21px!important;">Historical sample: P3 organisation 10/25; access 8/25; hashing/collisions 6/25; mechanism explanations dominate. Use this to practise response forms, never to predict a paper or remove syllabus content.</p>
+</section></section>
+
+<!-- H12 terms -->
+<section data-background-color="#F4F6FB" class="lt" id="a06a-leaf-21">
+  <div class="badges"><span class="bg bg-p3">P3</span></div>
+  <h2 style="font-size:.76em; margin:0 0 2px;">The sentences, in <span class="accent2">their</span> words</h2>
+  <p style="font-size:.42em; color:#8890b5; margin:0 0 4px;">Published mark schemes, quoted. These are the marks — learn the sentence, then let the code you ran today make it un-forgettable.</p>
+  <table class="qt" style="font-size:.46em; margin:0 auto;">
+    <tr><th style="width:150px;">ask</th><th>the published wording</th></tr>
+    <tr><td class="mono">serial</td><td>records stored one after the other, in <b>chronological order</b>; new records <b>appended</b> / added in the next available space</td></tr>
+    <tr class="win"><td class="mono">sequential</td><td>records stored one after the other <b>in the order of a key field</b>; new records <b>inserted in the correct position</b></td></tr>
+    <tr><td class="mono">random</td><td>records stored in <b>no particular order</b>; a <b>relationship between the key and the location</b> — a hashing algorithm finds the record; updates carried out <b>directly</b></td></tr>
+    <tr class="win"><td class="mono">direct access</td><td>a record is found <b>without other records being read</b> — via an <b>index</b> (sequential) or a <b>hashing algorithm</b> (random)</td></tr>
+    <tr><td class="mono">sequential access</td><td>each record is read <b>one after the other from the physical start of the file</b>, using the key, until found — or until the key is <b>exceeded</b> / EOF</td></tr>
+    <tr><td class="mono">collision</td><td>the computed location is <b>already occupied</b>; store in the <b>next available space</b> (closed) or an <b>overflow area</b> (open); if the search ends without a match, <b>the record is not in the file</b></td></tr>
+  </table>
+
+</section>
+
+<!-- H13 THE GAME -->
+<section data-background-color="#F4F6FB" class="lt growslide" id="a06a-leaf-22">
+  <h2 style="font-size:.76em; margin:0 0 8px;">🎮 Who Chose the Order?</h2>
+  <div class="g-wrap">
+    <div class="g-head"><span id="g-stage" class="g-stage"></span><span id="g-prog" class="g-prog"></span><span id="g-score" class="g-score"></span><button id="g-back" class="g-skip" title="back to the previous question">← back</button><button id="g-skip" class="g-skip" title="on to the next question, answered or not">next →</button></div>
+    <div id="g-q" class="g-q"></div>
+    <div id="g-body"></div>
+    <div id="g-say" class="g-say">&nbsp;</div>
+  </div>
+
+</section>
+
+<!-- H14 summary -->
+<section data-background-color="#151B3C" class="dk" id="a06a-leaf-23">
+  <div class="bar" style="background:linear-gradient(90deg,#17B3A3,#F2B53C,#F0655B);"></div>
+  <h2 style="font-size:.82em; margin:0 0 6px;">What you can now say</h2>
+  <div class="two-col" style="gap:16px;">
+    <div>
+      <div class="rule accent1" style="font-size:.46em; margin-top:0;">
+        <b>Who chose the order?</b> History (serial — append free, search dear), the key field (sequential — insert
+        dear, stop early and merge cheap), or a computation (random — one seek, mind the collisions).
+      </div>
+      <div class="rule accent3" style="font-size:.46em;">
+        <b>"Sequential" does double duty</b> — organisation in one column, access method in the other — and you now say
+        which job the word is doing every time.
+      </div>
+    </div>
+    <div>
+      <div class="rule accent2" style="font-size:.46em; margin-top:0;">
+        <b>A random file is an array on disk.</b> Fixed-width records give back the computable address; MOD picks the
+        element; collisions are the price, probed or overflowed.
+      </div>
+      <div class="rule accent1" style="font-size:.46em;">
+        <b>And you ran all of it</b> — append, the merge-insert, and <span class="mono">seek</span> — in real code, on a
+        real file, before the dialect ever appeared.
+      </div>
+    </div>
+  </div>
+  <div class="rule navy" style="font-size:.46em; margin-top:7px; text-align:center;">
+    <b>Next: you write it.</b> <span class="mono">OPENFILE FOR RANDOM</span> · <span class="mono">SEEK</span> ·
+    <span class="mono">GETRECORD</span> · <span class="mono">PUTRECORD</span> — the record-moving example the guide
+    itself uses — <b class="accent2">and then A6c: what happens when the file isn't there at all.</b>
+  </div>
+
+</section>
+
+</div></div>
+
+<div id="py-chip">🐍 waking Python…</div>
+
+
+<button id="fsbtn" title="fullscreen (or press F)">⛶</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/notes/notes.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+/* ===== Python runtime (Pyodide) — the audited house harness ===== */
+var pyPromise = null, pyBusy = false, currentOut = null, activeInput = null;
+
+function setRunButtons(enabled, label){
+  document.querySelectorAll('.pycell .pyrun').forEach(function(b){
+    b.disabled = !enabled;
+    b.textContent = enabled ? '▶ Run' : (label || '… running');
+  });
+}
+window.__pyInput = function(promptText){
+  return new Promise(function(resolve, reject){
+    var out = currentOut;
+    if(!out){ resolve(''); return; }
+    var row = document.createElement('span');
+    var lbl = document.createElement('span'); lbl.className='pyin-lbl'; lbl.textContent = promptText;
+    var inp = document.createElement('input'); inp.className='pyin';
+    inp.setAttribute('autocomplete','off'); inp.spellcheck = false;
+    row.appendChild(lbl); row.appendChild(inp); out.appendChild(row);
+    activeInput = {row: row, reject: reject};
+    setTimeout(function(){ inp.focus(); }, 60);
+    inp.addEventListener('keydown', function(ev){
+      if(ev.key === 'Enter'){ ev.stopPropagation(); var v=inp.value; row.remove(); activeInput=null; resolve(v); }
+    });
+  });
+};
+function stopPy(){
+  if(activeInput){ var r=activeInput.reject; activeInput.row.remove(); activeInput=null; r(new Error('__pyStop__')); }
+}
+function bootPython(){
+  if(pyPromise) return pyPromise;
+  pyPromise = loadPyodide().then(function(py){
+    py.runPython(
+      "import builtins, js\n" +
+      "async def __ainput(prompt=''):\n" +
+      "    v = await js.window.__pyInput(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "def _input_fallback(prompt=''):\n" +
+      "    v = js.window.prompt(str(prompt))\n" +
+      "    v = '' if v is None else str(v)\n" +
+      "    print(str(prompt) + v)\n" +
+      "    return v\n" +
+      "builtins.input = _input_fallback\n" +
+      "builtins.__ainput = __ainput\n");
+    var chip=document.getElementById('py-chip');
+    chip.textContent='🐍 Python ready'; chip.className='ready';
+    if(!pyBusy) setRunButtons(true);
+    return py;
+  });
+  return pyPromise;
+}
+function runPy(code, outEl, doneCb){
+  if(pyBusy) return;
+  pyBusy = true; setRunButtons(false); currentOut = outEl;
+  outEl.style.display='block'; outEl.className='pyout'; outEl.textContent='';
+  var crashed=false, errLine='', sawOutput=false;
+  bootPython().then(function(py){
+    function emit(s){ sawOutput = true; outEl.appendChild(document.createTextNode(s + '\n')); }
+    py.setStdout({batched: emit});
+    py.setStderr({batched: emit});
+    var src = code.replace(/\binput\s*\(/g, 'await __ainput(');
+    var ns = py.toPy({});
+    return py.runPythonAsync(src, {globals: ns})
+      .catch(function(e){
+        crashed = true;
+        var lines = String(e.message||e).trim().split('\n').filter(function(l){ return l.trim(); });
+        errLine = lines[lines.length-1] || 'Error';
+        if(String(e.message||e).indexOf('__pyStop__') !== -1) errLine = '__stopped__';
+      })
+      .finally(function(){ ns.destroy(); });
+  }).then(function(){
+    if(activeInput){ activeInput.row.remove(); activeInput = null; }
+    if(!sawOutput && !crashed) outEl.textContent = '(no output)';
+    if(crashed){
+      var sp=document.createElement('span'); sp.className='crash';
+      sp.textContent = (errLine==='__stopped__') ? '⏹ stopped' : '💥 ' + errLine;
+      outEl.appendChild(sp);
+    }
+    pyBusy=false; setRunButtons(true); currentOut=null;
+    if(doneCb) doneCb(crashed, outEl.textContent, errLine);
+  });
+}
+
+/* ===== editable live Python cells ===== */
+function initPyCells(){
+  document.querySelectorAll('.pycell').forEach(function(cell){
+    var srcEl  = cell.querySelector('.pysrc');
+    var code   = srcEl ? srcEl.textContent.replace(/^\n/,'').replace(/\s+$/,'') : '';
+    cell.innerHTML='';
+
+    var bar=document.createElement('div'); bar.className='pybar';
+    var dots=document.createElement('div'); dots.className='pydots';
+    ['#F0655B','#F2B53C','#17B3A3'].forEach(function(c){ var i=document.createElement('i'); i.style.background=c; dots.appendChild(i); });
+    bar.appendChild(dots);
+
+    var run=document.createElement('button'); run.className='pyrun';
+    run.textContent = '⏳ waking…';
+    run.disabled = true;
+    bar.appendChild(run);
+
+      var stp=document.createElement('button'); stp.className='pylock'; stp.textContent='⏹';
+      stp.title='stop a program waiting for input';
+      stp.addEventListener('click', stopPy);
+      bar.appendChild(stp);
+    var st=document.createElement('span'); st.className='pystate';
+    st.textContent = '🐍 editable · runs here';
+    bar.appendChild(st);
+
+    var ta=document.createElement('textarea'); ta.className='pyta';
+    ta.value=code; ta.rows=Math.max(2, code.split('\n').length); ta.spellcheck=false;
+    var out=document.createElement('pre'); out.className='pyout'; out.style.display='none';
+
+    cell.appendChild(bar);
+    if(cell.classList.contains('side')){
+      var row=document.createElement('div'); row.className='pyrow';
+      row.appendChild(ta); row.appendChild(out);
+      out.style.display='block'; out.textContent='press ▶ Run';
+      cell.appendChild(row);
+    } else {
+      cell.appendChild(ta); cell.appendChild(out);
+    }
+
+    run.addEventListener('click', function(){ runPy(ta.value, out); });
+  });
+  bootPython();
+}
+function autoSizePyTextareas(scope){
+  (scope||document).querySelectorAll('.pyta').forEach(function(ta){
+    if(ta.offsetParent === null) return;         /* hidden lane: scrollHeight is 0 */
+    ta.style.height='auto';
+    ta.style.height=(ta.scrollHeight+4)+'px';
+  });
+}
+
+document.getElementById('fsbtn').addEventListener('click', function(){
+  var d=document.documentElement;
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else if(d.requestFullscreen){ d.requestFullscreen(); }
+});
+/* Tab must INDENT, not move focus — Python answers are whitespace-sensitive and
+   the browser's default steals the key. Shift-Tab dedents the current line. */
+document.addEventListener('keydown', function(e){
+  var t = e.target;
+  if(e.key !== 'Tab' || !t || !t.matches || !t.matches('textarea.pyta, textarea.g-ta')) return;
+  if(t.readOnly) return;
+  e.preventDefault(); e.stopPropagation();
+  if(e.shiftKey){
+    var ls = t.value.lastIndexOf('\n', t.selectionStart - 1) + 1, n = 0;
+    while(n < 4 && t.value.charAt(ls + n) === ' ') n++;
+    if(n) t.setRangeText('', ls, ls + n, 'preserve');
+  } else {
+    t.setRangeText('    ', t.selectionStart, t.selectionEnd, 'end');
+  }
+}, true);
+
+
+/* THE ANSWER FORM IS WORTH ALL OF THE MARKS, and it flips between the two papers:
+     Paper 3 — pseudocode. No 9618 P3 mark scheme 2021-2025 offers program code.
+     Paper 4 — Python (this classroom route), and the front page of all 23 papers in the
+               archive says "a mark of zero will be awarded if a programming
+               language other than those listed here is used."
+   So a boss adapted from a Paper 4 question must REFUSE pseudocode outright.
+   Accepting it teaches a habit that scores nothing in the exam it prepares for. */
+function looksLikePseudocode(src){
+  return /←|<-|\bENDPROCEDURE\b|\bENDFUNCTION\b|\bENDWHILE\b|\bENDIF\b|\bDECLARE\b|\bTHEN\b|\bRETURNS\b/i.test(src);
+}
+function looksLikeProgramCode(src){
+  return /\bdef\s+\w+|\bpublic\s+static\b|System\.out|\bprintln\b|\bprint\s*\(|;\s*$|\{[\s\S]*\}/m.test(src);
+}
+</script>
+<script>
+/* ===== the three drawers =====
+   The same records filed three ways -- serial (arrival order), sequential
+   (key order, with a small index), random (a MOD-16 hash table with linear
+   probing). Every operation is scored in READS, the currency A4a taught.
+
+   The trade is the content: find favours random and punishes serial; add
+   favours serial and punishes sequential; absence is cheap everywhere except
+   serial, where it costs the whole file. Deterministic throughout, so the
+   teacher's rehearsed numbers are the class's numbers.                       */
+
+function makeDrawers(hostId){
+  var host = document.getElementById(hostId);
+  if(!host) return;
+  var q = function(sfx){ return document.getElementById(hostId + '-' + sfx); };
+
+  var SLOTS = 16;
+  var BASE = [                                   /* arrival order — history's choice */
+    [1519, 'Marcus'], [1043, 'Blessing'], [2049, 'Grace'],  [1204, 'Ella'],
+    [2926, 'Edsger'], [1737, 'Ada'],      [2661, 'Tim'],    [2340, 'Alan']
+  ];
+  /* fill-up queue: 2372 and 2612 both hash to 4, feeding the probe chain */
+  var EXTRA = [[2352, 'Radia'], [2372, 'Grete'], [1250, 'Vint'], [2612, 'Barbara']];
+
+  var st = {};
+  function reset(){
+    /* a reset mid-animation must CANCEL the animation, or the stale interval
+       keeps stepping over the fresh state -- found by clicking reset while a
+       find was still walking the serial drawer */
+    if(st.timer){ clearInterval(st.timer); st.timer = null; }
+    st.serial = BASE.slice();
+    st.seq    = BASE.slice().sort(function(a, b){ return a[0] - b[0]; });
+    st.slots  = [];
+    for(var i = 0; i < SLOTS; i++) st.slots.push(null);
+    st.probesLog = [];                            /* probes per stored record, for the average */
+    BASE.forEach(function(r){ hashPut(r, true); });
+    st.extraAt = 0;
+    st.reads = {a: 0, b: 0, c: 0};
+    st.hot = {a: -1, b: -1, bi: -1, c: -1};
+    st.busy = false;
+  }
+  function hashPut(rec, silent){
+    var h = rec[0] % SLOTS, probes = 1;
+    while(st.slots[h] !== null){ h = (h + 1) % SLOTS; probes++; }
+    st.slots[h] = rec;
+    st.probesLog.push(probes);
+    return {slot: h, probes: probes};
+  }
+  reset();
+
+  host.innerHTML =
+    '<div class="dww">'
+  +   '<div class="dwrow">'
+  +     '<label class="lklbl">student</label>'
+  +     '<select id="' + hostId + '-sel" class="dwsel"></select>'
+  +     '<button id="' + hostId + '-find" class="lkbtn">find</button>'
+  +     '<button id="' + hostId + '-add" class="lkbtn alt">add the next arrival</button>'
+  +     '<button id="' + hostId + '-abs" class="lkbtn ghost">look for 1600 (absent)</button>'
+  +     '<button id="' + hostId + '-rst" class="lkbtn ghost">reset</button>'
+  +     '<span id="' + hostId + '-avg" class="dwavg"></span>'
+  +   '</div>'
+  +   '<div class="dwpair">'
+  +     '<div class="dwcard a"><div class="dwh">SERIAL — arrival order</div>'
+  +       '<div id="' + hostId + '-pa"></div>'
+  +       '<div class="dwct">reads: <b id="' + hostId + '-ra">0</b></div></div>'
+  +     '<div class="dwcard b"><div class="dwh">SEQUENTIAL — key order + index</div>'
+  +       '<div id="' + hostId + '-pi" class="dwidx"></div>'
+  +       '<div id="' + hostId + '-pb"></div>'
+  +       '<div class="dwct">reads: <b id="' + hostId + '-rb">0</b></div></div>'
+  +     '<div class="dwcard c"><div class="dwh">RANDOM — slot = key MOD ' + SLOTS + '</div>'
+  +       '<div id="' + hostId + '-pc"></div>'
+  +       '<div class="dwct">reads: <b id="' + hostId + '-rc">0</b></div></div>'
+  +   '</div>'
+  +   '<div id="' + hostId + '-vd" class="lkverdict"></div>'
+  + '</div>';
+
+  function fillSelect(){
+    var sel = q('sel'), cur = sel.value;
+    sel.innerHTML = '';
+    st.seq.forEach(function(r){
+      var o = document.createElement('option');
+      o.value = r[0]; o.textContent = r[0] + ' · ' + r[1];
+      sel.appendChild(o);
+    });
+    if(cur) sel.value = cur;
+    if(!sel.value && sel.options.length) sel.selectedIndex = sel.options.length - 1;
+  }
+
+  /* the index: every 4th key of the sequential file */
+  function indexOf(){
+    var ix = [];
+    for(var i = 0; i < st.seq.length; i += 4) ix.push([st.seq[i][0], i]);
+    return ix;
+  }
+
+  function cell(rec, hot, extra){
+    return '<div class="dwc' + (hot ? ' hot' : '') + (extra || '') + '">'
+         + (rec ? rec[0] + ' <small>' + rec[1] + '</small>' : '<span class="dwe">—</span>')
+         + '</div>';
+  }
+  function draw(msg, cls){
+    q('pa').innerHTML = st.serial.map(function(r, i){ return cell(r, i === st.hot.a); }).join('');
+    q('pb').innerHTML = st.seq.map(function(r, i){ return cell(r, i === st.hot.b); }).join('');
+    q('pi').innerHTML = indexOf().map(function(e, i){
+      return '<span class="dwix' + (i === st.hot.bi ? ' hot' : '') + '">' + e[0] + '→' + e[1] + '</span>';
+    }).join('');
+    q('pc').innerHTML = st.slots.map(function(r, i){
+      return '<div class="dwsl' + (i === st.hot.c ? ' hot' : '') + '"><i>' + i + '</i>' + (r ? r[0] + ' <small>' + r[1] + '</small>' : '') + '</div>';
+    }).join('');
+    q('ra').textContent = st.reads.a;
+    q('rb').textContent = st.reads.b;
+    q('rc').textContent = st.reads.c;
+    var n = st.probesLog.length;
+    var avg = st.probesLog.reduce(function(s, p){ return s + p; }, 0) / Math.max(1, n);
+    q('avg').textContent = 'random drawer: ' + n + '/' + SLOTS + ' full · avg probes ' + avg.toFixed(2);
+    if(msg !== undefined){ var vd = q('vd'); vd.className = 'lkverdict ' + (cls || ''); vd.innerHTML = msg; }
+    fillSelect();
+  }
+
+  /* one shared stepper: plays a list of {p:'a'|'b'|'bi'|'c', i:index} highlights,
+     bumping the panel's read counter for each, then calls done() */
+  function play(steps, done){
+    st.busy = true;
+    var k = 0;
+    var t = setInterval(function(){
+      if(st.timer !== t){ clearInterval(t); return; }   /* cancelled by reset */
+      if(k >= steps.length){
+        clearInterval(t);
+        st.timer = null;
+        st.busy = false;
+        st.hot = {a: -1, b: -1, bi: -1, c: -1};
+        done();
+        return;
+      }
+      var s = steps[k++];
+      st.hot = {a: -1, b: -1, bi: -1, c: -1};
+      st.hot[s.p] = s.i;
+      if(s.p === 'a') st.reads.a++;
+      if(s.p === 'b' || s.p === 'bi') st.reads.b++;
+      if(s.p === 'c') st.reads.c++;
+      draw();
+    }, 170);
+    st.timer = t;
+  }
+
+  function findSteps(id){
+    var steps = [], out = {};
+    /* serial: front to back until hit (or the whole file) */
+    var hitA = -1;
+    for(var i = 0; i < st.serial.length; i++){
+      steps.push({p: 'a', i: i});
+      if(st.serial[i][0] === id){ hitA = i; break; }
+    }
+    out.a = (hitA === -1) ? st.serial.length : hitA + 1;
+    /* sequential: read the index, jump to the block, scan — stop early if passed */
+    var ix = indexOf(), block = 0, ixReads = 0;
+    for(var j = 0; j < ix.length; j++){
+      steps.push({p: 'bi', i: j}); ixReads++;
+      if(ix[j][0] <= id) block = ix[j][1];
+      if(ix[j][0] > id) break;
+    }
+    var hitB = -1, blockReads = 0;
+    for(var m = block; m < st.seq.length; m++){
+      steps.push({p: 'b', i: m}); blockReads++;
+      if(st.seq[m][0] === id){ hitB = m; break; }
+      if(st.seq[m][0] > id) break;              /* passed it: it cannot be later */
+    }
+    out.b = ixReads + blockReads;
+    out.bFound = hitB !== -1;
+    /* random: MOD, then probe until key matches or empty */
+    var h = id % SLOTS, probes = 0, found = false;
+    while(probes < SLOTS){
+      steps.push({p: 'c', i: h}); probes++;
+      if(st.slots[h] === null) break;
+      if(st.slots[h][0] === id){ found = true; break; }
+      h = (h + 1) % SLOTS;
+    }
+    out.c = probes; out.cFound = found; out.home = id % SLOTS;
+    return {steps: steps, out: out};
+  }
+
+  q('find').addEventListener('click', function(){
+    if(st.busy) return;
+    var id = parseInt(q('sel').value, 10);
+    st.reads = {a: 0, b: 0, c: 0};
+    var r = findSteps(id);
+    play(r.steps, function(){
+      draw('<b>Same student, three prices:</b> serial read <b>' + r.out.a + '</b>, sequential read <b>'
+        + r.out.b + '</b> (index + block), random read <b>' + r.out.c + '</b>'
+        + (r.out.c > 1 ? ' — slot ' + r.out.home + ' was taken, so it probed on' : ' — straight to slot ' + r.out.home)
+        + '. <span class="lknote">For a larger file, scan costs grow; indexed lookup depends on index design. '
+        + 'Hashed lookup also depends on collisions and load factor.</span>', 'ok');
+    });
+  });
+
+  q('abs').addEventListener('click', function(){
+    if(st.busy) return;
+    st.reads = {a: 0, b: 0, c: 0};
+    var r = findSteps(1600);
+    play(r.steps, function(){
+      draw('<b>1600 is not in the file — and each drawer proves it differently.</b> Serial read '
+        + '<b>every record (' + r.out.a + ')</b>: absence has no shortcut when nothing is ordered. Sequential '
+        + 'stopped after <b>' + r.out.b + '</b> reads, at the first key <em>past</em> 1600 — order lets you stop. '
+        + 'Random probed <b>' + r.out.c + '</b> and hit an empty slot — if 1600 existed, it would have been on '
+        + 'that path. <span class="lknote">The mark scheme pays for exactly these three sentences.</span>', 'warn');
+    });
+  });
+
+  q('add').addEventListener('click', function(){
+    if(st.busy) return;
+    if(st.extraAt >= EXTRA.length){
+      draw('The arrivals queue is empty — reset to run it again.', '');
+      return;
+    }
+    var rec = EXTRA[st.extraAt++];
+    st.reads = {a: 0, b: 0, c: 0};
+    /* serial: one append */
+    st.serial.push(rec);
+    /* sequential: find the place, count the shifts */
+    var pos = 0;
+    while(pos < st.seq.length && st.seq[pos][0] < rec[0]) pos++;
+    var shifted = st.seq.length - pos;
+    st.seq.splice(pos, 0, rec);
+    /* random: hash + probe */
+    var hp = hashPut(rec);
+    st.reads.a = 1;                        /* writes, but the same currency */
+    st.reads.b = shifted + 1;
+    st.reads.c = hp.probes;
+    st.hot = {a: st.serial.length - 1, b: pos, bi: -1, c: hp.slot};
+    draw('<b>' + rec[0] + ' (' + rec[1] + ') arrives — and the trade turns around.</b> Serial: <b>1 write</b>, on '
+      + 'the end, nothing else touched. Sequential: the record has <em>a place</em>, so <b>' + shifted
+      + ' records shifted</b> to make room (+1 write) — A2b\'s insertion cost, now on disk. Random: hashed to slot '
+      + (rec[0] % SLOTS) + (hp.probes > 1 ? ', found it taken, probed to slot ' + hp.slot + ' — <b>' + hp.probes + ' probes</b>'
+      : ' — <b>1 write</b>')
+      + '. <span class="lknote">Watch the average probes climb as the drawer fills: that is load factor, felt '
+      + 'before it is named.</span>', hp.probes > 1 ? 'warn' : 'ok');
+  });
+
+  q('rst').addEventListener('click', function(){
+    reset();
+    draw('Eight students, three drawers. Pick someone and press <b>find</b> — or add arrivals until the random '
+      + 'drawer starts to struggle.', '');
+  });
+
+  draw('Eight students, three drawers. Pick someone and press <b>find</b> — the counters score every drawer in '
+    + '<b>reads</b>.', '');
+}
+</script>
+<script>
+/* ===== 🎮 Who Chose the Order? — six stages, two prose bosses ===== */
+var G = {i:0, score:0, locked:false, earned:{}};
+
+/* The teacher walks backwards and forwards through the stages, so a stage must
+   be answerable twice without being paid for twice. Record what each stage
+   earned and REPLACE it, rather than adding to a running total. */
+function gAwardAt(idx, n){
+  G.earned[idx] = n;
+  /* the total is DERIVED from the ledger, never accumulated -- so a stage can be
+     answered any number of times, and nothing can leave the two disagreeing */
+  var t = 0;
+  for(var k in G.earned) if(G.earned.hasOwnProperty(k)) t += G.earned[k];
+  G.score = t;
+  var sc = document.getElementById('g-score');
+  if(sc) sc.textContent = G.score > 0 ? ('score ' + G.score) : '';
+}
+function gAward(n){ gAwardAt(G.i, n); }
+
+/* §13.2 never reaches Paper 4, so there is no code boss and no behaviour
+   mechanic — the A4b precedent. The harness still calls this name from its
+   boss branch; a stage would have to set boss:true to reach it, and none does.
+   Stubbed so a future edit gets a sentence instead of a ReferenceError. */
+function bossBehaviour(studentCode, cb, stage){
+  cb(null, 'java');
+}
+
+/* the exam's words have several legal spellings and nobody should lose a mark
+   to a plural, a capital or the word "file" */
+var W = {
+  serial: /^(a\s*)?serial(\s*file|\s*organisation|\s*organization)?$/,
+  seq:    /^(a\s*)?sequential(\s*file|\s*organisation|\s*organization|\s*access)?$/,
+  rand:   /^(a\s*)?random(\s*file|\s*organisation|\s*organization|\s*access)?$/,
+  index:  /(index|indices)/,
+  hash:   /hash/,
+  h0:     /^0$/,
+  h1:     /^1$/,
+  h2:     /^2$/
+};
+
+var STAGES = [
+ { name:'Stage 1 · who chose the order', paper:'P3',
+   q:'Name the file organisation. '
+    + '<span style="color:#8890b5;">Capitals and the word "file" do not matter.</span>',
+   table:true, total:4,
+   fields:[
+     {lbl:'records sit in the order they <b>arrived</b>; new ones are appended', want:'serial', re:W.serial,
+      why:'History chose the order — <em>chronological</em>, the published word. Nobody decided; it accumulated.'},
+     {lbl:'records sit in the order of a <b>key field</b>; new ones are inserted in place', want:'sequential', re:W.seq,
+      why:'The key chose the order — and a recent sitting\'s marker guidance warns that <em>"chronological order … would be serial"</em>, so this word choice is literally what is marked.'},
+     {lbl:'the record\'s <b>position is computed</b> from its key', want:'random', re:W.rand,
+      why:'Nobody needs to choose — the hash decides. The records <em>look</em> scattered, hence the name, but each is exactly where its key says.'},
+     {lbl:'a web server\'s <b>log file</b> is a … file', want:'serial', re:W.serial,
+      why:'Events in the order they happened, appended as they happen — the real world\'s most-written serial file, and the mark scheme\'s own example use.'}
+   ],
+   afterOk:'One question generated all three answers. Keep asking it — every sentence in this topic is <b>who chose the order?</b> unfolded.'},
+
+ { name:'Stage 2 · the exam\'s own hash', paper:'P3',
+   q:'<b>June 2023 Paper 31 Q3(a), extended.</b> A hashing algorithm calculates storage locations using '
+    + '<b>modulus 3</b> — the remainder after integer division. The paper\'s worked row: key '
+    + '<span class="mono">1030</span> → hash <span class="mono">1</span>. Complete the rest.',
+   table:true, total:3,
+   fields:[
+     {lbl:'<span class="mono">1050</span> →', want:'0', re:W.h0,
+      why:'1050 = 350 × 3 exactly, remainder <b>0</b>.'},
+     {lbl:'<span class="mono">1025</span> →', want:'2', re:W.h2,
+      why:'1025 = 341 × 3 + <b>2</b>.'},
+     {lbl:'<span class="mono">2026</span> →', want:'1', re:W.h1,
+      why:'2026 = 675 × 3 + <b>1</b>. Three keys, three different drawers — a good hash spreads.'}
+   ],
+   afterOk:'That is A2a\'s <span class="mono">MOD</span> doing its third job: clock arithmetic, then the ring buffer\'s index, now the hash function. Same operator, promoted again.'},
+
+ { name:'Stage 3 · one word, two jobs', paper:'P3',
+   q:'The syllabus\'s access table, from memory. '
+    + '<span style="color:#8890b5;">One word each for (a); a short phrase for (b) and (c).</span>',
+   table:true, total:3,
+   fields:[
+     {lbl:'(a) the access method that reads a <b>serial</b> file', want:'sequential (access)', re:W.seq,
+      why:'<b>The double-duty word.</b> Sequential <em>access</em> — one record after another — is how serial <em>and</em> sequential files are read. Say which job the word is doing, every time.'},
+     {lbl:'(b) direct access on a <b>sequential</b> file is made possible by…', want:'an index (of key fields)', re:W.index,
+      why:'Published, June 2024: <em>an index of all key fields is kept; the index is searched for the address of the target record</em>. For this syllabus question, direct access to a sequential file uses an index. Organisation and access are distinct; physical byte addressing alone does not identify the requested record.'},
+     {lbl:'(c) direct access on a <b>random</b> file is made possible by…', want:'hashing (a hashing algorithm)', re:W.hash,
+      why:'Compute the address from the key, jump straight there. No index needed — the key <em>is</em> the directions.'}
+   ],
+   afterOk:'<b>Two different mechanisms behind one phrase</b> — and June 2024 asked for both in a single question, which is stage 5.'},
+
+ { name:'Stage 4 · June 2023, whole', paper:'P3',
+   q:'<b>June 2023 Paper 32 Q2 — both parts, 3 + 2 marks, verbatim.</b> '
+    + '<span style="color:#8890b5;">One box per part. (b): a hashing algorithm calculates storage locations for records in a random access file using the function <b>modulus 5</b> — the remainder after integer division. For example, 3003 modulus 5 = 3, so record key 3003 gives hash value 3.</span>',
+   ta:'', rows:5, total:3, cap:3, numeric:[{label:'1029 MOD 5',answer:4},{label:'7630 MOD 5',answer:0}],
+   parts:[
+     {key:'a', rows:3, lbl:'<b>(a)</b> Describe how records are <b>organised</b> and <b>accessed</b> in a sequential file. <b>[3]</b>'},
+     {key:'b', rows:2, lbl:'<b>(b)</b> Give the hash values for record keys <b>1029</b> and <b>7630</b>, as <span class="mono">key = value</span>. <b>[2]</b>'}
+   ],
+   groupCaps:{a:3},
+   llmTask:'A06a-p3-seq', llmFn:'SeqFile',
+   mps:[
+     {fn:function(x){ return /(particular|specific|given|certain|sorted|ascending|descending) order|in order|ordered/i.test(x); }, pts:1, grp:'a',
+      label:'<b>(a)</b> records are stored in a <b>particular order</b>'},
+     {fn:function(x){ return /key field|record key|unique (identifier|id|key)|primary key|(order|sorted|based).{0,25}key/i.test(x); }, pts:1, grp:'a',
+      label:'<b>(a)</b> …the order determined by the value in a <b>key field</b>'},
+     {fn:function(x){ return /one after (the )?(an)?other|in turn|one by one|record by record|consecutiv|sequential(ly)? access/i.test(x); }, pts:1, grp:'a',
+      label:'<b>(a)</b> records are <b>accessed one after the other</b>'},
+     {fn:function(x){ return /(start|beginning|first record)/i.test(x) && /(search|read|check|examin|look)/i.test(x); }, pts:1, grp:'a',
+      label:'<b>(a)</b> found by searching from the <b>beginning of the file</b>, record by record'},
+     {fn:function(x){ return /until.{0,40}(found|exceed|passed|greater)|exceed|end of (the )?file|EOF/i.test(x); }, pts:1, grp:'a',
+      label:'<b>(a)</b> …until the record is found or the key value is <b>exceeded</b>'},
+
+   ],
+   model:'(a) The records are stored in a particular order, determined by the value in a key field. They are accessed one after the other: a record is found by searching from the beginning of the file, record by record, until the required record is found or the key field value has been exceeded. (Any three.)\n\n(b) 1029 = 4 (1029 = 205 × 5 + 4) · 7630 = 0 (7630 = 1526 × 5).' },
+
+ { name:'Stage 5 · BOSS · direct access, both ways', paper:'P3',
+   q:'<b>June 2024 Paper 32 Q7(b) — 4 marks.</b> Explain how <b>direct access</b> is used to locate a '
+    + 'specific record in each kind of file. '
+    + '<span style="color:#8890b5;">Two marks each — the two mechanisms are different, and naming the '
+    + 'wrong one in the wrong box is the classic loss here.</span>',
+   ta:'', rows:6, total:4, cap:4,
+   parts:[
+     {key:'s', tag:'(i)',  rows:2, lbl:'<b>(i)</b> … in <b>sequential</b> files <b>[2]</b>'},
+     {key:'r', tag:'(ii)', rows:2, lbl:'<b>(ii)</b> … in <b>random</b> files <b>[2]</b>'}
+   ],
+   groupCaps:{s:2, r:2},
+   llmTask:'A06a-p3-direct', llmFn:'DirectAccess',
+   mps:[
+     {fn:function(x){ return /index|indices/i.test(x); }, pts:1, grp:'s',
+      label:'<b>(i)</b> an <b>index</b> of all key fields is kept'},
+     {fn:function(x){ return /index.{0,60}(search|address|location|position|look)|(search|address|location|position).{0,60}index/i.test(x); }, pts:1, grp:'s',
+      label:'<b>(i)</b> …the index is searched for the <b>address</b> of the target record'},
+     {fn:function(x){ return /hash/i.test(x); }, pts:1, grp:'r',
+      label:'<b>(ii)</b> a <b>hashing algorithm</b> is applied to the key field'},
+     /* must be about the COMPUTATION giving the address -- the first version fired
+        on "the address of the target record" in an answer that never mentioned
+        hashing at all, handing a sequential-only answer a random-group mark */
+     {fn:function(x){ return /(hash|calculat|comput).{0,60}(address|location|position)|(address|location|position).{0,45}expect/i.test(x); }, pts:1, grp:'r',
+      label:'<b>(ii)</b> …the calculation gives the address where the record is <b>expected</b>'},
+     {fn:function(x){ return /probe|next free|next available|overflow|not (there|found|at)/i.test(x); }, pts:1, grp:'r',
+      label:'<b>(ii)</b> …and a method exists for when it is not there (probe on / overflow area)'}
+   ],
+   model:'(i) Sequential files: an index of all the key fields is kept. The index is searched for the key, and it gives the address of the file location where the target record is stored - so the record is reached without reading the records before it.\n\n(ii) Random files: a hashing algorithm is applied to the key field of the record. The result of the calculation is the address of the location where the record is expected to be stored. If it is not at that location, a further method is used - for example linear probing to the next free space, or searching an overflow area.' },
+
+ { name:'Stage 6 · BOSS · the collision', paper:'P3',
+   q:'<b>June 2023 Paper 31 Q3(b) — 4 marks.</b> Describe what happens, in relation to the <b>storage or '
+    + 'retrieval</b> of a record in the file, when the calculated hash value is a <b>duplicate</b> of a '
+    + 'previously calculated hash value for a different record key.<br>'
+    + '<span style="color:#8890b5;">The published scheme has nine bullets for a maximum of four — cover the '
+    + 'collision itself, what storing does, what retrieval does, and how a search can end.</span>',
+   ta:'', rows:7, total:4, cap:4,
+   llmTask:'A06a-p3-collision', llmFn:'Collision',
+   mps:[
+     {fn:function(x){ return /(already|previously).{0,25}(used|taken|occupied|stored)|another record|different (record )?key|slot.{0,20}(taken|full|used)|collision/i.test(x); }, pts:1,
+      label:'the computed location has <b>already been used</b> for another record — a collision'},
+     {fn:function(x){ return /next (available|free)|linear(ly)?.{0,25}(search|probe)|search.{0,25}linear/i.test(x); }, pts:1,
+      label:'<b>storing, closed hash:</b> search linearly for the next available space'},
+     {fn:function(x){ return /overflow/i.test(x); }, pts:1,
+      label:'<b>storing, open hash:</b> the record goes to an <b>overflow area</b>'},
+     {fn:function(x){ return /(retriev|read|find|look|search).{0,80}(same|retrace|key match|until.{0,25}(match|found|key))/i.test(x); }, pts:1,
+      label:'<b>retrieval:</b> search on from the calculated location (or through the overflow area) until the matching key is found'},
+     {fn:function(x){ return /not (in|stored in|found in) the file|does ?n.t exist|absent|no such record/i.test(x); }, pts:1,
+      label:'if the search ends without a match, <b>the record is not in the file</b>'}
+   ],
+   model:'A collision has occurred: the calculated storage location has already been used for a record with a different key.\n\nStoring - closed hash: the file is searched linearly from that location for the next available storage space, and the record is stored there. Open hash: the record is stored in the next free space in a separate overflow area.\n\nRetrieval: the hash is calculated and the location examined; if the key there does not match, the search continues by the same rule (linearly onward, or through the overflow area) until the matching record key is found. If the search reaches an empty space (or the end of the overflow area) without a match, the record is not in the file.' }
+];
+function gEl(id){ return document.getElementById(id); }
+</script>
+<script>
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LIVE LLM MARKING — the third mechanic, and the consensus across all three.
+
+   The key is NOT in this file and never will be: a deck gets emailed and
+   copied, so a key written here would be a published key. Instead a small
+   server runs on the teacher's machine (grade-server.py), holds the key in
+   .env, and marks on request. If it is not there — a student's laptop, or
+   the teacher simply hasn't started it — the fetch fails and the deck keeps
+   its two deterministic mechanics. The off-switch is the absence of the
+   process; there is nothing to remember to turn off.
+   ═══════════════════════════════════════════════════════════════════════ */
+/* Written review is local; no external grader implementation. */
+function gProg(){
+  var p=gEl('g-prog'); p.innerHTML='';
+  STAGES.forEach(function(_,k){
+    var i=document.createElement('i');
+    i.className = k<G.i ? 'done' : (k===G.i ? 'cur' : '');
+    p.appendChild(i);
+  });
+}
+function gSay(html, cls){
+  var s=gEl('g-say'); s.innerHTML=html||'&nbsp;'; s.className='g-say'+(cls?' '+cls:'');
+  /* On the code boss, gSay runs AFTER the answer has gone to the reader, so a notice
+     written before this call would be wiped. Re-assert it from the flag instead. */
+  if(G.llmBusy) gWaiting(true);
+}
+
+
+function markOne(ans, mps, cap, quiet, groupCaps, partText){
+  var got=0, rows=[], listed=0, byGrp={};
+  mps.forEach(function(m){
+    /* a multi-part question marks each part against ITS OWN box: a (c) sentence
+       written under (b) earns nothing, exactly as on paper -- and a bullet cannot
+       fire on words that belong to a different part */
+    var t = (partText && m.grp && partText[m.grp] != null) ? partText[m.grp] : ans;
+    var ok = m.fn ? m.fn(t) : (m.re.test(t) && (!m.also || m.also.test(t)));
+    if(ok){
+      /* a mark scheme that caps PART of its list -- Nov 2023 P32 Q9(c) scores its
+         framing sentence on its own (max 1) and takes max 3 from the other four.
+         Capping the total alone would let four body bullets buy the first mark. */
+      if(groupCaps && m.grp){
+        byGrp[m.grp] = (byGrp[m.grp] || 0) + m.pts;
+        if(byGrp[m.grp] <= groupCaps[m.grp]) got += m.pts;
+      } else got += m.pts;
+    }
+    listed += m.pts;
+    rows.push('<li><span class="'+(ok?'y':'n')+'">'+(ok?'✓':'✗')+'</span> '+m.label+' <b>['+m.pts+']</b></li>');
+  });
+  var raw = got, missed = listed - got;
+  if(cap && got > cap) got = cap;
+  /* the cap footnotes are irrelevant when the answer was refused on form, and they are
+     the two longest rows in the column — dropping them keeps the panel on the stage */
+  if(cap && listed > cap && !quiet){
+    rows.push('<li style="color:#8890b5;">the published scheme lists <b>'+listed+'</b> bullets for a maximum of <b>'+cap
+            + '</b> marks — mark schemes are generous on purpose, so you do not have to hit every one</li>');
+    if(missed > 0 && got === cap)
+      rows.push('<li style="color:#8890b5;">…which is why you have <b>'+cap+'/'+cap+'</b> with <b>'+missed
+              + '</b> bullet'+(missed>1?'s':'')+' missing. <b>The cap did that, not your answer</b> — and the '
+              + 'bullet you dropped is still a bug in your program.</li>');
+  }
+  return {got:got, html:'<ul class="g-mp">'+rows.join('')+'</ul>'};
+}
+
+/* Written meaning is human-reviewed. Executable answers keep the real behaviour harness.
+   Committed answers stay visible; no keyword score or external reader is used. */
+function rolloutReview(host,s){
+ var key=G.i, saved=G.reviews||(G.reviews={}), st=saved[key]||(saved[key]={answers:[],committed:false});
+ var parts=s.parts||[{lbl:'Your answer — or write on paper',rows:s.rows||4}];
+ function render(){
+  host.innerHTML='';var grid=document.createElement('div');grid.className='rollout-review';
+  var left=document.createElement('div'),right=document.createElement('div');right.className='review-pane';
+  parts.forEach(function(p,i){var lab=document.createElement('p');lab.className='review-note';lab.innerHTML=p.lbl||'Answer';left.appendChild(lab);
+   var ta=document.createElement('textarea');ta.className='g-ta';ta.rows=Math.min(p.rows||4,5);ta.value=st.answers[i]||'';ta.readOnly=st.committed;ta.setAttribute('aria-label','Answer part '+(i+1));
+   ta.oninput=function(){st.answers[i]=ta.value;};left.appendChild(ta);
+  });
+  var commit=document.createElement('button');commit.className='g-sub';commit.textContent=st.committed?'Edit / try again':'Commit typed or paper answer';
+  commit.onclick=function(){st.committed=!st.committed;render();};left.appendChild(commit);
+  var info=document.createElement('p');info.className='review-note';info.textContent=s.boss?'Python behaviour checks are diagnostics, not an automatic exam mark.':'Human review only — no automatic prose score.';right.appendChild(info);
+  if(st.committed){
+   if(s.numeric){var nums=document.createElement('div');nums.className='review-note';var fields=[];s.numeric.forEach(function(n){var label=document.createElement('label');label.textContent=n.label+' ';var input=document.createElement('input');input.type='number';input.style.width='80px';input.value=(st.numbers||[])[fields.length]||'';label.appendChild(input);nums.appendChild(label);fields.push(input);});var check=document.createElement('button');check.className='g-sub';check.textContent='Check remainders';nums.appendChild(check);var result=document.createElement('p');nums.appendChild(result);check.onclick=function(){st.numbers=fields.map(function(x){return x.value;});var score=fields.reduce(function(n,x,i){return n+(x.value.trim()!==''&&Number(x.value)===s.numeric[i].answer?1:0);},0);var previous=(G.earned||{})[key]||0;G.earned[key]=score;G.score+=score-previous;result.textContent=score+' / '+s.numeric.length+' numeric checks. Explain the division and remainder on paper.';};right.appendChild(nums);}
+   if(s.boss){var run=document.createElement('button');run.className='g-sub';run.textContent='Run Python checks';right.appendChild(run);
+    var result=document.createElement('div');result.className='review-note';result.textContent=st.result||'Draw / trace the structure before running.';right.appendChild(result);
+    run.onclick=function(){run.disabled=true;result.textContent='Running changed-data and failure cases…';
+     bossBehaviour(st.answers.join('\n\n'),function(raw,err){run.disabled=false;
+      var rows=raw?raw.split('||')[0].split('|'):[];st.result=err?'Execution failed: '+err:rows.filter(function(x){return x.indexOf('1:')===0;}).length+' / '+rows.length+' behaviour checks passed';
+      result.innerHTML='';var msg=document.createElement('p');msg.textContent=st.result;result.appendChild(msg);
+      rows.forEach(function(row){var line=document.createElement('p');line.textContent=(row.indexOf('1:')===0?'PASS: ':'FAIL: ')+row.slice(2);result.appendChild(line);});
+     },s);
+    };
+   }
+   var rubric=document.createElement('details'),head=document.createElement('summary');head.textContent='Show capped human rubric · Max '+s.total;rubric.appendChild(head);
+   if(s.groupCaps){Object.keys(s.groupCaps).forEach(function(k){var line=document.createElement('p');line.textContent='Part / group '+k+': maximum '+s.groupCaps[k];rubric.appendChild(line);});}
+   var points=s.reviewPoints||(s.mps||[]).concat.apply(s.mps||[],(s.parts||[]).map(function(p){return p.mps||[];})).map(function(m){return m.label;});
+   points.forEach(function(point){var line=document.createElement('p');line.innerHTML=point;rubric.appendChild(line);});
+   var cap=document.createElement('p');cap.textContent='Accept equivalent meanings. Credit distinct ideas once, in their correct part; apply group caps and the total maximum. Negated or reversed claims do not earn their positive point.';rubric.appendChild(cap);right.appendChild(rubric);
+   var model=s.model||(s.parts||[]).map(function(p){return p.model||'';}).filter(Boolean).join('\n\n');
+   if(model){var det=document.createElement('details'),sum=document.createElement('summary'),pre=document.createElement('pre');sum.textContent='Optional full reference answer';pre.textContent=model;det.appendChild(sum);det.appendChild(pre);right.appendChild(det);}
+  }
+  grid.appendChild(left);grid.appendChild(right);host.appendChild(grid);
+ }
+ render();
+}
+
+function gDraw(){
+  var s=STAGES[G.i];
+  /* which paper this stage is, because the ANSWER FORM changes with it and the
+     form is worth all of the marks */
+  gEl('g-stage').innerHTML = s.name
+    + (s.paper ? ' <span class="pbadge ' + (s.paper==='P4'?'p4':'p3') + '">' + s.paper + '</span>' : '');
+  gEl('g-score').textContent = G.score>0 ? ('score ' + G.score) : '';
+  gNavState();
+  gEl('g-q').innerHTML = s.q;
+  var b=gEl('g-body'); b.innerHTML=''; G.locked=false; gSay('');
+  gProg();
+
+  if(s.review || s.boss || (s.ta !== undefined && !s.table)){
+    rolloutReview(b,s);
+  } else if(s.opts){
+    var wrap=document.createElement('div'); wrap.className='g-opts';
+    s.opts.forEach(function(o){
+      var btn=document.createElement('button'); btn.className='g-b'; btn.style.flex='1 1 44%';
+      btn.innerHTML=o.t;
+      btn.addEventListener('click', function(){
+        if(G.locked) return;
+        if(o.ok){
+          G.locked=true; btn.className='g-b yes'; gAward(1);
+          gSay('✓ ' + o.why + ' <span style="opacity:.6">— press next → when you are ready</span>', 'ok'); /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */
+        } else {
+          btn.className='g-b no';
+          gSay('✗ ' + o.why, 'bad');
+        }
+      });
+      wrap.appendChild(btn);
+    });
+    b.appendChild(wrap);
+  } else if(s.table){
+    var wrap=document.createElement('div');
+    s.fields.forEach(function(f, idx){
+      var lab=document.createElement('label');
+      lab.style.cssText='display:inline-flex; align-items:center; gap:6px; margin:0 18px 8px 0; font-size:.54em; font-weight:bold; color:var(--navy);';
+      lab.innerHTML=f.lbl+' ';
+      var inp=document.createElement('input'); inp.className='tin'; inp.id='tf'+idx;
+      inp.setAttribute('autocomplete','off'); inp.spellcheck=false;
+      lab.appendChild(inp); wrap.appendChild(lab);
+    });
+    b.appendChild(wrap);
+    var subT=document.createElement('button'); subT.className='g-sub'; subT.textContent='mark it, out of '+s.total;
+    subT.addEventListener('click', function(){
+      var got=0, rows='';
+      s.fields.forEach(function(f, idx){
+        var v=gEl('tf'+idx).value.trim().replace(/\u2212/g,'-');
+        /* an expression cell is marked on its VALUE, not its spacing: "1+0" is the
+           same answer as "1 + 0" and a student may not lose a mark to a space bar. */
+        var norm=function(t){ return String(t).replace(/\s+/g,'').toLowerCase(); };
+        /* Big O has several legal spellings, so a field may carry a regex instead of
+           an exact string; the printed answer stays f.want either way. */
+        var ok = f.re ? f.re.test(norm(v)) : (norm(v)===norm(f.want));
+        if(ok) got++;
+        rows+='<li><span class="'+(ok?'y':'n')+'">'+(ok?'\u2713':'\u2717')+'</span> '+f.lbl+' \u2014 <b>'+f.want+'</b>. '+f.why+'</li>';
+      });
+      gAward(got);
+      gSay('<b>'+got+' / '+s.total+'</b><ul class="g-mp">'+rows+'</ul>'
+         + (got===s.total && s.afterOk ? '<div style="margin-top:4px; font-size:.92em;">'+s.afterOk+'</div>' : '')
+         + '<div id="g-nexthint" style="margin-top:5px; opacity:.65;">press next → when you are ready</div>',
+           got===s.total?'ok':'bad');
+      if(!G.locked){ G.locked=true; /* advancing is the next-> button's job; a document-wide click
+           listener catches every stray click on the slide */ }
+    });
+    b.appendChild(subT);
+  }
+}
+
+window.gReplay = function(){ G.reviews={};
+  G.i = 0; G.score = 0; G.earned = {};
+  var sk = document.getElementById('g-skip'); if(sk) sk.style.display = '';
+  var bk = document.getElementById('g-back'); if(bk) bk.style.display = '';
+  gDraw();
+};
+function gSkip(){
+  G.locked = true;
+  G.i++;
+  if(G.i >= STAGES.length){ gFinish(); } else { gDraw(); }
+}
+function gBack(){
+  if(G.i <= 0) return;
+  G.locked = true;
+  G.i--;
+  gDraw();
+}
+function gNavState(){
+  var b = document.getElementById('g-back');
+  if(b) b.style.visibility = (G.i > 0) ? '' : 'hidden';
+}
+/* Bind immediately. In the A2-era decks this whole block lives inside the
+   Reveal.initialize().then() closure, which resolves AFTER DOMContentLoaded has
+   already fired -- so a DOMContentLoaded listener registered here never runs and
+   the button silently does nothing. */
+function gSkipBind(){
+  var b = document.getElementById('g-skip'), k = document.getElementById('g-back');
+  if(!b){ document.addEventListener('DOMContentLoaded', gSkipBind); return; }
+  if(!b.__bound){ b.__bound = true;
+    b.addEventListener('click', function(ev){ ev.stopPropagation(); gSkip(); }); }
+  if(k && !k.__bound){ k.__bound = true;
+    k.addEventListener('click', function(ev){ ev.stopPropagation(); gBack(); }); }
+  gNavState();
+}
+gSkipBind();
+function gNextOnce(){
+  G.i++;
+  if(G.i>=STAGES.length){ gFinish(); } else { gDraw(); }
+}
+function gFinish(){
+ var automatic=STAGES.reduce(function(n,s){return n+(s.numeric?s.numeric.length:(!s.review&&!s.boss&&(s.table||s.opts)?(s.total||1):0));},0);
+ gEl('g-stage').textContent='done';gEl('g-q').innerHTML='';gEl('g-prog').innerHTML='';gEl('g-score').textContent='';
+ ['g-back','g-skip'].forEach(function(id){var e=gEl(id);if(e)e.style.display='none';});
+ gEl('g-body').innerHTML='<div class="g-fin"><div class="big">'+G.score+' / '+automatic+' checked</div><p>Written answers use capped human rubrics. Python behaviour checks report execution separately.</p><button class="g-sub" onclick="gReplay();">play again</button></div>';gSay('');
+}
+
+Reveal.initialize({
+  hash:true, slideNumber:'c/t', width:1280, height:720, margin:.06,
+  plugins:[RevealNotes],
+  transition:'slide', backgroundTransition:'fade'
+}).then(function(){
+  initPyCells();
+  makeDrawers('drawviz');
+  /* Local review needs no external grader. */
+  gDraw();
+  var ob=document.getElementById('obj-btn');
+  if(ob) ob.addEventListener('click', function(){
+    var o=document.getElementById('obj');
+    o.style.display = (o.style.display==='none') ? 'block' : 'none';
+  });
+});
+Reveal.on('ready', function(e){ autoSizePyTextareas(e.currentSlide); });
+Reveal.on('slidechanged', function(e){ autoSizePyTextareas(e.currentSlide); });
+</script>
+</body>
+</html>
